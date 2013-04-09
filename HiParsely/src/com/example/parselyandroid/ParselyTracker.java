@@ -176,6 +176,7 @@ public class ParselyTracker {
 		
 		this.eventQueue = new ArrayList<Map>();
 		
+		// set up a map of enumerated type to identifier name
 		this.idNameMap = new HashMap<kIdType, String>();
 		this.idNameMap.put(kIdType.kUrl, "url");
 		this.idNameMap.put(kIdType.kPostId, "postid");
