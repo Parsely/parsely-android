@@ -18,6 +18,7 @@
 
 package com.example.parselyandroid;
 
+import android.annotation.SuppressLint;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class ParselyTracker {
 	private String apikey, rootUrl;
 	private int flushInterval, queueSizeLimit, storageSizeLimit;
 	private Boolean shouldBatchRequests;
-	private ArrayList<Map> eventQueue;
+	private ArrayList<Map<String, Object>> eventQueue;
 	private Map<kIdType, String> idNameMap;
 	private Timer timer;
 	
@@ -70,7 +71,7 @@ public class ParselyTracker {
 	        PLog(String.format("Flush timer set to %d", this.flushInterval));
 	    }
 	}
-	
+
 	public void flush(){
 		PLog("Flushing queue");
 		
@@ -86,8 +87,8 @@ public class ParselyTracker {
 	        return;
 	    }
 	    
-	    ArrayList<Map> storedQueue = this.getStoredQueue();
-	    ArrayList<Map> newQueue = (ArrayList<Map>)this.eventQueue.clone();
+	    ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
+	    ArrayList<Map<String, Object>> newQueue = (ArrayList<Map<String, Object>>)this.eventQueue.clone();
 	    if(storedQueue != null){
 	        newQueue.addAll(storedQueue);
 	    }
@@ -115,7 +116,7 @@ public class ParselyTracker {
 		PLog(String.format("flushing individual event %s", event));
 	}
 	
-	private void sendBatchRequest(ArrayList<Map> queue){
+	private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
 		PLog("Sending batched request");
 	}
 	
@@ -137,9 +138,9 @@ public class ParselyTracker {
 		return 0;
 	}
 	
-	private ArrayList<Map> getStoredQueue(){
+	private ArrayList<Map<String, Object>> getStoredQueue(){
 		PLog("ERROR getStoredQueue NOT IMPLEMENTED PROPERLY!!!");
-		return new ArrayList<Map>();
+		return new ArrayList<Map<String, Object>>();
 	}
 	
 	private void purgeStoredQueue(){
@@ -182,7 +183,7 @@ public class ParselyTracker {
 		this.queueSizeLimit = 5;
 		this.storageSizeLimit = 20;
 		
-		this.eventQueue = new ArrayList<Map>();
+		this.eventQueue = new ArrayList<Map<String, Object>>();
 		
 		// set up a map of enumerated type to identifier name
 		this.idNameMap = new HashMap<kIdType, String>();
