@@ -27,7 +27,7 @@ import java.util.TimerTask;
 public class ParselyTracker {
 	private static ParselyTracker instance = null;
 	
-	enum kIdType{ kUrl, kPostId }
+	public static enum kIdType{ kUrl, kPostId }
 	
 	private String apikey, rootUrl;
 	private int flushInterval, queueSizeLimit, storageSizeLimit;
@@ -65,6 +65,55 @@ public class ParselyTracker {
 	
 	public void flush(){
 		PLog("Flushing queue");
+		
+		PLog(String.format("%d events in queue, %d stored events", this.eventQueue.size(), this.getStoredQueue().size()));
+	    
+	    if(this.eventQueue.size() == 0 && this.getStoredQueue().size() == 0){
+	        this.stopFlushTimer();
+	        return;
+	    }
+	    
+	    if(!this.isReachable()){
+	        PLog("Network unreachable. Not flushing.");
+	        return;
+	    }
+	    
+	    ArrayList<Map> storedQueue = this.getStoredQueue();
+	    ArrayList<Map> newQueue = (ArrayList<Map>)this.eventQueue.clone();
+	    if(storedQueue != null){
+	        newQueue.addAll(storedQueue);
+	    }
+	    
+	    PLog("Flushing queue...");
+	    if(this.shouldBatchRequests){
+	        this.sendBatchRequest(newQueue);
+	    } else {
+	        for(Map<String, Object> event : newQueue){
+	            this.flushEvent(event);
+	        }
+	    }
+	    PLog("done");
+
+	    this.eventQueue.clear();
+	    this.purgeStoredQueue();
+	    
+	    if(this.eventQueue.size() == 0 && this.getStoredQueue().size() == 0){
+	        PLog("Event queue empty, flush timer cleared.");
+	        this.stopFlushTimer();
+	    }
+	}
+	
+	private void flushEvent(Map<String, Object> event){
+		PLog(String.format("flushing individual event %s", event));
+	}
+	
+	private void sendBatchRequest(ArrayList<Map> queue){
+		PLog("Sending batched request");
+	}
+	
+	private boolean isReachable(){
+		PLog("ERROR isReachable NOT IMPLEMENTED!!!");
+		return true;
 	}
 	
 	private int queueSize(){
@@ -80,9 +129,13 @@ public class ParselyTracker {
 		return 0;
 	}
 	
-	private boolean getStoredQueue(){
-		PLog("ERROR getStoredQueue NOT IMPLEMENTED!!!");
-		return false;
+	private ArrayList<Map> getStoredQueue(){
+		PLog("ERROR getStoredQueue NOT IMPLEMENTED PROPERLY!!!");
+		return new ArrayList<Map>();
+	}
+	
+	private void purgeStoredQueue(){
+		PLog("ERROR purgeStoredQueue NOT IMPLEMENTED!!!");
 	}
 	
 	private void expelStoredEvent(){
@@ -127,7 +180,7 @@ public class ParselyTracker {
 		this.idNameMap.put(kIdType.kUrl, "url");
 		this.idNameMap.put(kIdType.kPostId, "postid");
 		
-		if(this.getStoredQueue()){
+		if(this.getStoredQueue() != null){
 			this.setFlushTimer();
 		}
 	}
