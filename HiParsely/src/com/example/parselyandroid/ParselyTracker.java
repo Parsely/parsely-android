@@ -27,16 +27,24 @@ import java.util.TimerTask;
 public class ParselyTracker {
 	private static ParselyTracker instance = null;
 	
-	public static enum kIdType{ kUrl, kPostId }
+	private static enum kIdType{ kUrl, kPostId }
 	
 	private String apikey, rootUrl;
 	private int flushInterval, queueSizeLimit, storageSizeLimit;
 	private Boolean shouldBatchRequests;
 	private ArrayList<Map> eventQueue;
 	private Map<kIdType, String> idNameMap;
-	private Timer timer; 
+	private Timer timer;
 	
-	public void track(String identifier, kIdType idType){
+	public void trackURL(String url){
+		this.track(url, kIdType.kUrl);
+	}
+	
+	public void trackPostId(String pid){
+		this.track(pid, kIdType.kPostId);
+	}
+	
+	private void track(String identifier, kIdType idType){
 		PLog(String.format("Track called for %s", identifier));
 		
 		Map<String, Object> params = new HashMap<String, Object>();

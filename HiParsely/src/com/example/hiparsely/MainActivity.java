@@ -23,11 +23,11 @@ public class MainActivity extends Activity {
 	}
 	
 	public void trackURL(View view) {
-		ParselyTracker.sharedInstance().track("http://arstechnica.com/something-whatever.html", ParselyTracker.kIdType.kUrl);
+		ParselyTracker.sharedInstance().trackURL("http://arstechnica.com/something-whatever.html");
 	}
 	
 	public void trackPID(View view) {
-		ParselyTracker.sharedInstance().track("1987263412-341872361023-12783461234", ParselyTracker.kIdType.kPostId);
+		ParselyTracker.sharedInstance().trackPostId("1987263412-341872361023-12783461234");
 	}
 	
 	public void toggleConnection(View view) {
