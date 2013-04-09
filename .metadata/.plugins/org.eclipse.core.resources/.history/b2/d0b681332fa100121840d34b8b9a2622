@@ -21,8 +21,8 @@ package com.example.parselyandroid;
 public class ParselyTracker {
 	private static ParselyTracker instance = null;
 	
-	private String apikey, rootUrl;
-	private int flushInterval, queueSizeLimit, storageLimit;
+	private String apikey;
+	private int flushInterval;
 	private Boolean shouldBatchRequests;
 	
 	protected ParselyTracker(String apikey, int flushInterval){
@@ -30,9 +30,6 @@ public class ParselyTracker {
 		this.apikey = apikey;
 		this.flushInterval = flushInterval;
 		this.shouldBatchRequests = true;
-		this.rootUrl = "http://localhost:5001/mobileproxy";
-		this.queueSizeLimit = 5;
-		this.storageLimit = 20;
 	}
 	
 	public static ParselyTracker sharedInstance(){

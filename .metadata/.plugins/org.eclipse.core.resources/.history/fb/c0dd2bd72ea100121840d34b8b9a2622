@@ -21,18 +21,11 @@ package com.example.parselyandroid;
 public class ParselyTracker {
 	private static ParselyTracker instance = null;
 	
-	private String apikey, rootUrl;
-	private int flushInterval, queueSizeLimit, storageLimit;
-	private Boolean shouldBatchRequests;
+	private String apikey;
+	private int flushInterval'
 	
 	protected ParselyTracker(String apikey, int flushInterval){
-		super();
-		this.apikey = apikey;
-		this.flushInterval = flushInterval;
-		this.shouldBatchRequests = true;
-		this.rootUrl = "http://localhost:5001/mobileproxy";
-		this.queueSizeLimit = 5;
-		this.storageLimit = 20;
+		
 	}
 	
 	public static ParselyTracker sharedInstance(){
