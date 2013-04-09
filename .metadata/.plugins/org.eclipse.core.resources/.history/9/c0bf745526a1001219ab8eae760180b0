@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">HiParsely</string>
+    <string name="action_settings">Settings</string>
+    <string name="parsely">Parsely</string>
+    <string name="button_track_url">Track URL</string>
+
+</resources>

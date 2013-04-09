@@ -1,0 +1,4 @@
+INDEX VERSION 1.126+/Users/emmettbutler/git/CT/Parsely-Android/.metadata/.plugins/org.eclipse.jdt.core
+2163269769.index
+1129990089.index
+1786908931.index
