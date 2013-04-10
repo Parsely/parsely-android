@@ -24,6 +24,11 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/*! \brief Manages pageview events and analytics data for Parsely on Android
+*
+*  Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
+*  flushes the queue to the Parsely pixel proxy server.
+*/ 
 public class ParselyTracker {
     private static ParselyTracker instance = null;
 
