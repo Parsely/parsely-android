@@ -178,6 +178,11 @@ public class ParselyTracker {
         PLog("ERROR expelStoredEvent NOT IMPLEMENTED!!!");
     }
 
+    /*! \brief Allow Parsely to send pageview events
+    *
+    *  Instantiates the callback timer responsible for flushing the events queue.
+    *  Can be called before of after `stop`, but has no effect is used before instantiating the singleton
+    */
     public void setFlushTimer(){
         if(this.flushTimerIsActive()){
             this.stopFlushTimer();
@@ -190,10 +195,19 @@ public class ParselyTracker {
         }, this.flushInterval * 1000, this.flushInterval * 1000);
     }
 
+    /*! \brief Is the callback timer running 
+    *
+    *  @return `true` if the callback timer is currently running, `false` otherwise
+    */
     public boolean flushTimerIsActive(){
         return this.timer != null;
     }
 
+    /*! \brief Disallow Parsely from sending pageview events
+    *
+    *  Invalidates the callback timer responsible for flushing the events queue.
+    *  Can be called before or after `start`, but has no effect if used before instantiating the singleton
+    */
     public void stopFlushTimer(){
         if(this.timer != null){
             this.timer.cancel();
