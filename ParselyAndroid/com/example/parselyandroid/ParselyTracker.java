@@ -128,6 +128,7 @@ public class ParselyTracker {
 
     private void persistQueue(){
         PLog("ERROR persistQueue NOT IMPLEMENTED!!!");
+        //http://stackoverflow.com/a/3585036/735204
     }
 
     private int storedEventsCount(){
