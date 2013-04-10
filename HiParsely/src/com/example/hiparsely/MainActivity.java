@@ -5,7 +5,7 @@ import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import com.example.parselyandroid.*;
+import com.parsely.parselyandroid.*;
 
 public class MainActivity extends Activity {
 
