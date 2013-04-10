@@ -32,6 +32,10 @@ import java.util.TimerTask;
 public class ParselyTracker {
     private static ParselyTracker instance = null;
 
+    /*! \brief types of post identifiers
+    *
+    *  Representation of the allowed post identifier types
+    */
     private static enum kIdType{ kUrl, kPostId }
 
     private String apikey, rootUrl;
@@ -41,14 +45,28 @@ public class ParselyTracker {
     private Map<kIdType, String> idNameMap;
     private Timer timer;
 
+    /*! \brief Register a pageview event using a canonical URL
+    *
+    *  @param url The canonical URL of the article being tracked (eg: "http://samplesite.com/some-old/article.html")
+    */
     public void trackURL(String url){
         this.track(url, kIdType.kUrl);
     }
 
+    /*! \brief Register a pageview event using a CMS post identifier
+    *
+    *  @param postid A string uniquely identifying this post. This **must** be unique within Parsely's database.
+    */
     public void trackPostId(String pid){
         this.track(pid, kIdType.kPostId);
     }
 
+    /*! \brief Registers a pageview event
+    *
+    *  Places a data structure representing the event into the in-memory queue for later use
+    *
+    *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue store exceeds `storageSizeLimit`.
+    */
     private void track(String identifier, kIdType idType){
         PLog(String.format("Track called for %s", identifier));
 
@@ -76,6 +94,12 @@ public class ParselyTracker {
         }
     }
 
+    /*!  \brief Generate pixel requests from the queue
+    *
+    *  Empties the entire queue and sends the appropriate pixel requests.
+    *  If `shouldBatchRequests` is true, the queue is sent as a minimum number of requests.
+    *  Called automatically after a number of seconds determined by `flushInterval`.
+    */
     public void flush(){
         PLog(String.format("%d events in queue, %d stored events", this.eventQueue.size(), this.getStoredQueue().size()));
 
@@ -198,6 +222,10 @@ public class ParselyTracker {
         }
     }
 
+    /*! \brief Singleton instance accessor. Note: This must be called after sharedInstance(String, int)
+    *
+    *  @return The singleton instance
+    */
     public static ParselyTracker sharedInstance(){
         if(instance == null){
             return null;
