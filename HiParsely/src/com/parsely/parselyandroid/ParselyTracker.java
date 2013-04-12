@@ -23,6 +23,13 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.*;
+import android.content.Context;
 
 /*! \brief Manages pageview events and analytics data for Parsely on Android
 *
@@ -38,12 +45,13 @@ public class ParselyTracker {
     */
     private static enum kIdType{ kUrl, kPostId }
 
-    private String apikey, rootUrl;
+    private String apikey, rootUrl, storageKey;
     private int flushInterval, queueSizeLimit, storageSizeLimit;
     private Boolean shouldBatchRequests;
     private ArrayList<Map<String, Object>> eventQueue;
     private Map<kIdType, String> idNameMap;
     private Timer timer;
+    private Context context;
 
     /*! \brief Register a pageview event using a canonical URL
     *
@@ -55,7 +63,7 @@ public class ParselyTracker {
 
     /*! \brief Register a pageview event using a CMS post identifier
     *
-    *  @param postid A string uniquely identifying this post. This **must** be unique within Parsely's database.
+    *  @param pid A string uniquely identifying this post. This **must** be unique within Parsely's database.
     */
     public void trackPostId(String pid){
         this.track(pid, kIdType.kPostId);
@@ -66,6 +74,9 @@ public class ParselyTracker {
     *  Places a data structure representing the event into the in-memory queue for later use
     *
     *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue store exceeds `storageSizeLimit`.
+    *  
+    *  @param identifier The post id or canonical URL uniquely identifying the post
+    *  @param idType enum element indicating what type of identifier the first argument is
     */
     private void track(String identifier, kIdType idType){
         PLog(String.format("Track called for %s", identifier));
@@ -156,26 +167,47 @@ public class ParselyTracker {
     }
 
     private void persistQueue(){
-        PLog("ERROR persistQueue NOT IMPLEMENTED!!!");
-        //http://stackoverflow.com/a/3585036/735204
+        PLog("Persisting event queue");
+        ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
+        storedQueue.addAll(this.eventQueue);
+        this.persistObject(storedQueue);
     }
 
     private int storedEventsCount(){
-        PLog("ERROR storedEventsCount NOT IMPLEMENTED!!!");
-        return 0;
+        return this.getStoredQueue().size();
     }
 
     private ArrayList<Map<String, Object>> getStoredQueue(){
-        PLog("ERROR getStoredQueue NOT IMPLEMENTED PROPERLY!!!");
-        return new ArrayList<Map<String, Object>>();
+        ArrayList<Map<String, Object>> storedQueue = null;
+        try{
+            FileInputStream fis = new FileInputStream(this.storageKey);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
+            ois.close();
+        } catch (Exception ex){
+            PLog(String.format("Exception thrown during queue deserialization: %s", ex.toString()));
+        }
+        return storedQueue;
     }
 
     private void purgeStoredQueue(){
-        PLog("ERROR purgeStoredQueue NOT IMPLEMENTED!!!");
+        this.persistObject(null);
     }
 
     private void expelStoredEvent(){
-        PLog("ERROR expelStoredEvent NOT IMPLEMENTED!!!");
+        ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
+        storedQueue.remove(0);
+    }
+    
+    private void persistObject(Object o){
+        try{
+            FileOutputStream fos = new FileOutputStream(this.storageKey);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(o);
+            oos.close();
+        } catch (Exception ex){
+            PLog(String.format("Exception thrown during queue serialization: %s", ex.toString()));
+        }
     }
 
     /*! \brief Allow Parsely to send pageview events
@@ -216,13 +248,16 @@ public class ParselyTracker {
         this.timer = null;
     }
 
-    protected ParselyTracker(String apikey, int flushInterval){
+    protected ParselyTracker(String apikey, int flushInterval, Context c){
         this.apikey = apikey;
         this.flushInterval = flushInterval;
+        this.storageKey = "parsely-events.ser";
         this.shouldBatchRequests = true;
         this.rootUrl = "http://localhost:5001/mobileproxy";
         this.queueSizeLimit = 5;
         this.storageSizeLimit = 20;
+        
+        this.context = c;
 
         this.eventQueue = new ArrayList<Map<String, Object>>();
 
@@ -247,10 +282,10 @@ public class ParselyTracker {
         return instance;
     }
 
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval){
+    public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
         PLog("In sharedinstance");
         if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval);
+            instance = new ParselyTracker(apikey, flushInterval, c);
         }
         return instance;
     }

@@ -13,7 +13,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ParselyTracker.sharedInstance("arstechnica.com", 2);
+        ParselyTracker.sharedInstance("arstechnica.com", 2, this);
     }
 
     @Override
