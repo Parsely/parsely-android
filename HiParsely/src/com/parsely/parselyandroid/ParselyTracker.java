@@ -127,7 +127,7 @@ public class ParselyTracker {
     *  Called automatically after a number of seconds determined by `flushInterval`.
     */
     public void flush(){
-        PLog(String.format("%d events in queue, %d stored events", this.eventQueue.size(), this.getStoredQueue().size()));
+        PLog(String.format("%d events in queue, %d stored events", this.queueSize(), this.storedEventsCount()));
 
         if(this.eventQueue.size() == 0 && this.getStoredQueue().size() == 0){
             this.stopFlushTimer();
@@ -158,7 +158,7 @@ public class ParselyTracker {
         this.eventQueue.clear();
         this.purgeStoredQueue();
         
-        if(this.eventQueue.size() == 0 && this.getStoredQueue().size() == 0){
+        if(this.queueSize() == 0 && this.storedEventsCount() == 0){
             PLog("Event queue empty, flush timer cleared.");
             this.stopFlushTimer();
         }
@@ -239,6 +239,7 @@ public class ParselyTracker {
         } catch (Exception ex){
             PLog(String.format("Exception thrown during queue deserialization: %s", ex.toString()));
         }
+        assert storedQueue != null;
         return storedQueue;
     }
 
@@ -413,7 +414,15 @@ public class ParselyTracker {
     }
     
     private int queueSize(){ return this.eventQueue.size(); }
-    private int storedEventsCount(){ return this.getStoredQueue().size(); }
+    private int storedEventsCount(){
+        int ret = 0;
+        try {
+            ret = this.getStoredQueue().size();
+        } catch (Exception ex){
+            PLog(ex.toString()); 
+        }
+        return ret;
+    }
 
     private static void PLog(String logstring){
         System.out.printf("[Parsely] %s\n", logstring);
