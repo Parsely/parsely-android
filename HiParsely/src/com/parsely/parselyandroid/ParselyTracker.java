@@ -27,9 +27,6 @@ import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.*;
-import android.content.Context;
 
 /*! \brief Manages pageview events and analytics data for Parsely on Android
 *
@@ -51,7 +48,6 @@ public class ParselyTracker {
     private ArrayList<Map<String, Object>> eventQueue;
     private Map<kIdType, String> idNameMap;
     private Timer timer;
-    private Context context;
 
     /*! \brief Register a pageview event using a canonical URL
     *
@@ -248,7 +244,7 @@ public class ParselyTracker {
         this.timer = null;
     }
 
-    protected ParselyTracker(String apikey, int flushInterval, Context c){
+    protected ParselyTracker(String apikey, int flushInterval){
         this.apikey = apikey;
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
@@ -256,8 +252,6 @@ public class ParselyTracker {
         this.rootUrl = "http://localhost:5001/mobileproxy";
         this.queueSizeLimit = 5;
         this.storageSizeLimit = 20;
-        
-        this.context = c;
 
         this.eventQueue = new ArrayList<Map<String, Object>>();
 
@@ -282,10 +276,10 @@ public class ParselyTracker {
         return instance;
     }
 
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
+    public static ParselyTracker sharedInstance(String apikey, int flushInterval){
         PLog("In sharedinstance");
         if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, c);
+            instance = new ParselyTracker(apikey, flushInterval);
         }
         return instance;
     }
