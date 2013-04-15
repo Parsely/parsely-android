@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.3.1"/>
-<title>ParselyAndroid: Main Page</title>
+<title>ParselyAndroid: Parsely for iPhone Documentation</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -16,6 +16,7 @@
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr style="height: 56px;">
+  <td id="projectlogo"><img alt="Logo" src="parsely_appicon_retina.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">ParselyAndroid
    &#160;<span id="projectnumber">1.0</span>
@@ -30,19 +31,51 @@
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Classes</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">ParselyAndroid Documentation</div>  </div>
+<div class="title">Parsely for iPhone Documentation </div>  </div>
 </div><!--header-->
 <div class="contents">
-</div><!-- contents -->
+<div class="textblock"><h1>Quickstart Guide</h1>
+<h2>Integrating with Eclipse</h2>
+<p>Adding Parsely to your Android app is easy!</p>
+<ol type="1">
+<li>Copy the <code>parsely</code> directory (under <code>src/com</code>) to your project's top-level package directory (in a default Eclipse project, this is <code>com</code>.) The directory tree should look like <code>src/com/parsely/parselyandroid</code>.</li>
+<li>Copy the <code>jackson-core</code> and <code>jackson-mapper</code> JAR files into your project's <code>libs</code> directory.</li>
+<li>In the Package Explorer, right click your project, select Build Path -&gt; Add External Archives, select both of the Jackson JARs and click Open.</li>
+<li><p class="startli">Add the following lines to your AndroidManifest.xml file:</p>
+<p class="startli"><code>&lt;uses-permission android:name="android.permission.INTERNET"/&gt;</code> <code>&lt;uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/&gt;</code> <code>&lt;uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/&gt;</code></p>
+</li>
+</ol>
+<h2>Including the SDK</h2>
+<p>In any file that uses the Parsely SDK, be sure to add the line </p>
+<pre class="fragment">import com.parsely.parselyandroid.*;
+</pre><p>at the top of the file.</p>
+<h2>Parsely Initialization</h2>
+<p>Before using the SDK, you must initialize the Parsely object with your public api key. This is usually best to do in the <code>MainActivity</code>'s <code>onCreate</code> method. </p>
+<pre class="fragment">@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    ParselyTracker.sharedInstance("examplesite.com", this);
+}
+</pre><p>The <code>this</code> parameter is necessary to give Parsely access to the app's context.</p>
+<h2>Pageview Tracking</h2>
+<p>To register a pageview event with Parsely, simply use the <code>track</code> call. </p>
+<pre class="fragment">ParselyTracker.sharedInstance().trackURL("http://examplesite.com/something-whatever.html");
+</pre><p>This call requires the canonical URL of the page corresponding to the post currently being viewed.</p>
+<p>You can also use </p>
+<pre class="fragment">ParselyTracker.sharedInstance().trackPostId("1987263412-12783461234");
+</pre><p>which requires a string uniquely identifying the post to Parsely's systems. </p>
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Apr 10 2013 16:50:12 for ParselyAndroid by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Apr 15 2013 12:31:42 for ParselyAndroid by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>
