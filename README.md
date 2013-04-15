@@ -1,4 +1,4 @@
-'If you want to track activity on your Android app, first clone this repository with
+If you want to track activity on your Android app, first clone this repository with
 
     git clone http://github.com/Parsely/parsely-android.git
 
@@ -22,9 +22,9 @@ Adding Parsely to your Android app is easy!
    External Archives, select both of the Jackson JARs and click Open.
 4. Add the following lines to your AndroidManifest.xml file:
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    `<uses-permission android:name="android.permission.INTERNET"/>`
+    `<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>`
+    `<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>`
 
 Including the SDK
 -----------------
