@@ -39,6 +39,7 @@ import java.util.Random;
 
 import android.content.SharedPreferences;
 import android.content.Context;
+import android.content.Context.*;
 
 /*! \brief Manages pageview events and analytics data for Parsely on Android
 *
@@ -232,7 +233,9 @@ public class ParselyTracker {
     private ArrayList<Map<String, Object>> getStoredQueue(){
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<Map<String, Object>>();
         try{
-            FileInputStream fis = new FileInputStream(this.context.getFilesDir().getPath().toString() + "/" + this.storageKey);
+            FileInputStream fis = this.context.getApplicationContext().openFileInput(
+                    this.storageKey
+                    );
             ObjectInputStream ois = new ObjectInputStream(fis);
             storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
             ois.close();
@@ -254,7 +257,10 @@ public class ParselyTracker {
     
     private void persistObject(Object o){
         try{
-            FileOutputStream fos = new FileOutputStream(this.context.getFilesDir().getPath().toString() + "/" + this.storageKey);
+            FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
+                                       this.storageKey,
+                                       android.content.Context.MODE_PRIVATE
+                                   );
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(o);
             oos.close();
@@ -347,7 +353,7 @@ public class ParselyTracker {
     }
     
     private String getSiteUuid(){
-        String uuid = null;
+        String uuid = "";
         try{
             uuid = this.settings.getString(this.uuidkey, "");
             if(uuid == ""){
@@ -415,13 +421,11 @@ public class ParselyTracker {
     
     private int queueSize(){ return this.eventQueue.size(); }
     private int storedEventsCount(){
-        int ret = 0;
-        try {
-            ret = this.getStoredQueue().size();
-        } catch (Exception ex){
-            PLog(ex.toString()); 
+        ArrayList<Map<String, Object>> ar = (ArrayList<Map<String, Object>>)this.getStoredQueue();
+        if(ar != null){
+            return ar.size();
         }
-        return ret;
+        return 0;
     }
 
     private static void PLog(String logstring){
