@@ -43,6 +43,7 @@ import java.util.Random;
 import android.content.SharedPreferences;
 import android.content.Context;
 import android.content.Context.*;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
@@ -330,6 +331,7 @@ public class ParselyTracker {
             connection = new URL(url).openConnection();
             connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19");
             
             OutputStream output = connection.getOutputStream();
             
@@ -419,6 +421,13 @@ public class ParselyTracker {
        
         dInfo.put("parsely_site_uuid", this.getSiteUuid());
         dInfo.put("idsite", this.apikey);
+        dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
+        dInfo.put("os", "android");
+        dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
+        
+        Resources appR = this.context.getApplicationContext().getResources(); 
+        CharSequence txt = appR.getText(appR.getIdentifier("app_name","string", this.context.getApplicationContext().getPackageName()));
+        dInfo.put("appname", txt.toString());
         
         return dInfo;
     }
