@@ -2,7 +2,6 @@ package com.example.hiparsely;
 
 import android.os.Bundle;
 import android.app.Activity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import com.parsely.parselyandroid.*;
