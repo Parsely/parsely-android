@@ -375,6 +375,9 @@ public class ParselyTracker {
     }
 
     protected ParselyTracker(String apikey, int flushInterval, Context c){
+        this.context = c;
+        this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
+        
         this.apikey = apikey;
         this.uuidkey = "parsely-uuid";
         this.flushInterval = flushInterval;
@@ -384,9 +387,6 @@ public class ParselyTracker {
         this.queueSizeLimit = 5;
         this.storageSizeLimit = 20;
         this.deviceInfo = this.collectDeviceInfo();
-        
-        this.context = c;
-        this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
         this.eventQueue = new ArrayList<Map<String, Object>>();
 
