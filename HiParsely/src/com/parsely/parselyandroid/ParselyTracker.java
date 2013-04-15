@@ -40,6 +40,8 @@ import java.util.Random;
 import android.content.SharedPreferences;
 import android.content.Context;
 import android.content.Context.*;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 /*! \brief Manages pageview events and analytics data for Parsely on Android
 *
@@ -219,8 +221,9 @@ public class ParselyTracker {
     }
 
     private boolean isReachable(){
-        PLog("ERROR isReachable NOT IMPLEMENTED!!!");
-        return true;
+        ConnectivityManager cm = (ConnectivityManager)this.context.getSystemService(Context.CONNECTIVITY_SERVICE);    
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();    
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
     private void persistQueue(){
