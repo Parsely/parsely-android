@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -44,6 +45,7 @@ import android.content.Context;
 import android.content.Context.*;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.telephony.TelephonyManager;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -381,16 +383,26 @@ public class ParselyTracker {
     }
     
     private String generateSiteUuid(){
-        PLog("ERROR: generateSiteUuid NOT IMPLEMENTED");
-        String uuid = "this-is-wrong";  // TODO - this uuid is obviously not a real uuid
-        SharedPreferences.Editor editor = this.settings.edit();
-        editor.putString(this.uuidkey, uuid);
-        editor.commit();
+        // Debatable: http://stackoverflow.com/a/2853253/735204
+        final TelephonyManager tm = (TelephonyManager) this.context.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        final String tmDevice, tmSerial, androidId;
+        tmDevice = "" + tm.getDeviceId();
+        tmSerial = "" + tm.getSimSerialNumber();
+        androidId = "" + android.provider.Settings.Secure.getString(this.context.getApplicationContext().getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
+        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
+        String uuid = deviceUuid.toString();
+
+        PLog(String.format("Generated UUID: %s", uuid));
         return uuid;
     }
     
     private String getSiteUuid(){
         String uuid = "";
+        SharedPreferences.Editor editor = this.settings.edit();
+        editor.putString(this.uuidkey, "");
+        editor.commit();
         try{
             uuid = this.settings.getString(this.uuidkey, "");
             if(uuid == ""){
