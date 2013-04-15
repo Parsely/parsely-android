@@ -433,6 +433,10 @@ public class ParselyTracker {
         }
         return instance;
     }
+    
+    public static ParselyTracker sharedInstance(String apikey, Context c){
+        return ParselyTracker.sharedInstance(apikey, 60, c);
+    }
 
     public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
         PLog("In sharedinstance");
