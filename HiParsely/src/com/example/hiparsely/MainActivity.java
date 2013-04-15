@@ -29,8 +29,4 @@ public class MainActivity extends Activity {
     public void trackPID(View view) {
         ParselyTracker.sharedInstance().trackPostId("1987263412-341872361023-12783461234");
     }
-
-    public void toggleConnection(View view) {
-        Log.i("MainActivity", "toggle connection called");
-    }
 }
