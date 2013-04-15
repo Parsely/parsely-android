@@ -173,6 +173,13 @@ public class ParselyTracker {
         }
     }
 
+    /*! \brief Send a single pixel request
+    *
+    *  Sends a single request directly to Parsely's pixel server, bypassing the proxy.
+    *  Prefer `sendBatchRequest:` to this method, as `sendBatchRequest:` causes less battery usage
+    *
+    *  @param event A dictionary containing data for a single pageview event
+    */
     private void flushEvent(Map<String, Object> event){
         PLog(String.format("flushing individual event %s", event));
         
@@ -196,6 +203,13 @@ public class ParselyTracker {
         PLog(String.format("Data %s", this.JsonEncode(data)));
     }
 
+    /*!  \brief Send the entire queue as a single request
+    *
+    *   Creates a large POST request containing the JSON encoding of the entire queue.
+    *   Sends this request to the proxy server, which forwards requests to the pixel server.
+    *
+    *   @param queue The list of event dictionaries to serialize
+    */
     private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
         PLog("Sending batched request");
         
@@ -423,7 +437,7 @@ public class ParselyTracker {
         }
     }
 
-    /*! \brief Singleton instance accessor. Note: This must be called after sharedInstance(String, int)
+    /*! \brief Singleton instance accessor. Note: This must be called after sharedInstance(String, Context)
     *
     *  @return The singleton instance
     */
@@ -434,6 +448,12 @@ public class ParselyTracker {
         return instance;
     }
     
+    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+    *
+    *  @param apikey The Parsely public API key (eg "samplesite.com")
+    *  @param c The current Android application context
+    *  @return The singleton instance
+    */
     public static ParselyTracker sharedInstance(String apikey, Context c){
         return ParselyTracker.sharedInstance(apikey, 60, c);
     }
