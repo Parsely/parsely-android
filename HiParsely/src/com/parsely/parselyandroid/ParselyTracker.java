@@ -26,12 +26,14 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
+import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.net.URLConnection;
 import java.net.URL;
@@ -42,6 +44,10 @@ import android.content.Context;
 import android.content.Context.*;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /*! \brief Manages pageview events and analytics data for Parsely on Android
 *
@@ -186,7 +192,8 @@ public class ParselyTracker {
                      );
 
         this.APIConnection(url);
-        PLog(String.format("Requested %@", url));
+        PLog(String.format("Requested %s", url));
+        PLog(String.format("Data %s", this.JsonEncode(data)));
     }
 
     private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
@@ -218,6 +225,7 @@ public class ParselyTracker {
         
         this.APIConnection(this.rootUrl, this.JsonEncode(batchMap));
         PLog(String.format("Requested %s", this.rootUrl));
+        PLog(String.format("Data %s", this.JsonEncode(batchMap)));
     }
 
     private boolean isReachable(){
@@ -273,8 +281,20 @@ public class ParselyTracker {
     }
     
     private String JsonEncode(Map<String, Object> map){
-        PLog("ERROR JsonEncode NOT IMPLEMENTED");
-        return map.toString();
+        ObjectMapper mapper = new ObjectMapper();
+        String ret = null;
+        try {
+            StringWriter strWriter = new StringWriter();
+            mapper.writeValue(strWriter, map);
+            ret = strWriter.toString();
+          } catch (JsonGenerationException e) {
+            e.printStackTrace();
+          } catch (JsonMappingException e) {
+            e.printStackTrace();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        return ret;
     }
     
     private URLConnection APIConnection(String url){
