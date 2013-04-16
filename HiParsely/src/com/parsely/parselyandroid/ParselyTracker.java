@@ -256,8 +256,8 @@ public class ParselyTracker {
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         if(storedQueue != null){
             storedQueue.addAll(this.eventQueue);
+            this.persistObject(storedQueue);
         }
-        this.persistObject(storedQueue);
     }
 
     private ArrayList<Map<String, Object>> getStoredQueue(){
@@ -285,7 +285,6 @@ public class ParselyTracker {
     }
     
     private void persistObject(Object o){
-        PLog("attempting to persist object");
         try{
             FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
                                        this.storageKey,
