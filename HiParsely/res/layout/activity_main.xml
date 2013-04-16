@@ -30,5 +30,20 @@
         android:layout_below="@id/url_button"
         android:text="@string/button_track_pid"
         android:onClick="trackPID" />
+        
+    <TextView android:id="@+id/queue_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/pid_button" 
+        android:text=""/>
+
+    <TextView android:id="@+id/stored_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/queue_size" 
+        android:text=""/>
+    
 
 </RelativeLayout>

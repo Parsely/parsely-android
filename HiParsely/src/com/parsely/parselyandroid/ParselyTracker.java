@@ -331,14 +331,13 @@ public class ParselyTracker {
             connection = new URL(url).openConnection();
             connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19");
-            
+
             OutputStream output = connection.getOutputStream();
-            
+
             String query = String.format("rqs=%s", URLEncoder.encode(data));
             output.write(query.getBytes());
             output.close();
-            
+
             InputStream response = connection.getInputStream();
         } catch(Exception ex){
             PLog(String.format("Exception caught during HTTP POST request: %s", ex.toString()));
@@ -441,7 +440,7 @@ public class ParselyTracker {
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         this.shouldBatchRequests = true;
-        this.rootUrl = "http://localhost:5001/mobileproxy";
+        this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
         this.queueSizeLimit = 5;
         this.storageSizeLimit = 20;
         this.deviceInfo = this.collectDeviceInfo();
@@ -487,8 +486,8 @@ public class ParselyTracker {
         return instance;
     }
     
-    private int queueSize(){ return this.eventQueue.size(); }
-    private int storedEventsCount(){
+    public int queueSize(){ return this.eventQueue.size(); }
+    public int storedEventsCount(){
         ArrayList<Map<String, Object>> ar = (ArrayList<Map<String, Object>>)this.getStoredQueue();
         if(ar != null){
             return ar.size();
