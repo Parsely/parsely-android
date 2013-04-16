@@ -254,19 +254,20 @@ public class ParselyTracker {
     private void persistQueue(){
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
-        storedQueue.addAll(this.eventQueue);
+        if(storedQueue != null){
+            storedQueue.addAll(this.eventQueue);
+        }
         this.persistObject(storedQueue);
     }
 
     private ArrayList<Map<String, Object>> getStoredQueue(){
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<Map<String, Object>>();
         try{
-            FileInputStream fis = this.context.getApplicationContext().openFileInput(
-                    this.storageKey
-                    );
+            FileInputStream fis = this.context.getApplicationContext().openFileInput(this.storageKey);
             ObjectInputStream ois = new ObjectInputStream(fis);
             storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
             ois.close();
+        } catch(java.io.EOFException ex){
         } catch (Exception ex){
             PLog(String.format("Exception thrown during queue deserialization: %s", ex.toString()));
         }
@@ -284,12 +285,14 @@ public class ParselyTracker {
     }
     
     private void persistObject(Object o){
+        PLog("attempting to persist object");
         try{
             FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
                                        this.storageKey,
                                        android.content.Context.MODE_PRIVATE
                                    );
             ObjectOutputStream oos = new ObjectOutputStream(fos);
+            PLog(String.format("serialized object: %s", o.toString()));
             oos.writeObject(o);
             oos.close();
         } catch (Exception ex){
@@ -442,7 +445,7 @@ public class ParselyTracker {
         this.shouldBatchRequests = true;
         this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
         this.queueSizeLimit = 5;
-        this.storageSizeLimit = 20;
+        this.storageSizeLimit = 200;
         this.deviceInfo = this.collectDeviceInfo();
 
         this.eventQueue = new ArrayList<Map<String, Object>>();

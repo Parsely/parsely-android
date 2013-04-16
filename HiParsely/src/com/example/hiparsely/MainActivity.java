@@ -19,7 +19,9 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ParselyTracker.sharedInstance("arstechnica.com", 3, this);
+        
+        // initialize the Parsely tracker with your API key and the current Context
+        ParselyTracker.sharedInstance("examplesite.com", 3, this);
         
         final TextView queueView = (TextView)findViewById(R.id.queue_size);
         queueView.setText(String.format("Queued events: %d", ParselyTracker.sharedInstance().queueSize()));
@@ -52,7 +54,6 @@ public class MainActivity extends Activity {
             }
         }, 500, 500);
         
-        
     }
 
     @Override
@@ -62,7 +63,7 @@ public class MainActivity extends Activity {
     }
 
     public void trackURL(View view) {
-        ParselyTracker.sharedInstance().trackURL("http://arstechnica.com/something-whatever.html");
+        ParselyTracker.sharedInstance().trackURL("http://examplesite.com/something-whatever.html");
     }
 
     public void trackPID(View view) {
