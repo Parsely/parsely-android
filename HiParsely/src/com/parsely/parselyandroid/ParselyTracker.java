@@ -19,6 +19,7 @@
 package com.parsely.parselyandroid;
 
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
@@ -255,7 +256,12 @@ public class ParselyTracker {
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         if(storedQueue != null){
-            storedQueue.addAll(this.eventQueue);
+            HashSet hs = new HashSet();
+            hs.addAll(storedQueue);
+            hs.addAll(this.eventQueue);
+            storedQueue.clear();
+            storedQueue.addAll(hs);
+            
             this.persistObject(storedQueue);
         }
     }
