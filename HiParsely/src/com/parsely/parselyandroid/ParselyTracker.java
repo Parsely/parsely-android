@@ -450,9 +450,10 @@ public class ParselyTracker {
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         this.shouldBatchRequests = true;
-        this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
-        this.queueSizeLimit = 5;
-        this.storageSizeLimit = 200;
+        //this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
+        this.rootUrl = "http://174.143.139.157/mobileproxy";
+        this.queueSizeLimit = 50;
+        this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
 
         this.eventQueue = new ArrayList<Map<String, Object>>();
