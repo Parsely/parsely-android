@@ -44,6 +44,13 @@
         android:layout_centerHorizontal="true"
         android:layout_below="@id/queue_size" 
         android:text=""/>
+        
+    <TextView android:id="@+id/interval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/stored_size" 
+        android:text=""/>
     
 
 </RelativeLayout>

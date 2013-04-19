@@ -69,7 +69,8 @@ public class ParselyTracker {
 
     private String apikey, rootUrl, storageKey, uuidkey;
     private SharedPreferences settings;
-    private int flushInterval, queueSizeLimit, storageSizeLimit;
+    private int queueSizeLimit, storageSizeLimit;
+    public int flushInterval;
     private Boolean shouldBatchRequests;
     private ArrayList<Map<String, Object>> eventQueue;
     private Map<kIdType, String> idNameMap;
@@ -461,7 +462,7 @@ public class ParselyTracker {
         this.idNameMap.put(kIdType.kUrl, "url");
         this.idNameMap.put(kIdType.kPostId, "postid");
 
-        if(this.getStoredQueue() != null){
+        if(this.getStoredQueue() != null && this.getStoredQueue().size() > 0){
             this.setFlushTimer();
         }
     }
