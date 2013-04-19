@@ -256,7 +256,7 @@ public class ParselyTracker {
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         if(storedQueue != null){
-            HashSet hs = new HashSet();
+            HashSet<Map<String, Object>> hs = new HashSet<Map<String, Object>>();
             hs.addAll(storedQueue);
             hs.addAll(this.eventQueue);
             storedQueue.clear();
@@ -409,9 +409,6 @@ public class ParselyTracker {
     
     private String getSiteUuid(){
         String uuid = "";
-        SharedPreferences.Editor editor = this.settings.edit();
-        editor.putString(this.uuidkey, "");
-        editor.commit();
         try{
             uuid = this.settings.getString(this.uuidkey, "");
             if(uuid == ""){
