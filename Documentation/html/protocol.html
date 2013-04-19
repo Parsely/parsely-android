@@ -21,6 +21,7 @@
    <div id="projectname">ParselyAndroid
    &#160;<span id="projectnumber">1.0</span>
    </div>
+   <div id="projectbrief">The Parsely Android Toolkit</div>
   </td>
  </tr>
  </tbody>
@@ -43,7 +44,7 @@
 <div class="contents">
 <div class="textblock"><p>The Parsely pixel server accepts GET requests containing the information for single pageviews. For mobile devices, sending one request per pageview wastes battery. The Parsely SDK sends batches of events to a proxy server, which then splits the batches into individual requests for consumption by the pixel server. The Parsely SDK creates this batched request for you, but there are some cases where you might want to construct this batched request yourself.</p>
 <h2>Elements of the Proxy Request</h2>
-<p>All POST requests sent to <code><a href="http://hack.parsely.com/mobileproxy/">http://hack.parsely.com/mobileproxy/</a></code> must have a single argument <code>rqs</code>. All other aruments are ignored. The value of the <code>rqs</code> (requests) parameter is a <b>URL-encoded</b> JSON document that must have the following structure: </p>
+<p>All POST requests sent to <code><a href="http://pixel.parsely.com/mobileproxy">http://pixel.parsely.com/mobileproxy</a></code> must have a single argument <code>rqs</code>. All other aruments are ignored. The value of the <code>rqs</code> (requests) parameter is a <b>URL-encoded</b> JSON document that must have the following structure: </p>
 <pre class="fragment">{
     "data":{
         "idsite":"samplesite.com",
@@ -76,7 +77,7 @@
 <tr>
 <td><code>idsite</code> </td><td><code>data</code> </td><td>The site ID where data should be stored </td><td>yes </td><td><code>"idsite":"samplesite.com"</code> </td></tr>
 <tr>
-<td><code>parsely_uuid</code> </td><td><code>data</code> </td><td>The UUID for the current user or device </td><td>yes </td><td><code>"parsely_uuid":"76e4c8f0afeb4e7643f5089235779937d9637b55"</code> </td></tr>
+<td><code>parsely_site_uuid</code> </td><td><code>data</code> </td><td>The UUID for the current user or device </td><td>yes </td><td><code>"parsely_site_uuid":"76e4c8f0afeb4e7643f5089235779937d9637b55"</code> </td></tr>
 <tr>
 <td><code>appname</code> </td><td><code>data</code> </td><td>The name of the current app (for mobile devices) </td><td>no </td><td><code>"appname":"MyCoolApp"</code> </td></tr>
 <tr>
@@ -94,7 +95,7 @@
 </table>
 <p>A real request to the proxy server might look like this one, which contains two separate pageview events in the URL-encoded JSON document: </p>
 <pre class="fragment">POST /mobileproxy HTTP/1.1
-Host: hack.parsely.com
+Host: pixel.parsely.com
 Content-Type: application/x-www-form-urlencoded
 Content-Length: 213
 
@@ -105,7 +106,7 @@ rqs=%7B%22data%22%3A%7B%22os_version%22%3A%226.1%22%2C%22appname%22%3A%22HiParse
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Apr 15 2013 12:44:43 for ParselyAndroid by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Apr 19 2013 16:17:17 for ParselyAndroid by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

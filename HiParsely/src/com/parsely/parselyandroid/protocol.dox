@@ -7,7 +7,7 @@ The Parsely SDK creates this batched request for you, but there are some cases w
 Elements of the Proxy Request
 -----------------------------
 
-All POST requests sent to `http://hack.parsely.com/mobileproxy/` must have a single argument `rqs`. All other aruments are ignored.
+All POST requests sent to `http://pixel.parsely.com/mobileproxy` must have a single argument `rqs`. All other aruments are ignored.
 The value of the `rqs` (requests) parameter is a **URL-encoded** JSON document that must have the following structure:
 
     {
@@ -40,27 +40,27 @@ The `data` variable is a document containing invariant data about the pixel requ
 The `events` variable is a list of documents containing data that differs per request.
 Note that it is permissible to mix `url`s and `postid`s in the same `events` array.
 
-Variable        | Container | Description                                           | Required         |          Example
---------------- | --------- | ----------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------
-`idsite`        | `data`    | The site ID where data should be stored               | yes              | `"idsite":"samplesite.com"`
-`parsely_uuid`  | `data`    | The UUID for the current user or device               | yes              | `"parsely_uuid":"76e4c8f0afeb4e7643f5089235779937d9637b55"`
-`appname`       | `data`    | The name of the current app (for mobile devices)      | no               | `"appname":"MyCoolApp"`
-`manufacturer ` | `data`    | The device manufacturer (for mobile devices)          | no               | `"manufacturer":"Apple"`
-`os`            | `data`    | The name of the operating system (mobile only)        | no               | `"os":"iPhone OS"`
-`os_version`    | `data`    | Operating system major and minor version              | no               | `"os_version":"6.1"`
-`url`           | `events`  | The canonical URL of the tracked post                 | yes, or `postid` | `"url":"http://samplesite.com/2013/03/20/obama-reid-dragged-into-evolving-menendez-donor-scandal/"`
-`postid`        | `events`  | The Parsely-unique string identifier for the post     | yes, or `url`    | `"postid":"147136-1892374-1297856"`
-`ts`            | `events`  | The UNIX timestamp of the event (seconds since epoch) | yes              | `"ts":1363796913.220884`
+Variable            | Container | Description                                           | Required         |          Example
+------------------- | --------- | ----------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------
+`idsite`            | `data`    | The site ID where data should be stored               | yes              | `"idsite":"samplesite.com"`
+`parsely_site_uuid` | `data`    | The UUID for the current user or device               | yes              | `"parsely_site_uuid":"76e4c8f0afeb4e7643f5089235779937d9637b55"`
+`appname`           | `data`    | The name of the current app (for mobile devices)      | no               | `"appname":"MyCoolApp"`
+`manufacturer`      | `data`    | The device manufacturer (for mobile devices)          | no               | `"manufacturer":"Apple"`
+`os`                | `data`    | The name of the operating system (mobile only)        | no               | `"os":"iPhone OS"`
+`os_version`        | `data`    | Operating system major and minor version              | no               | `"os_version":"6.1"`
+`url`               | `events`  | The canonical URL of the tracked post                 | yes, or `postid` | `"url":"http://samplesite.com/2013/03/20/obama-reid-dragged-into-evolving-menendez-donor-scandal/"`
+`postid`            | `events`  | The Parsely-unique string identifier for the post     | yes, or `url`    | `"postid":"147136-1892374-1297856"`
+`ts`                | `events`  | The UNIX timestamp of the event (seconds since epoch) | yes              | `"ts":1363796913.220884`
 
 A real request to the proxy server might look like this one, which contains two separate pageview events in the URL-encoded JSON document:
 
     POST /mobileproxy HTTP/1.1
-    Host: hack.parsely.com
+    Host: pixel.parsely.com
     Content-Type: application/x-www-form-urlencoded
     Content-Length: 213
 
     rqs=%7B%22data%22%3A%7B%22os_version%22%3A%226.1%22%2C%22appname%22%3A%22HiParsely%22%2C%22parsely_uuid%22%3A%22ad926df27f7f39fe1417f41bac9ec8e40232680a%22%2C%22idsite%22%3A%22somesite.com%22%2C%22manufacturer%22%3A%22Apple%22%2C%22os%22%3A%22iPhone%20OS%22%7D%2C%22events%22%3A%5B%7B%22url%22%3A%22http%3A%5C%2F%5C%2Fsomesite.com%5C%2Fnot-a-real-url.html%22%2C%22ts%22%3A1363977322.65788%7D%2C%7B%22ts%22%3A1363977323.012882%2C%22postid%22%3A%2212353-983124-876153%22%7D%5D%7D
-    
+
 Generating a UUID
 -----------------
 

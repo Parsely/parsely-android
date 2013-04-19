@@ -361,7 +361,7 @@ public class ParselyTracker {
     /*! \brief Allow Parsely to send pageview events
     *
     *  Instantiates the callback timer responsible for flushing the events queue.
-    *  Can be called before of after `stop`, but has no effect is used before instantiating the singleton
+    *  Can be called before of after `stop`, but has no effect if used before instantiating the singleton
     */
     public void setFlushTimer(){
         if(this.flushTimerIsActive()){
@@ -450,8 +450,8 @@ public class ParselyTracker {
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         this.shouldBatchRequests = true;
-        //this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
-        this.rootUrl = "http://174.143.139.157/mobileproxy";
+        this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
+        //this.rootUrl = "http://174.143.139.157/mobileproxy";
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
