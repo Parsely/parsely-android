@@ -153,9 +153,13 @@ public class ParselyTracker {
         }
 
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
-        ArrayList<Map<String, Object>> newQueue = (ArrayList<Map<String, Object>>)this.eventQueue.clone();
+        HashSet<Map<String, Object>> hs = new HashSet<Map<String, Object>>();
+        ArrayList<Map<String, Object>> newQueue = new ArrayList<Map<String, Object>>();
+        
+        hs.addAll(this.eventQueue);
         if(storedQueue != null){
-            newQueue.addAll(storedQueue);
+            hs.addAll(storedQueue);
+            newQueue.addAll(hs);
         }
 
         PLog("Flushing queue...");
