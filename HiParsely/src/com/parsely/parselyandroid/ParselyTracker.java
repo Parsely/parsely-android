@@ -246,6 +246,7 @@ public class ParselyTracker {
         }
         batchMap.put("events", events);
         
+        PLog("Setting API connection");
         this.APIConnection(this.rootUrl, this.JsonEncode(batchMap));
         PLog(String.format("Requested %s", this.rootUrl));
         PLog(String.format("Data %s", this.JsonEncode(batchMap)));
@@ -350,7 +351,8 @@ public class ParselyTracker {
             String query = String.format("rqs=%s", URLEncoder.encode(data));
             output.write(query.getBytes());
             output.close();
-
+            
+            PLog("Connecting to input stream");
             InputStream response = connection.getInputStream();
         } catch(Exception ex){
             PLog(String.format("Exception caught during HTTP POST request: %s", ex.toString()));
@@ -450,8 +452,8 @@ public class ParselyTracker {
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         this.shouldBatchRequests = true;
-        this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
-        //this.rootUrl = "http://174.143.139.157/mobileproxy";
+        //this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
+        this.rootUrl = "http://174.143.139.157/mobileproxy";
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
