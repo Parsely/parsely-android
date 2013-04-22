@@ -1,1 +1,1 @@
-HiParsely/src/com/parsely/parselyandroid/mainpage.dox
+HiParsely/src/com/parsely/parselyandroid/doc/mainpage.dox
