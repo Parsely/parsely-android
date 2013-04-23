@@ -19,6 +19,7 @@
 package com.parsely.parselyandroid;
 
 import java.util.Calendar;
+import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -104,11 +105,11 @@ public class ParselyTracker {
     *  @param idType enum element indicating what type of identifier the first argument is
     */
     private void track(String identifier, kIdType idType){
-        PLog(String.format("Track called for %s", identifier));
+        PLog("Track called for %s", identifier);
         
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         double timestamp = calendar.getTimeInMillis() / 1000.0;
-        PLog(String.format("%f", calendar.getTimeInMillis() / 1000.0));
+        PLog("%f", calendar.getTimeInMillis() / 1000.0);
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put(this.idNameMap.get(idType), identifier);
@@ -117,7 +118,7 @@ public class ParselyTracker {
 
         this.eventQueue.add(params);
 
-        PLog(String.format("%s", params));
+        PLog("%s", params);
 
         if(this.queueSize() >= this.queueSizeLimit + 1){
             PLog("Queue size exceeded, expelling oldest event to persistent memory");
@@ -131,7 +132,7 @@ public class ParselyTracker {
 
         if(this.timer == null){
             this.setFlushTimer();
-            PLog(String.format("Flush timer set to %d", this.flushInterval));
+            PLog("Flush timer set to %d", this.flushInterval);
         }
     }
 
@@ -142,7 +143,7 @@ public class ParselyTracker {
     *  Called automatically after a number of seconds determined by `flushInterval`.
     */
     public void flush(){
-        PLog(String.format("%d events in queue, %d stored events", this.queueSize(), this.storedEventsCount()));
+        PLog("%d events in queue, %d stored events", this.queueSize(), this.storedEventsCount());
 
         if(this.eventQueue.size() == 0 && this.getStoredQueue().size() == 0){
             this.stopFlushTimer();
@@ -182,7 +183,7 @@ public class ParselyTracker {
     *  @param event A dictionary containing data for a single pageview event
     */
     private void flushEvent(Map<String, Object> event){
-        PLog(String.format("flushing individual event %s", event));
+        PLog("flushing individual event %s", event);
         
         // add the timestamp to the data object for non-batched requests, since they are sent directly to the pixel server
         Map<String, Object> data = (Map<String, Object>)event.get("data");
@@ -200,8 +201,8 @@ public class ParselyTracker {
                      );
 
         new ParselyAPIConnection().execute(url);
-        PLog(String.format("Requested %s", url));
-        PLog(String.format("Data %s", this.JsonEncode(data)));
+        PLog("Requested %s", url);
+        PLog("Data %s", this.JsonEncode(data));
     }
 
     /*!  \brief Send the entire queue as a single request
@@ -240,8 +241,8 @@ public class ParselyTracker {
         
         PLog("Setting API connection");
         new ParselyAPIConnection().execute(this.rootUrl + "mobileproxy", this.JsonEncode(batchMap));
-        PLog(String.format("Requested %s", this.rootUrl));
-        PLog(String.format("Data %s", this.JsonEncode(batchMap)));
+        PLog("Requested %s", this.rootUrl);
+        PLog("Data %s", this.JsonEncode(batchMap));
     }
 
     private boolean isReachable(){
@@ -273,7 +274,7 @@ public class ParselyTracker {
             ois.close();
         } catch(java.io.EOFException ex){
         } catch (Exception ex){
-            PLog(String.format("Exception thrown during queue deserialization: %s", ex.toString()));
+            PLog("Exception thrown during queue deserialization: %s", ex.toString());
         }
         assert storedQueue != null;
         return storedQueue;
@@ -295,11 +296,11 @@ public class ParselyTracker {
                                        android.content.Context.MODE_PRIVATE
                                    );
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            PLog(String.format("serialized object: %s", o.toString()));
+            PLog("serialized object: %s", o.toString());
             oos.writeObject(o);
             oos.close();
         } catch (Exception ex){
-            PLog(String.format("Exception thrown during queue serialization: %s", ex.toString()));
+            PLog("Exception thrown during queue serialization: %s", ex.toString());
         }
     }
     
@@ -382,7 +383,7 @@ public class ParselyTracker {
                 uuid = this.generateSiteUuid();
             }
         } catch(Exception ex){
-            PLog(String.format("Exception caught during site uuid generation: %s", ex.toString()));
+            PLog("Exception caught during site uuid generation: %s", ex.toString());
         }
         return uuid;
     }
@@ -468,7 +469,7 @@ public class ParselyTracker {
         return 0;
     }
 
-    protected static void PLog(String logstring){
-        System.out.printf("[Parsely] %s\n", logstring);
+    protected static void PLog(String logstring, Object... objects){
+        System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
     }
 }
