@@ -50,6 +50,11 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, URLConnec
             // only purge the queue if the request was successful
             ParselyTracker.sharedInstance().eventQueue.clear();
             ParselyTracker.sharedInstance().purgeStoredQueue();
+            
+            if(ParselyTracker.sharedInstance().queueSize() == 0 && ParselyTracker.sharedInstance().storedEventsCount() == 0){
+                ParselyTracker.PLog("Event queue empty, flush timer cleared.");
+                ParselyTracker.sharedInstance().stopFlushTimer();
+            }
         }
     }
 }

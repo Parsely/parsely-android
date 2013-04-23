@@ -172,12 +172,6 @@ public class ParselyTracker {
                 this.flushEvent(event);
             }
         }
-        PLog("done");
-        
-        if(this.queueSize() == 0 && this.storedEventsCount() == 0){
-            PLog("Event queue empty, flush timer cleared.");
-            this.stopFlushTimer();
-        }
     }
 
     /*! \brief Send a single pixel request
