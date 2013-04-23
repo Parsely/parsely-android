@@ -72,7 +72,7 @@ public class ParselyTracker {
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
     private Boolean shouldBatchRequests;
-    private ArrayList<Map<String, Object>> eventQueue;
+    protected ArrayList<Map<String, Object>> eventQueue;
     private Map<kIdType, String> idNameMap;
     private Map<String, String> deviceInfo;
     private Context context;
@@ -107,11 +107,12 @@ public class ParselyTracker {
         PLog(String.format("Track called for %s", identifier));
         
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        long timestamp = calendar.getTimeInMillis() / 1000L;
+        double timestamp = calendar.getTimeInMillis() / 1000.0;
+        PLog(String.format("%f", calendar.getTimeInMillis() / 1000.0));
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put(this.idNameMap.get(idType), identifier);
-        params.put("ts", timestamp);
+        params.put("ts", Double.valueOf(timestamp));
         params.put("data", this.deviceInfo);
 
         this.eventQueue.add(params);
@@ -172,9 +173,6 @@ public class ParselyTracker {
             }
         }
         PLog("done");
-
-        this.eventQueue.clear();
-        this.purgeStoredQueue();
         
         if(this.queueSize() == 0 && this.storedEventsCount() == 0){
             PLog("Event queue empty, flush timer cleared.");
@@ -198,16 +196,16 @@ public class ParselyTracker {
         
         Random gen = new Random();
         
-        String url = String.format("%s?rand=%lli&idsite=%s&url=%s&urlref=%s&data=%s",
-                         this.rootUrl,
-                         1000000000 + gen.nextInt() % 999999999,
+        String url = String.format("%s?rand=%d&idsite=%s&url=%s&urlref=%s&data=%s",
+                         this.rootUrl + "plogger",
+                         1000 + gen.nextInt() % 9999,
                          this.apikey,
                          URLEncoder.encode((String)event.get("url")),
                          "mobile",  // urlref
                          URLEncoder.encode(this.JsonEncode(data))
                      );
 
-        this.APIConnection(url);
+        new ParselyAPIConnection().execute(url);
         PLog(String.format("Requested %s", url));
         PLog(String.format("Data %s", this.JsonEncode(data)));
     }
@@ -241,13 +239,13 @@ public class ParselyTracker {
             
             Map<String, Object> _toAdd = new HashMap<String, Object>();
             _toAdd.put(field, value);
-            _toAdd.put("ts", event.get("ts"));
+            _toAdd.put("ts", String.format("%f", event.get("ts")));
             events.add(_toAdd);
         }
         batchMap.put("events", events);
         
         PLog("Setting API connection");
-        this.APIConnection(this.rootUrl, this.JsonEncode(batchMap));
+        new ParselyAPIConnection().execute(this.rootUrl + "mobileproxy", this.JsonEncode(batchMap));
         PLog(String.format("Requested %s", this.rootUrl));
         PLog(String.format("Data %s", this.JsonEncode(batchMap)));
     }
@@ -287,7 +285,7 @@ public class ParselyTracker {
         return storedQueue;
     }
 
-    private void purgeStoredQueue(){
+    protected void purgeStoredQueue(){
         this.persistObject(null);
     }
 
@@ -326,38 +324,6 @@ public class ParselyTracker {
             e.printStackTrace();
           }
         return ret;
-    }
-    
-    private URLConnection APIConnection(String url){
-        URLConnection connection = null;
-        try{
-            connection = new URL(url).openConnection();
-            InputStream response = connection.getInputStream();
-        } catch (Exception ex){
-            PLog("Exception caught during HTTP GET request");
-        }
-        return connection;
-    }
-    
-    private URLConnection APIConnection(String url, String data){
-        URLConnection connection = null;
-        try{
-            connection = new URL(url).openConnection();
-            connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
-            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-            OutputStream output = connection.getOutputStream();
-
-            String query = String.format("rqs=%s", URLEncoder.encode(data));
-            output.write(query.getBytes());
-            output.close();
-            
-            PLog("Connecting to input stream");
-            InputStream response = connection.getInputStream();
-        } catch(Exception ex){
-            PLog(String.format("Exception caught during HTTP POST request: %s", ex.toString()));
-        }
-        return connection;
     }
 
     /*! \brief Allow Parsely to send pageview events
@@ -452,8 +418,8 @@ public class ParselyTracker {
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         this.shouldBatchRequests = true;
-        //this.rootUrl = "http://10.0.2.2:5001/mobileproxy";  // emulator localhost
-        this.rootUrl = "http://174.143.139.157/mobileproxy";
+        //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
+        this.rootUrl = "http://174.143.139.157/";
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
@@ -508,7 +474,7 @@ public class ParselyTracker {
         return 0;
     }
 
-    private static void PLog(String logstring){
+    protected static void PLog(String logstring){
         System.out.printf("[Parsely] %s\n", logstring);
     }
 }
