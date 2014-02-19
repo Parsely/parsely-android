@@ -73,10 +73,4 @@ To register a pageview event with Parsely, simply use the `track` call.
 
 This call requires the canonical URL of the page corresponding to the post currently being viewed.
 
-You can also use
-
-    ParselyTracker.sharedInstance().trackPostId("1987263412-12783461234");
-
-which requires a string uniquely identifying the post to Parsely's systems.
-
 */

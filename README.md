@@ -1,3 +1,20 @@
+Parsely Android SDK
+===================
+
+This library provides an interface to Parsely's pageview tracking system. It
+provides similar functionality to the [Parsely Javascript tracker](http://www.parsely.com/docs/integration/tracking/basic.html)
+for Android apps.
+
+Documentation
+-------------
+
+Full class-level documentation of this library can be found at the
+[Parsely website](http://www.parsely.com/sdk/android/index.html). This documentation
+is generated from the code itself using [Doxygen](http://www.stack.nl/~dimitri/doxygen/).
+
+Usage
+-----
+
 If you want to track activity on your Android app, first clone this repository with
 
     git clone http://github.com/Parsely/parsely-android.git
@@ -17,7 +34,7 @@ Integrating with Eclipse
 
 Adding Parsely to your Android app is easy!
 
-1. Copy the `parsely` directory (under `src/com`) to your project's top-level
+1. Copy the `parsely` directory (under `HiParsely/src/com`) to your project's top-level
    package directory (in a default Eclipse project, this is `com`.) The
    directory tree should look like `src/com/parsely/parselyandroid`.
 2. Copy the `jackson-core` and `jackson-mapper` JAR files into your project's
@@ -79,9 +96,3 @@ To register a pageview event with Parsely, simply use the `track` call.
     ParselyTracker.sharedInstance().trackURL("http://examplesite.com/something-whatever.html");
 
 This call requires the canonical URL of the page corresponding to the post currently being viewed.
-
-You can also use
-
-    ParselyTracker.sharedInstance().trackPostId("1987263412-12783461234");
-
-which requires a string uniquely identifying the post to Parsely's systems.
