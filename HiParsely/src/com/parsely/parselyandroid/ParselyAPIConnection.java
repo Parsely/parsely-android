@@ -1,3 +1,19 @@
+/*
+    Copyright 2014 Parse.ly, Inc.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 package com.parsely.parselyandroid;
 
 import java.io.InputStream;
@@ -29,10 +45,10 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, URLConnec
                 String query = String.format("rqs=%s", URLEncoder.encode(data[1]));
                 output.write(query.getBytes());
                 output.close();
-                
+
                 InputStream response = connection.getInputStream();
             }
-            
+
         } catch (Exception ex){
             this.exception = ex;
             return null;
@@ -46,11 +62,11 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, URLConnec
             ParselyTracker.PLog(this.exception.toString());
         } else {
             ParselyTracker.PLog("Pixel request success");
-            
+
             // only purge the queue if the request was successful
             ParselyTracker.sharedInstance().eventQueue.clear();
             ParselyTracker.sharedInstance().purgeStoredQueue();
-            
+
             if(ParselyTracker.sharedInstance().queueSize() == 0 && ParselyTracker.sharedInstance().storedEventsCount() == 0){
                 ParselyTracker.PLog("Event queue empty, flush timer cleared.");
                 ParselyTracker.sharedInstance().stopFlushTimer();
