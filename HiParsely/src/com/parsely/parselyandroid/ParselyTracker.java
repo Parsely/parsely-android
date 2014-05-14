@@ -412,7 +412,7 @@ public class ParselyTracker {
         this.storageKey = "parsely-events.ser";
         this.shouldBatchRequests = true;
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
-        this.rootUrl = "http://174.143.139.157/";
+        this.rootUrl = "http://srv.pixel.parsely.com/";
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
