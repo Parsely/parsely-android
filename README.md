@@ -44,6 +44,9 @@ To integrate Parse.ly mobile tracking with your Android app:
 
     `<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>`
 
+Using the SDK
+-------------
+
 In any file that uses the Parsely SDK, be sure to add the line
 
     import com.parsely.parselyandroid.*;
