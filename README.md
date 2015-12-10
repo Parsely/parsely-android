@@ -2,15 +2,10 @@ Parsely Android SDK
 ===================
 
 This library provides an interface to Parsely's pageview tracking system. It
-provides similar functionality to the [Parsely Javascript tracker](http://www.parsely.com/docs/integration/tracking/basic.html)
-for Android apps.
-
-Documentation
--------------
-
-Full class-level documentation of this library can be found at the
-[Parsely website](http://www.parsely.com/sdk/android/index.html). This documentation
-is generated from the code itself using [Doxygen](http://www.stack.nl/~dimitri/doxygen/).
+provides similar functionality to the
+[Parsely Javascript tracker](http://www.parsely.com/docs/integration/tracking/basic.html)
+for Android apps. Full class-level documentation of this library can be found at the
+[Parsely website](http://www.parsely.com/sdk/android/index.html).
 
 Usage
 -----
@@ -32,7 +27,7 @@ Quickstart Guide
 Integrating with Eclipse
 ------------------------
 
-Adding Parsely to your Android app is easy!
+To integrate Parse.ly mobile tracking with your Android app:
 
 1. Copy the `parsely` directory (under `HiParsely/src/com`) to your project's top-level
    package directory (in a default Eclipse project, this is `com`.) The
@@ -49,17 +44,11 @@ Adding Parsely to your Android app is easy!
 
     `<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>`
 
-Including the SDK
------------------
-
 In any file that uses the Parsely SDK, be sure to add the line
 
     import com.parsely.parselyandroid.*;
 
 at the top of the file.
-
-Parsely Initialization
-----------------------
 
 Before using the toolkit, you must initialize the Parsely object with your public
 api key. This is usually best to do in the `MainActivity`'s `onCreate` method.
@@ -71,9 +60,6 @@ api key. This is usually best to do in the `MainActivity`'s `onCreate` method.
     }
 
 The `this` parameter is necessary to give Parsely access to the app's context.
-
-Flushing the Event Queue
-------------------------
 
 The Parsely toolkit maintains a queue of pageview events and periodically flushes it to the servers.
 This helps extend the battery life of your users' Android devices. As a result of
@@ -88,9 +74,6 @@ at this time, make sure to include a call to `flush()` in your main activity's
         super.onDestroy();
     }
 
-Pageview Tracking
------------------
-
 To register a pageview event with Parsely, simply use the `track` call.
 
     ParselyTracker.sharedInstance().trackURL("http://examplesite.com/something-whatever.html");
@@ -100,7 +83,7 @@ This call requires the canonical URL of the page corresponding to the post curre
 License
 -------
 
-    Copyright 2014 Parse.ly, Inc.
+    Copyright 2015 Parse.ly, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
