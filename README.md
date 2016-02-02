@@ -29,26 +29,25 @@ To integrate Parse.ly mobile tracking with your Android Studio app:
 
 1. Copy the `parselyandroid` directory to your project's top-level package directory
     (in a default Android Studio project, this is
-   `/app/src/main/java/com`.) The directory tree should look like
+   `/app/src/main/java/com`). The directory tree should look like
    `/app/src/main/java/com/parsely/parselyandroid`.
 2. In `Build -> Edit Libraries and Dependencies` under the `Dependencies` tab,
    use the green `+` to add two Library Dependencies:
    `org.codehaus.jackson:jackson-core-lgpl:1.9.13` and
    `org.codehaus.jackson:jackson-mapper-lgpl:1.9.13`
 3. Add the following lines to your `AndroidManifest.xml` file:
-    ```
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    ```
+
+        <uses-permission android:name="android.permission.INTERNET"/>
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
 4. Add the following lines to `app/build.gradle`:
-    ```
-    packagingOptions {
-        exclude 'META-INF/LGPL2.1'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/NOTICE'
-    }
-    ```
+
+        packagingOptions {
+            exclude 'META-INF/LGPL2.1'
+            exclude 'META-INF/LICENSE'
+            exclude 'META-INF/NOTICE'
+        }
 
 Using the SDK
 -------------

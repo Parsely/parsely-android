@@ -73,7 +73,8 @@ public class ParselyTracker {
 
     /*! \brief Register a pageview event using a canonical URL
     *
-    *  @param url The canonical URL of the article being tracked (eg: "http://samplesite.com/some-old/article.html")
+    *  @param url The canonical URL of the article being tracked
+    *  (eg: "http://samplesite.com/some-old/article.html")
     */
     public void trackURL(String url){
         this.track(url, kIdType.kUrl);
@@ -81,17 +82,19 @@ public class ParselyTracker {
 
     /*! \brief Register a pageview event using a CMS post identifier
     *
-    *  @param pid A string uniquely identifying this post. This **must** be unique within Parsely's database.
+    *  @param pid A string uniquely identifying this post. This **must** be unique within Parsely's
+    *  database.
     */
     public void trackPostId(String pid){
         this.track(pid, kIdType.kPostId);
     }
 
-    /*! \brief Registers a pageview event
+    /*! \brief Register a pageview event
     *
     *  Places a data structure representing the event into the in-memory queue for later use
     *
-    *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue store exceeds `storageSizeLimit`.
+    *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
+    *  store exceeds `storageSizeLimit`.
     *
     *  @param identifier The post id or canonical URL uniquely identifying the post
     *  @param idType enum element indicating what type of identifier the first argument is
@@ -101,7 +104,6 @@ public class ParselyTracker {
 
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         double timestamp = calendar.getTimeInMillis() / 1000.0;
-        PLog("%f", calendar.getTimeInMillis() / 1000.0);
 
         Map<String, Object> params = new HashMap<>();
         params.put(this.idNameMap.get(idType), identifier);
@@ -157,7 +159,7 @@ public class ParselyTracker {
             newQueue.addAll(hs);
         }
 
-        PLog("Flushing queue...");
+        PLog("Flushing queue");
         if(this.shouldBatchRequests){
             this.sendBatchRequest(newQueue);
         } else {
@@ -177,7 +179,8 @@ public class ParselyTracker {
     private void flushEvent(Map<String, Object> event){
         PLog("flushing individual event %s", event);
 
-        // add the timestamp to the data object for non-batched requests, since they are sent directly to the pixel server
+        // add the timestamp to the data object for non-batched requests, since they are sent
+        // directly to the pixel server
         //noinspection unchecked
         Map<String, Object> data = (Map<String, Object>)event.get("data");
         data.put("ts", event.get("ts"));
@@ -247,7 +250,8 @@ public class ParselyTracker {
     }
 
     private boolean isReachable(){
-        ConnectivityManager cm = (ConnectivityManager)this.context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager)this.context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
@@ -269,7 +273,8 @@ public class ParselyTracker {
     private ArrayList<Map<String, Object>> getStoredQueue(){
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
         try{
-            FileInputStream fis = this.context.getApplicationContext().openFileInput(this.storageKey);
+            FileInputStream fis = this.context.getApplicationContext().openFileInput(
+                    this.storageKey);
             ObjectInputStream ois = new ObjectInputStream(fis);
             //noinspection unchecked
             storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
@@ -299,7 +304,6 @@ public class ParselyTracker {
                                        android.content.Context.MODE_PRIVATE
                                    );
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            PLog("serialized object: %s", o.toString());
             oos.writeObject(o);
             oos.close();
         } catch (Exception ex){
@@ -323,7 +327,8 @@ public class ParselyTracker {
     /*! \brief Allow Parsely to send pageview events
     *
     *  Instantiates the callback timer responsible for flushing the events queue.
-    *  Can be called before of after `stop`, but has no effect if used before instantiating the singleton
+    *  Can be called before of after `stop`, but has no effect if used before instantiating the
+    *  singleton
     */
     public void setFlushTimer(){
         if(this.flushTimerIsActive()){
@@ -348,7 +353,8 @@ public class ParselyTracker {
     /*! \brief Disallow Parsely from sending pageview events
     *
     *  Invalidates the callback timer responsible for flushing the events queue.
-    *  Can be called before or after `start`, but has no effect if used before instantiating the singleton
+    *  Can be called before or after `start`, but has no effect if used before instantiating the
+    *  singleton
     */
     public void stopFlushTimer(){
         if(this.timer != null){
@@ -360,14 +366,18 @@ public class ParselyTracker {
 
     private String generateSiteUuid(){
         // Debatable: http://stackoverflow.com/a/2853253/735204
-        final TelephonyManager tm = (TelephonyManager) this.context.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+        final TelephonyManager tm = (TelephonyManager)this.context.getApplicationContext()
+                .getSystemService(Context.TELEPHONY_SERVICE);
 
         final String tmDevice, tmSerial, androidId;
         tmDevice = "" + tm.getDeviceId();
         tmSerial = "" + tm.getSimSerialNumber();
-        androidId = "" + android.provider.Settings.Secure.getString(this.context.getApplicationContext().getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        androidId = "" + android.provider.Settings.Secure.getString(
+                this.context.getApplicationContext().getContentResolver(),
+                android.provider.Settings.Secure.ANDROID_ID);
 
-        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
+        UUID deviceUuid = new UUID(androidId.hashCode(),
+                ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
         String uuid = deviceUuid.toString();
 
         PLog(String.format("Generated UUID: %s", uuid));
@@ -397,7 +407,8 @@ public class ParselyTracker {
         dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
 
         Resources appR = this.context.getApplicationContext().getResources();
-        CharSequence txt = appR.getText(appR.getIdentifier("app_name","string", this.context.getApplicationContext().getPackageName()));
+        CharSequence txt = appR.getText(appR.getIdentifier("app_name","string",
+                this.context.getApplicationContext().getPackageName()));
         dInfo.put("appname", txt.toString());
 
         return dInfo;
@@ -430,7 +441,8 @@ public class ParselyTracker {
         }
     }
 
-    /*! \brief Singleton instance accessor. Note: This must be called after sharedInstance(String, Context)
+    /*! \brief Singleton instance accessor. Note: This must be called after
+    sharedInstance(String, Context)
     *
     *  @return The singleton instance
     */
