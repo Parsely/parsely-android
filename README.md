@@ -14,12 +14,10 @@ If you want to track activity on your Android app, first clone this repository w
 
     git clone http://github.com/Parsely/parsely-android.git
 
-This repository contains three main directories:
-
-* `HiParsely` is an Eclipse project demonstrating how to integrate the SDK
-into an app. It also contains the source code of the Parsely toolkit, under
-`src/com/parsely`
-* `Documentation` is the target directory for the Doxygen document generator
+This repository's primary purpose is to host the open source Parse.ly Android SDK,
+implemented as a Java module in `/parsely`. This module is symlinked in
+the `/ParselyExample/app/src/main/java/com` directory as an example of
+how to integrate the SDK in a typical Android Studio project.
 
 Quickstart Guide
 ================
@@ -29,9 +27,9 @@ Integrating with Android Studio
 
 To integrate Parse.ly mobile tracking with your Android Studio app:
 
-1. Copy the `parsely` directory (under `ParselyExample/app/src/main/java/com`) to your
-   project's top-level package directory (in a default Android Studio project, this is
-   `/app/src/main/java`.) The directory tree should look like
+1. Copy the `parselyandroid` directory to your project's top-level package directory
+    (in a default Android Studio project, this is
+   `/app/src/main/java/com`.) The directory tree should look like
    `/app/src/main/java/com/parsely/parselyandroid`.
 2. In `Build -> Edit Libraries and Dependencies` under the `Dependencies` tab,
    use the green `+` to add two Library Dependencies:
