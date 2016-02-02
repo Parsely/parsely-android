@@ -17,7 +17,6 @@
 package com.parsely.parselyandroid;
 
 import java.io.EOFException;
-import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.Formatter;
 import java.util.HashSet;
@@ -27,15 +26,12 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.StringWriter;
-import java.net.URLEncoder;
-import java.util.Random;
 
 import android.content.SharedPreferences;
 import android.content.Context;
@@ -43,7 +39,6 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.Settings.Secure;
-import android.telephony.TelephonyManager;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -134,7 +129,6 @@ public class ParselyTracker {
     /*!  \brief Generate pixel requests from the queue
     *
     *  Empties the entire queue and sends the appropriate pixel requests.
-    *  If `shouldBatchRequests` is true, the queue is sent as a minimum number of requests.
     *  Called automatically after a number of seconds determined by `flushInterval`.
     */
     public void flush(){
@@ -161,54 +155,7 @@ public class ParselyTracker {
         newQueue.addAll(hs);
 
         PLog("Flushing queue");
-        if(this.shouldBatchRequests){
-            this.sendBatchRequest(newQueue);
-        } else {
-            for(Map<String, Object> event : newQueue){
-                this.flushEvent(event);
-            }
-        }
-    }
-
-    /*! \brief Send a single pixel request
-    *
-    *  Sends a single request directly to Parsely's pixel server, bypassing the proxy.
-    *  Prefer `sendBatchRequest:` to this method, as `sendBatchRequest:` causes less battery usage
-    *
-    *  @param event A dictionary containing data for a single pageview event
-    */
-    private void flushEvent(Map<String, Object> event){
-        PLog("flushing individual event %s", event);
-
-        // add the timestamp to the data object for non-batched requests, since they are sent
-        // directly to the pixel server
-        //noinspection unchecked
-        Map<String, Object> data = (Map<String, Object>)event.get("data");
-        data.put("ts", event.get("ts"));
-
-        Random gen = new Random();
-
-        String encodedURL = "";
-        String encodedData = "";
-        try {
-            encodedURL = URLEncoder.encode((String)event.get("url"), "UTF-8");
-            encodedData = URLEncoder.encode(this.JsonEncode(data), "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            PLog("Exception thrown during flushEvent: %s", ex.toString());
-        }
-
-        String url = String.format("%s?rand=%d&idsite=%s&url=%s&urlref=%s&data=%s",
-                         this.rootUrl + "plogger",
-                         1000 + gen.nextInt() % 9999,
-                         this.apikey,
-                         encodedURL,
-                         "mobile",  // urlref
-                         encodedData
-                     );
-
-        new ParselyAPIConnection().execute(url);
-        PLog("Requested %s", url);
-        PLog("Data %s", this.JsonEncode(data));
+        this.sendBatchRequest(newQueue);
     }
 
     /*!  \brief Send the entire queue as a single request
