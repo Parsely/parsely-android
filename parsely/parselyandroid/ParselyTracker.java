@@ -49,6 +49,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 */
 public class ParselyTracker {
     private static ParselyTracker instance = null;
+    private static int DEFAULT_FLUSH_INTERVAL = 60;
+    private static String DEFAULT_URLREF = "parsely_mobile_sdk";
 
     /*! \brief types of post identifiers
     *
@@ -56,11 +58,10 @@ public class ParselyTracker {
     */
     private enum kIdType{ kUrl, kPostId }
 
-    private String apikey, rootUrl, storageKey, uuidkey;
+    private String apikey, rootUrl, storageKey, uuidkey, urlref;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
-    private Boolean shouldBatchRequests;
     protected ArrayList<Map<String, Object>> eventQueue;
     private Map<kIdType, String> idNameMap;
     private Map<String, String> deviceInfo;
@@ -339,6 +340,7 @@ public class ParselyTracker {
         dInfo.put("idsite", this.apikey);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
+        dInfo.put("urlref", this.urlref);
         dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
 
         Resources appR = this.context.getApplicationContext().getResources();
@@ -349,7 +351,7 @@ public class ParselyTracker {
         return dInfo;
     }
 
-    protected ParselyTracker(String apikey, int flushInterval, Context c){
+    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
         this.context = c;
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
@@ -357,9 +359,9 @@ public class ParselyTracker {
         this.uuidkey = "parsely-uuid";
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
-        this.shouldBatchRequests = true;
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
         this.rootUrl = "http://srv.pixel.parsely.com/";
+        this.urlref = urlref;
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
@@ -395,12 +397,34 @@ public class ParselyTracker {
     *  @return The singleton instance
     */
     public static ParselyTracker sharedInstance(String apikey, Context c){
-        return ParselyTracker.sharedInstance(apikey, 60, c);
+        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, DEFAULT_URLREF, c);
     }
 
+    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+    *
+    *  @param apikey The Parsely public API key (eg "samplesite.com")
+    *  @param flushInterval The interval at which the events queue should flush, in seconds
+    *  @param c The current Android application context
+    *  @return The singleton instance
+    */
     public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
         if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, c);
+            instance = new ParselyTracker(apikey, flushInterval, DEFAULT_URLREF, c);
+        }
+        return instance;
+    }
+
+    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+    *
+    *  @param apikey The Parsely public API key (eg "samplesite.com")
+    *  @param flushInterval The interval at which the events queue should flush, in seconds
+    *  @param urlref The referrer string to send with pixel requests
+    *  @param c The current Android application context
+    *  @return The singleton instance
+    */
+    public static ParselyTracker sharedInstance(String apikey, int flushInterval, String urlref, Context c){
+        if(instance == null){
+            instance = new ParselyTracker(apikey, flushInterval, urlref, c);
         }
         return instance;
     }
