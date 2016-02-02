@@ -17,7 +17,8 @@ If you want to track activity on your Android app, first clone this repository w
 This repository's primary purpose is to host the open source Parse.ly Android SDK,
 implemented as a Java module in `/parsely`. This module is symlinked in
 the `/ParselyExample/app/src/main/java/com` directory as an example of
-how to integrate the SDK in a typical Android Studio project.
+how to integrate the SDK in a typical Android Studio project. You can open
+`ParselyExample` as an Android Studio project and explore a typical SDK integration.
 
 Quickstart Guide
 ================
