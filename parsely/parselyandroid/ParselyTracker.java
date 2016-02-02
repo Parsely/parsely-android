@@ -42,6 +42,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -156,8 +157,8 @@ public class ParselyTracker {
         hs.addAll(this.eventQueue);
         if(storedQueue != null){
             hs.addAll(storedQueue);
-            newQueue.addAll(hs);
         }
+        newQueue.addAll(hs);
 
         PLog("Flushing queue");
         if(this.shouldBatchRequests){
@@ -218,7 +219,7 @@ public class ParselyTracker {
     *   @param queue The list of event dictionaries to serialize
     */
     private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
-        PLog("Sending batched request");
+        PLog("Sending batched request of size %d", queue.size());
 
         Map<String, Object> batchMap = new HashMap<>();
 
@@ -365,21 +366,8 @@ public class ParselyTracker {
     }
 
     private String generateSiteUuid(){
-        // Debatable: http://stackoverflow.com/a/2853253/735204
-        final TelephonyManager tm = (TelephonyManager)this.context.getApplicationContext()
-                .getSystemService(Context.TELEPHONY_SERVICE);
-
-        final String tmDevice, tmSerial, androidId;
-        tmDevice = "" + tm.getDeviceId();
-        tmSerial = "" + tm.getSimSerialNumber();
-        androidId = "" + android.provider.Settings.Secure.getString(
-                this.context.getApplicationContext().getContentResolver(),
-                android.provider.Settings.Secure.ANDROID_ID);
-
-        UUID deviceUuid = new UUID(androidId.hashCode(),
-                ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
-        String uuid = deviceUuid.toString();
-
+        String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
+                Secure.ANDROID_ID);
         PLog(String.format("Generated UUID: %s", uuid));
         return uuid;
     }
