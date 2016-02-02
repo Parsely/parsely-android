@@ -4,3 +4,9 @@
 *.class
 bin/
 .metadata
+.idea
+gen
+build
+nohup.out
+docs
+*.bak
