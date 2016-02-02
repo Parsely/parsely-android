@@ -1,5 +1,5 @@
 /*
-    Copyright 2014 Parse.ly, Inc.
+    Copyright 2016 Parse.ly, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@
 
 package com.parsely.parselyandroid;
 
+import java.io.EOFException;
+import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.Formatter;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -28,34 +29,27 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.StringWriter;
 import java.net.URLEncoder;
-import java.net.URLConnection;
-import java.net.URL;
 import java.util.Random;
 
 import android.content.SharedPreferences;
 import android.content.Context;
-import android.content.Context.*;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-/*! \brief Manages pageview events and analytics data for Parsely on Android
+/*! \brief Tracks Parse.ly app views in Android apps
 *
 *  Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
-*  flushes the queue to the Parsely pixel proxy server.
+*  flushes the queue to the Parse.ly pixel proxy server.
 */
 public class ParselyTracker {
     private static ParselyTracker instance = null;
@@ -64,7 +58,7 @@ public class ParselyTracker {
     *
     *  Representation of the allowed post identifier types
     */
-    private static enum kIdType{ kUrl, kPostId }
+    private enum kIdType{ kUrl, kPostId }
 
     private String apikey, rootUrl, storageKey, uuidkey;
     private SharedPreferences settings;
@@ -109,9 +103,9 @@ public class ParselyTracker {
         double timestamp = calendar.getTimeInMillis() / 1000.0;
         PLog("%f", calendar.getTimeInMillis() / 1000.0);
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put(this.idNameMap.get(idType), identifier);
-        params.put("ts", Double.valueOf(timestamp));
+        params.put("ts", timestamp);
         params.put("data", this.deviceInfo);
 
         this.eventQueue.add(params);
@@ -154,8 +148,8 @@ public class ParselyTracker {
         }
 
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
-        HashSet<Map<String, Object>> hs = new HashSet<Map<String, Object>>();
-        ArrayList<Map<String, Object>> newQueue = new ArrayList<Map<String, Object>>();
+        HashSet<Map<String, Object>> hs = new HashSet<>();
+        ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
 
         hs.addAll(this.eventQueue);
         if(storedQueue != null){
@@ -184,18 +178,28 @@ public class ParselyTracker {
         PLog("flushing individual event %s", event);
 
         // add the timestamp to the data object for non-batched requests, since they are sent directly to the pixel server
+        //noinspection unchecked
         Map<String, Object> data = (Map<String, Object>)event.get("data");
         data.put("ts", event.get("ts"));
 
         Random gen = new Random();
 
+        String encodedURL = "";
+        String encodedData = "";
+        try {
+            encodedURL = URLEncoder.encode((String)event.get("url"), "UTF-8");
+            encodedData = URLEncoder.encode(this.JsonEncode(data), "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            PLog("Exception thrown during flushEvent: %s", ex.toString());
+        }
+
         String url = String.format("%s?rand=%d&idsite=%s&url=%s&urlref=%s&data=%s",
                          this.rootUrl + "plogger",
                          1000 + gen.nextInt() % 9999,
                          this.apikey,
-                         URLEncoder.encode((String)event.get("url")),
+                         encodedURL,
                          "mobile",  // urlref
-                         URLEncoder.encode(this.JsonEncode(data))
+                         encodedData
                      );
 
         new ParselyAPIConnection().execute(url);
@@ -213,14 +217,13 @@ public class ParselyTracker {
     private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
         PLog("Sending batched request");
 
-        Map<String, Object> batchMap = new HashMap<String, Object>();
+        Map<String, Object> batchMap = new HashMap<>();
 
         // the object contains only one copy of the queue's invariant data
         batchMap.put("data", queue.get(0).get("data"));
-        ArrayList<Map<String, Object>> events = new ArrayList<Map<String, Object>>();
+        ArrayList<Map<String, Object>> events = new ArrayList<>();
 
-        for(Iterator<Map<String, Object>> i = queue.iterator(); i.hasNext();){
-            Map<String, Object> event = (Map<String, Object>)i.next();
+        for(Map<String, Object> event : queue){
             String field = null, value = null;
             if(event.get("url") != null){
                 field = "url";
@@ -230,9 +233,9 @@ public class ParselyTracker {
                 value = (String)event.get("postid");
             }
 
-            Map<String, Object> _toAdd = new HashMap<String, Object>();
+            Map<String, Object> _toAdd = new HashMap<>();
             _toAdd.put(field, value);
-            _toAdd.put("ts", String.format("%f", event.get("ts")));
+            _toAdd.put("ts", String.format("%f", (double)event.get("ts")));
             events.add(_toAdd);
         }
         batchMap.put("events", events);
@@ -253,7 +256,7 @@ public class ParselyTracker {
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         if(storedQueue != null){
-            HashSet<Map<String, Object>> hs = new HashSet<Map<String, Object>>();
+            HashSet<Map<String, Object>> hs = new HashSet<>();
             hs.addAll(storedQueue);
             hs.addAll(this.eventQueue);
             storedQueue.clear();
@@ -264,14 +267,16 @@ public class ParselyTracker {
     }
 
     private ArrayList<Map<String, Object>> getStoredQueue(){
-        ArrayList<Map<String, Object>> storedQueue = new ArrayList<Map<String, Object>>();
+        ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
         try{
             FileInputStream fis = this.context.getApplicationContext().openFileInput(this.storageKey);
             ObjectInputStream ois = new ObjectInputStream(fis);
+            //noinspection unchecked
             storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
             ois.close();
-        } catch(java.io.EOFException ex){
-        } catch (Exception ex){
+        } catch(EOFException ex){
+            PLog("");
+        } catch(Exception ex){
             PLog("Exception thrown during queue deserialization: %s", ex.toString());
         }
         assert storedQueue != null;
@@ -309,10 +314,6 @@ public class ParselyTracker {
             StringWriter strWriter = new StringWriter();
             mapper.writeValue(strWriter, map);
             ret = strWriter.toString();
-          } catch (JsonGenerationException e) {
-            e.printStackTrace();
-          } catch (JsonMappingException e) {
-            e.printStackTrace();
           } catch (IOException e) {
             e.printStackTrace();
           }
@@ -377,7 +378,7 @@ public class ParselyTracker {
         String uuid = "";
         try{
             uuid = this.settings.getString(this.uuidkey, "");
-            if(uuid == ""){
+            if(uuid.equals("")){
                 uuid = this.generateSiteUuid();
             }
         } catch(Exception ex){
@@ -387,7 +388,7 @@ public class ParselyTracker {
     }
 
     private Map<String, String> collectDeviceInfo(){
-        Map<String, String> dInfo = new HashMap<String, String>();
+        Map<String, String> dInfo = new HashMap<>();
 
         dInfo.put("parsely_site_uuid", this.getSiteUuid());
         dInfo.put("idsite", this.apikey);
@@ -417,10 +418,10 @@ public class ParselyTracker {
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
 
-        this.eventQueue = new ArrayList<Map<String, Object>>();
+        this.eventQueue = new ArrayList<>();
 
         // set up a map of enumerated type to identifier name
-        this.idNameMap = new HashMap<kIdType, String>();
+        this.idNameMap = new HashMap<>();
         this.idNameMap.put(kIdType.kUrl, "url");
         this.idNameMap.put(kIdType.kPostId, "postid");
 
@@ -451,7 +452,6 @@ public class ParselyTracker {
     }
 
     public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
-        PLog("In sharedinstance");
         if(instance == null){
             instance = new ParselyTracker(apikey, flushInterval, c);
         }
@@ -460,7 +460,7 @@ public class ParselyTracker {
 
     public int queueSize(){ return this.eventQueue.size(); }
     public int storedEventsCount(){
-        ArrayList<Map<String, Object>> ar = (ArrayList<Map<String, Object>>)this.getStoredQueue();
+        ArrayList<Map<String, Object>> ar = this.getStoredQueue();
         if(ar != null){
             return ar.size();
         }
@@ -468,6 +468,9 @@ public class ParselyTracker {
     }
 
     protected static void PLog(String logstring, Object... objects){
+        if (logstring.equals("")) {
+            return;
+        }
         System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
     }
 }
