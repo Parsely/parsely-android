@@ -1,4 +1,4 @@
-package com.parsely.example.parselyexample;
+package com.parsely.example;
 
 import java.util.Timer;
 import java.util.TimerTask;
