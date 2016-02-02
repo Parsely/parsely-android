@@ -16,8 +16,8 @@
 
 package com.parsely.parselyandroid;
 
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -34,7 +34,7 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, URLConnec
         try{
             if(data.length == 1){  // non-batched (since no post data is included)
                 connection = new URL(data[0]).openConnection();
-                InputStream response = connection.getInputStream();
+                connection.getInputStream();
             } else if(data.length == 2){  // batched (post data included)
                 connection = new URL(data[0]).openConnection();
                 connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
@@ -42,11 +42,15 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, URLConnec
 
                 OutputStream output = connection.getOutputStream();
 
-                String query = String.format("rqs=%s", URLEncoder.encode(data[1]));
+                String query = "";
+                try {
+                    query = String.format("rqs=%s", URLEncoder.encode(data[1], "UTF-8"));
+                } catch (UnsupportedEncodingException ex) {
+                    ParselyTracker.PLog("");
+                }
                 output.write(query.getBytes());
                 output.close();
-
-                InputStream response = connection.getInputStream();
+                connection.getInputStream();
             }
 
         } catch (Exception ex){
@@ -63,13 +67,22 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, URLConnec
         } else {
             ParselyTracker.PLog("Pixel request success");
 
-            // only purge the queue if the request was successful
-            ParselyTracker.sharedInstance().eventQueue.clear();
-            ParselyTracker.sharedInstance().purgeStoredQueue();
+            ParselyTracker instance = null;
+            try {
+                instance = ParselyTracker.sharedInstance();
+            } catch (NullPointerException ex) {
+                ParselyTracker.PLog("ParselyTracker is null");
+            }
 
-            if(ParselyTracker.sharedInstance().queueSize() == 0 && ParselyTracker.sharedInstance().storedEventsCount() == 0){
-                ParselyTracker.PLog("Event queue empty, flush timer cleared.");
-                ParselyTracker.sharedInstance().stopFlushTimer();
+            if (instance != null) {
+                // only purge the queue if the request was successful
+                instance.eventQueue.clear();
+                instance.purgeStoredQueue();
+
+                if(instance.queueSize() == 0 && instance.storedEventsCount() == 0){
+                    ParselyTracker.PLog("Event queue empty, flush timer cleared.");
+                    instance.stopFlushTimer();
+                }
             }
         }
     }
