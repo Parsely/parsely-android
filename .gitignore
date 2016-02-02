@@ -4,3 +4,6 @@
 *.class
 bin/
 .metadata
+.idea
+gen
+build

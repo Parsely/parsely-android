@@ -24,25 +24,33 @@ into an app. It also contains the source code of the Parsely toolkit, under
 Quickstart Guide
 ================
 
-Integrating with Eclipse
-------------------------
+Integrating with Android Studio
+-------------------------------
 
-To integrate Parse.ly mobile tracking with your Android app:
+To integrate Parse.ly mobile tracking with your Android Studio app:
 
-1. Copy the `parsely` directory (under `HiParsely/src/com`) to your project's top-level
-   package directory (in a default Eclipse project, this is `com`.) The
-   directory tree should look like `src/com/parsely/parselyandroid`.
-2. Copy the `jackson-core` and `jackson-mapper` JAR files into your project's
-   `libs` directory.
-3. In the Package Explorer, right click your project, select Build Path -> Add
-   External Archives, select both of the Jackson JARs and click Open.
-4. Add the following lines to your AndroidManifest.xml file:
-
-    `<uses-permission android:name="android.permission.INTERNET"/>`
-
-    `<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>`
-
-    `<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>`
+1. Copy the `parsely` directory (under `ParselyExample/app/src/main/java/com`) to your
+   project's top-level package directory (in a default Android Studio project, this is
+   `/app/src/main/java`.) The directory tree should look like
+   `/app/src/main/java/com/parsely/parselyandroid`.
+2. In `Build -> Edit Libraries and Dependencies` under the `Dependencies` tab,
+   use the green `+` to add two Library Dependencies:
+   `org.codehaus.jackson:jackson-core-lgpl:1.9.13` and
+   `org.codehaus.jackson:jackson-mapper-lgpl:1.9.13`
+3. Add the following lines to your `AndroidManifest.xml` file:
+    ```
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    ```
+4. Add the following lines to `app/build.gradle`:
+    ```
+    packagingOptions {
+        exclude 'META-INF/LGPL2.1'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+    ```
 
 Using the SDK
 -------------
@@ -86,7 +94,7 @@ This call requires the canonical URL of the page corresponding to the post curre
 License
 -------
 
-    Copyright 2015 Parse.ly, Inc.
+    Copyright 2016 Parse.ly, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
