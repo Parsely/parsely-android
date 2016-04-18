@@ -61,6 +61,7 @@ public class ParselyTracker {
     private String apikey, rootUrl, storageKey, uuidkey, urlref;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
+    public boolean enablePersistence;
     public int flushInterval;
     protected ArrayList<Map<String, Object>> eventQueue;
     private Map<kIdType, String> idNameMap;
@@ -207,6 +208,10 @@ public class ParselyTracker {
 
     private void persistQueue(){
         PLog("Persisting event queue");
+        if (!this.enablePersistence) {
+            PLog("Persistence disabled. Skipping.");
+            return;
+        }
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         if(storedQueue != null){
             HashSet<Map<String, Object>> hs = new HashSet<>();
@@ -221,7 +226,11 @@ public class ParselyTracker {
 
     private ArrayList<Map<String, Object>> getStoredQueue(){
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
-        try{
+        if (!this.enablePersistence) {
+            PLog("Persistence disabled, returning empty queue.");
+            return storedQueue;
+        }
+        try {
             FileInputStream fis = this.context.getApplicationContext().openFileInput(
                     this.storageKey);
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -351,7 +360,7 @@ public class ParselyTracker {
         return dInfo;
     }
 
-    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
+    protected ParselyTracker(String apikey, int flushInterval, String urlref, boolean enablePersistence, Context c){
         this.context = c;
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
@@ -363,6 +372,7 @@ public class ParselyTracker {
         this.rootUrl = "http://srv.pixel.parsely.com/";
         this.urlref = urlref;
         this.queueSizeLimit = 50;
+        this.enablePersistence = enablePersistence;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
 
@@ -397,7 +407,7 @@ public class ParselyTracker {
     *  @return The singleton instance
     */
     public static ParselyTracker sharedInstance(String apikey, Context c){
-        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, DEFAULT_URLREF, c);
+        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, DEFAULT_URLREF, true, c);
     }
 
     /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
@@ -409,7 +419,7 @@ public class ParselyTracker {
     */
     public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
         if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, DEFAULT_URLREF, c);
+            instance = new ParselyTracker(apikey, flushInterval, DEFAULT_URLREF, true, c);
         }
         return instance;
     }
@@ -424,7 +434,23 @@ public class ParselyTracker {
     */
     public static ParselyTracker sharedInstance(String apikey, int flushInterval, String urlref, Context c){
         if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, urlref, c);
+            instance = new ParselyTracker(apikey, flushInterval, urlref, true, c);
+        }
+        return instance;
+    }
+
+    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+    *
+    *  @param apikey The Parsely public API key (eg "samplesite.com")
+    *  @param flushInterval The interval at which the events queue should flush, in seconds
+    *  @param urlref The referrer string to send with pixel requests
+    *  @param enablePersistence Whether the SDK should write events to local storage
+    *  @param c The current Android application context
+    *  @return The singleton instance
+    */
+    public static ParselyTracker sharedInstance(String apikey, int flushInterval, String urlref, boolean enablePersistence, Context c){
+        if(instance == null){
+            instance = new ParselyTracker(apikey, flushInterval, urlref, enablePersistence, c);
         }
         return instance;
     }
