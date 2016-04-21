@@ -33,11 +33,14 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.StringWriter;
 
+import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.provider.Settings.Secure;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -111,15 +114,10 @@ public class ParselyTracker {
 
         PLog("%s", params);
 
-        if(this.queueSize() >= this.queueSizeLimit + 1){
-            PLog("Queue size exceeded, expelling oldest event to persistent memory");
-            this.persistQueue();
-            this.eventQueue.remove(0);
-        }
+        // check to see if eventqueue should be added to persist queue- in asynctask because
+        // hits disk I/O
 
-        if(this.storedEventsCount() > this.storageSizeLimit){
-            this.expelStoredEvent();
-        }
+        new ManageQueue().execute();
 
         if(this.timer == null){
             this.setFlushTimer();
@@ -127,37 +125,17 @@ public class ParselyTracker {
         }
     }
 
+    public void flush() {
+        // needed for call from MainActivity
+        new FlushQueue().execute();
+    }
+
     /*!  \brief Generate pixel requests from the queue
     *
     *  Empties the entire queue and sends the appropriate pixel requests.
     *  Called automatically after a number of seconds determined by `flushInterval`.
     */
-    public void flush(){
-        PLog("%d events in queue, %d stored events", this.queueSize(), this.storedEventsCount());
 
-        if(this.eventQueue.size() == 0 && this.getStoredQueue().size() == 0){
-            this.stopFlushTimer();
-            return;
-        }
-
-        if(!this.isReachable()){
-            PLog("Network unreachable. Not flushing.");
-            return;
-        }
-
-        ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
-        HashSet<Map<String, Object>> hs = new HashSet<>();
-        ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
-
-        hs.addAll(this.eventQueue);
-        if(storedQueue != null){
-            hs.addAll(storedQueue);
-        }
-        newQueue.addAll(hs);
-
-        PLog("Flushing queue");
-        this.sendBatchRequest(newQueue);
-    }
 
     /*!  \brief Send the entire queue as a single request
     *
@@ -208,6 +186,9 @@ public class ParselyTracker {
     private void persistQueue(){
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
+        if (storedQueue == null) {
+            storedQueue = new ArrayList<>();
+        }
         if(storedQueue != null){
             HashSet<Map<String, Object>> hs = new HashSet<>();
             hs.addAll(storedQueue);
@@ -217,9 +198,11 @@ public class ParselyTracker {
 
             this.persistObject(storedQueue);
         }
+        this.persistObject(storedQueue);
+
     }
 
-    private ArrayList<Map<String, Object>> getStoredQueue(){
+    private ArrayList<Map<String, Object>> getStoredQueue() {
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
         try{
             FileInputStream fis = this.context.getApplicationContext().openFileInput(
@@ -230,7 +213,8 @@ public class ParselyTracker {
             ois.close();
         } catch(EOFException ex){
             PLog("");
-        } catch(Exception ex){
+        }
+        catch(Exception ex){
             PLog("Exception thrown during queue deserialization: %s", ex.toString());
         }
         assert storedQueue != null;
@@ -246,15 +230,16 @@ public class ParselyTracker {
         storedQueue.remove(0);
     }
 
+    @TargetApi(Build.VERSION_CODES.CUPCAKE)
     private void persistObject(Object o){
         try{
             FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
                                        this.storageKey,
                                        android.content.Context.MODE_PRIVATE
                                    );
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(o);
-            oos.close();
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                oos.writeObject(o);
+                oos.close();
         } catch (Exception ex){
             PLog("Exception thrown during queue serialization: %s", ex.toString());
         }
@@ -286,7 +271,7 @@ public class ParselyTracker {
         this.timer = new Timer();
         this.timer.scheduleAtFixedRate(new TimerTask(){
             public void run(){
-                flush();
+                new FlushQueue().execute();
             }
         }, this.flushInterval * 1000, this.flushInterval * 1000);
     }
@@ -443,5 +428,69 @@ public class ParselyTracker {
             return;
         }
         System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
+    }
+
+    @TargetApi(Build.VERSION_CODES.CUPCAKE)
+    public class ManageQueue extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
+            // if event queue is too big, push to persisted storage
+            if (eventQueue.size() >= queueSizeLimit + 1) {
+
+                PLog("Queue size exceeded, expelling oldest event to persistent memory");
+                persistQueue();
+                eventQueue.remove(0);
+
+                // if persisted storage is too big, expel one
+                if (storedQueue != null) {
+                    if (storedEventsCount() > storageSizeLimit) {
+                        expelStoredEvent();
+                    }
+                }
+
+            }
+
+
+
+            return null;
+
+        }
+    }
+
+    public class FlushQueue extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
+            PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
+            // in case both queues have been flushed and app quits, don't crash
+            if (eventQueue == null || storedQueue == null) {
+                return null;
+            }
+            if(eventQueue.size() == 0 && storedQueue.size() == 0){
+                stopFlushTimer();
+                return null;
+            }
+
+            if(!isReachable()){
+                PLog("Network unreachable. Not flushing.");
+                return null;
+            }
+
+            HashSet<Map<String, Object>> hs = new HashSet<>();
+            ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
+
+            hs.addAll(eventQueue);
+            if(storedQueue != null){
+                hs.addAll(storedQueue);
+            }
+            newQueue.addAll(hs);
+
+            PLog("Flushing queue");
+            sendBatchRequest(newQueue);
+            return null;
+        }
     }
 }
