@@ -109,16 +109,9 @@ public class ParselyTracker {
         params.put(this.idNameMap.get(idType), identifier);
         params.put("ts", timestamp);
         params.put("data", this.deviceInfo);
-
         this.eventQueue.add(params);
-
         PLog("%s", params);
-
-        // check to see if eventqueue should be added to persist queue- in asynctask because
-        // hits disk I/O
-
-        new ManageQueue().execute();
-
+        new QueueManager().execute();
         if(this.timer == null){
             this.setFlushTimer();
             PLog("Flush timer set to %d", this.flushInterval);
@@ -129,7 +122,6 @@ public class ParselyTracker {
         // needed for call from MainActivity
         new FlushQueue().execute();
     }
-
     /*!  \brief Generate pixel requests from the queue
     *
     *  Empties the entire queue and sends the appropriate pixel requests.
@@ -189,17 +181,12 @@ public class ParselyTracker {
         if (storedQueue == null) {
             storedQueue = new ArrayList<>();
         }
-        if(storedQueue != null){
-            HashSet<Map<String, Object>> hs = new HashSet<>();
-            hs.addAll(storedQueue);
-            hs.addAll(this.eventQueue);
-            storedQueue.clear();
-            storedQueue.addAll(hs);
-
-            this.persistObject(storedQueue);
-        }
+        HashSet<Map<String, Object>> hs = new HashSet<>();
+        hs.addAll(storedQueue);
+        hs.addAll(this.eventQueue);
+        storedQueue.clear();
+        storedQueue.addAll(hs);
         this.persistObject(storedQueue);
-
     }
 
     private ArrayList<Map<String, Object>> getStoredQueue() {
@@ -207,10 +194,10 @@ public class ParselyTracker {
         try{
             FileInputStream fis = this.context.getApplicationContext().openFileInput(
                     this.storageKey);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            //noinspection unchecked
-            storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
-            ois.close();
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        //noinspection unchecked
+        storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
+        ois.close();
         } catch(EOFException ex){
             PLog("");
         }
@@ -237,9 +224,9 @@ public class ParselyTracker {
                                        this.storageKey,
                                        android.content.Context.MODE_PRIVATE
                                    );
-                ObjectOutputStream oos = new ObjectOutputStream(fos);
-                oos.writeObject(o);
-                oos.close();
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(o);
+            oos.close();
         } catch (Exception ex){
             PLog("Exception thrown during queue serialization: %s", ex.toString());
         }
@@ -271,7 +258,7 @@ public class ParselyTracker {
         this.timer = new Timer();
         this.timer.scheduleAtFixedRate(new TimerTask(){
             public void run(){
-                new FlushQueue().execute();
+                flush();
             }
         }, this.flushInterval * 1000, this.flushInterval * 1000);
     }
@@ -431,36 +418,27 @@ public class ParselyTracker {
     }
 
     @TargetApi(Build.VERSION_CODES.CUPCAKE)
-    public class ManageQueue extends AsyncTask<Void, Void, Void> {
-
+    public class QueueManager extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             // if event queue is too big, push to persisted storage
             if (eventQueue.size() >= queueSizeLimit + 1) {
-
                 PLog("Queue size exceeded, expelling oldest event to persistent memory");
                 persistQueue();
                 eventQueue.remove(0);
-
                 // if persisted storage is too big, expel one
                 if (storedQueue != null) {
                     if (storedEventsCount() > storageSizeLimit) {
                         expelStoredEvent();
                     }
                 }
-
             }
-
-
-
             return null;
-
         }
     }
 
     public class FlushQueue extends AsyncTask<Void, Void, Void> {
-
         @Override
         protected Void doInBackground(Void... params) {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
@@ -473,12 +451,10 @@ public class ParselyTracker {
                 stopFlushTimer();
                 return null;
             }
-
             if(!isReachable()){
                 PLog("Network unreachable. Not flushing.");
                 return null;
             }
-
             HashSet<Map<String, Object>> hs = new HashSet<>();
             ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
 
@@ -487,7 +463,6 @@ public class ParselyTracker {
                 hs.addAll(storedQueue);
             }
             newQueue.addAll(hs);
-
             PLog("Flushing queue");
             sendBatchRequest(newQueue);
             return null;
