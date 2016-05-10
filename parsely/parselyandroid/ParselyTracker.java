@@ -444,7 +444,7 @@ public class ParselyTracker {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
-            if (eventQueue == null || storedQueue == null) {
+            if (eventQueue == null && storedQueue == null) {
                 return null;
             }
             if(eventQueue.size() == 0 && storedQueue.size() == 0){
