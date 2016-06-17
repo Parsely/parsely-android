@@ -16,67 +16,90 @@
 
 package com.parsely.parselyandroid;
 
-import java.io.EOFException;
-import java.util.Calendar;
-import java.util.Formatter;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
-import java.io.StringWriter;
-
 import android.annotation.TargetApi;
-import android.content.SharedPreferences;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Looper;
 import android.provider.Settings.Secure;
+import android.util.Log;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-/*! \brief Tracks Parse.ly app views in Android apps
-*
-*  Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
-*  flushes the queue to the Parse.ly pixel proxy server.
-*/
+import java.io.EOFException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.MissingFormatArgumentException;
+import java.util.TimeZone;
+
+/**
+ * Tracks Parse.ly app views in Android apps
+ * Maintains a queue of pageview events on disk and requires periodic manual flushing by the implementing developer
+ * as javadoced in the {@LINK #flush} method.
+ */
 public class ParselyTracker {
-    private static ParselyTracker instance = null;
-    private static int DEFAULT_FLUSH_INTERVAL = 60;
-    private static String DEFAULT_URLREF = "parsely_mobile_sdk";
+    public static String DEFAULT_URLREF = "parsely_mobile_sdk";
 
     /*! \brief types of post identifiers
     *
     *  Representation of the allowed post identifier types
     */
-    private enum kIdType{ kUrl, kPostId }
+    private enum kIdType {
+        kUrl, kPostId
+    }
 
-    private String apikey, rootUrl, storageKey, uuidkey, urlref;
+    private static boolean DEBUG = true;
+    private static String apikey, rootUrl, storageKey, uuidkey, urlref;
     private SharedPreferences settings;
-    private int queueSizeLimit, storageSizeLimit;
-    public int flushInterval;
-    protected ArrayList<Map<String, Object>> eventQueue;
     private Map<kIdType, String> idNameMap;
     private Map<String, String> deviceInfo;
     private Context context;
-    private Timer timer;
+
+    /**
+     * @param apikey  The API key for the Parsely server
+     * @param urlref  {@link #DEFAULT_URLREF}, can use default or change as required
+     * @param context
+     */
+    public ParselyTracker(String apikey, String urlref, Context context) {
+        this.context = context.getApplicationContext();
+        this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
+        this.apikey = apikey;
+        this.uuidkey = "parsely-uuid";
+        this.storageKey = "parsely-events.ser";
+        //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
+        this.rootUrl = "http://srv.pixel.parsely.com/";
+        this.urlref = urlref;
+        this.deviceInfo = this.collectDeviceInfo();
+        // set up a map of enumerated type to identifier name
+        this.idNameMap = new HashMap<>();
+        this.idNameMap.put(kIdType.kUrl, "url");
+        this.idNameMap.put(kIdType.kPostId, "postid");
+    }
 
     /*! \brief Register a pageview event using a canonical URL
     *
     *  @param url The canonical URL of the article being tracked
     *  (eg: "http://samplesite.com/some-old/article.html")
     */
-    public void trackURL(String url){
+    public void trackURL(String url) {
         this.track(url, kIdType.kUrl);
     }
 
@@ -85,8 +108,18 @@ public class ParselyTracker {
     *  @param pid A string uniquely identifying this post. This **must** be unique within Parsely's
     *  database.
     */
-    public void trackPostId(String pid){
+    public void trackPostId(String pid) {
         this.track(pid, kIdType.kPostId);
+    }
+
+    /**
+     * It's recommended to flush the queue in an onPause callback of the main activity.
+     * onPause is highly likely to get called, but you can also use onStop if desired.
+     * Since the queue is persisted to disk technically you can flush the queue whenever you'd like.
+     */
+    public void flush() {
+        // needed for call from MainActivity
+        new FlushQueue(context).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     /*! \brief Register a pageview event
@@ -99,373 +132,252 @@ public class ParselyTracker {
     *  @param identifier The post id or canonical URL uniquely identifying the post
     *  @param idType enum element indicating what type of identifier the first argument is
     */
-    private void track(String identifier, kIdType idType){
+    private void track(String identifier, kIdType idType) {
         PLog("Track called for %s", identifier);
-
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         double timestamp = calendar.getTimeInMillis() / 1000.0;
-
         Map<String, Object> params = new HashMap<>();
         params.put(this.idNameMap.get(idType), identifier);
         params.put("ts", timestamp);
         params.put("data", this.deviceInfo);
-        this.eventQueue.add(params);
         PLog("%s", params);
-        new QueueManager().execute();
-        if(this.timer == null){
-            this.setFlushTimer();
-            PLog("Flush timer set to %d", this.flushInterval);
-        }
+        new QueueManager(context).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, params);
     }
 
-    public void flush() {
-        // needed for call from MainActivity
-        new FlushQueue().execute();
-    }
-    /*!  \brief Generate pixel requests from the queue
-    *
-    *  Empties the entire queue and sends the appropriate pixel requests.
-    *  Called automatically after a number of seconds determined by `flushInterval`.
-    */
-
-
-    /*!  \brief Send the entire queue as a single request
-    *
-    *   Creates a large POST request containing the JSON encoding of the entire queue.
-    *   Sends this request to the proxy server, which forwards requests to the pixel server.
-    *
-    *   @param queue The list of event dictionaries to serialize
-    */
-    private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
-        PLog("Sending batched request of size %d", queue.size());
-
-        Map<String, Object> batchMap = new HashMap<>();
-
-        // the object contains only one copy of the queue's invariant data
-        batchMap.put("data", queue.get(0).get("data"));
-        ArrayList<Map<String, Object>> events = new ArrayList<>();
-
-        for(Map<String, Object> event : queue){
-            String field = null, value = null;
-            if(event.get("url") != null){
-                field = "url";
-                value = (String)event.get("url");
-            } else if(event.get("postid") != null){
-                field = "postid";
-                value = (String)event.get("postid");
-            }
-
-            Map<String, Object> _toAdd = new HashMap<>();
-            _toAdd.put(field, value);
-            _toAdd.put("ts", String.format("%f", (double)event.get("ts")));
-            events.add(_toAdd);
-        }
-        batchMap.put("events", events);
-
-        PLog("Setting API connection");
-        new ParselyAPIConnection().execute(this.rootUrl + "mobileproxy", this.JsonEncode(batchMap));
-        PLog("Requested %s", this.rootUrl);
-        PLog("Data %s", this.JsonEncode(batchMap));
-    }
-
-    private boolean isReachable(){
-        ConnectivityManager cm = (ConnectivityManager)this.context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
+    private static boolean isReachable(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    private void persistQueue(){
-        PLog("Persisting event queue");
-        ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
-        if (storedQueue == null) {
-            storedQueue = new ArrayList<>();
+    private static ArrayList<Map<String, Object>> getStoredQueue(Context context) {
+        //Cannot write to disk on the main thread
+        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+            throw new WrongThreadException();
         }
-        HashSet<Map<String, Object>> hs = new HashSet<>();
-        hs.addAll(storedQueue);
-        hs.addAll(this.eventQueue);
-        storedQueue.clear();
-        storedQueue.addAll(hs);
-        this.persistObject(storedQueue);
-    }
-
-    private ArrayList<Map<String, Object>> getStoredQueue() {
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
-        try{
-            FileInputStream fis = this.context.getApplicationContext().openFileInput(
-                    this.storageKey);
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        //noinspection unchecked
-        storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
-        ois.close();
-        } catch(EOFException ex){
+        try {
+            FileInputStream fis = context.openFileInput(storageKey);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            //noinspection unchecked
+            storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
+            ois.close();
+        } catch (EOFException ex) {
             PLog("");
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             PLog("Exception thrown during queue deserialization: %s", ex.toString());
         }
         assert storedQueue != null;
         return storedQueue;
     }
 
-    protected void purgeStoredQueue(){
-        this.persistObject(null);
+    private static void purgeStoredQueue(Context context) {
+        persistObject(context, null);
     }
 
-    private void expelStoredEvent(){
-        ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
-        storedQueue.remove(0);
-    }
-
-    @TargetApi(Build.VERSION_CODES.CUPCAKE)
-    private void persistObject(Object o){
-        try{
-            FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
-                                       this.storageKey,
-                                       android.content.Context.MODE_PRIVATE
-                                   );
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(o);
-            oos.close();
-        } catch (Exception ex){
-            PLog("Exception thrown during queue serialization: %s", ex.toString());
-        }
-    }
-
-    private String JsonEncode(Map<String, Object> map){
+    private static String jsonEncode(Map<String, Object> map) {
         ObjectMapper mapper = new ObjectMapper();
         String ret = null;
         try {
             StringWriter strWriter = new StringWriter();
             mapper.writeValue(strWriter, map);
             ret = strWriter.toString();
-          } catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-          }
+        }
         return ret;
     }
 
-    /*! \brief Allow Parsely to send pageview events
-    *
-    *  Instantiates the callback timer responsible for flushing the events queue.
-    *  Can be called before of after `stop`, but has no effect if used before instantiating the
-    *  singleton
-    */
-    public void setFlushTimer(){
-        if(this.flushTimerIsActive()){
-            this.stopFlushTimer();
-        }
-        this.timer = new Timer();
-        this.timer.scheduleAtFixedRate(new TimerTask(){
-            public void run(){
-                flush();
-            }
-        }, this.flushInterval * 1000, this.flushInterval * 1000);
-    }
-
-    /*! \brief Is the callback timer running
-    *
-    *  @return `true` if the callback timer is currently running, `false` otherwise
-    */
-    public boolean flushTimerIsActive(){
-        return this.timer != null;
-    }
-
-    /*! \brief Disallow Parsely from sending pageview events
-    *
-    *  Invalidates the callback timer responsible for flushing the events queue.
-    *  Can be called before or after `start`, but has no effect if used before instantiating the
-    *  singleton
-    */
-    public void stopFlushTimer(){
-        if(this.timer != null){
-            this.timer.cancel();
-            this.timer.purge();
-        }
-        this.timer = null;
-    }
-
-    private String generateSiteUuid(){
-        String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
-                Secure.ANDROID_ID);
+    private String generateSiteUuid() {
+        String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
         PLog(String.format("Generated UUID: %s", uuid));
         return uuid;
     }
 
-    private String getSiteUuid(){
+    private String getSiteUuid() {
         String uuid = "";
-        try{
+        try {
             uuid = this.settings.getString(this.uuidkey, "");
-            if(uuid.equals("")){
+            if (uuid.equals("")) {
                 uuid = this.generateSiteUuid();
             }
-        } catch(Exception ex){
+        } catch (Exception ex) {
             PLog("Exception caught during site uuid generation: %s", ex.toString());
         }
         return uuid;
     }
 
-    private Map<String, String> collectDeviceInfo(){
+    private Map<String, String> collectDeviceInfo() {
         Map<String, String> dInfo = new HashMap<>();
-
         dInfo.put("parsely_site_uuid", this.getSiteUuid());
         dInfo.put("idsite", this.apikey);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
         dInfo.put("urlref", this.urlref);
         dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
-
         Resources appR = this.context.getApplicationContext().getResources();
-        CharSequence txt = appR.getText(appR.getIdentifier("app_name","string",
-                this.context.getApplicationContext().getPackageName()));
+        CharSequence txt = appR.getText(appR.getIdentifier("app_name", "string", this.context.getApplicationContext().getPackageName()));
         dInfo.put("appname", txt.toString());
-
         return dInfo;
     }
 
-    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
-        this.context = c;
-        this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
-
-        this.apikey = apikey;
-        this.uuidkey = "parsely-uuid";
-        this.flushInterval = flushInterval;
-        this.storageKey = "parsely-events.ser";
-        //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
-        this.rootUrl = "http://srv.pixel.parsely.com/";
-        this.urlref = urlref;
-        this.queueSizeLimit = 50;
-        this.storageSizeLimit = 100;
-        this.deviceInfo = this.collectDeviceInfo();
-
-        this.eventQueue = new ArrayList<>();
-
-        // set up a map of enumerated type to identifier name
-        this.idNameMap = new HashMap<>();
-        this.idNameMap.put(kIdType.kUrl, "url");
-        this.idNameMap.put(kIdType.kPostId, "postid");
-
-        if(this.getStoredQueue() != null && this.getStoredQueue().size() > 0){
-            this.setFlushTimer();
-        }
-    }
-
-    /*! \brief Singleton instance accessor. Note: This must be called after
-    sharedInstance(String, Context)
-    *
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(){
-        if(instance == null){
-            return null;
-        }
-        return instance;
-    }
-
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
-    *
-    *  @param apikey The Parsely public API key (eg "samplesite.com")
-    *  @param c The current Android application context
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(String apikey, Context c){
-        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, DEFAULT_URLREF, c);
-    }
-
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
-    *
-    *  @param apikey The Parsely public API key (eg "samplesite.com")
-    *  @param flushInterval The interval at which the events queue should flush, in seconds
-    *  @param c The current Android application context
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
-        if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, DEFAULT_URLREF, c);
-        }
-        return instance;
-    }
-
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
-    *
-    *  @param apikey The Parsely public API key (eg "samplesite.com")
-    *  @param flushInterval The interval at which the events queue should flush, in seconds
-    *  @param urlref The referrer string to send with pixel requests
-    *  @param c The current Android application context
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval, String urlref, Context c){
-        if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, urlref, c);
-        }
-        return instance;
-    }
-
-    public int queueSize(){ return this.eventQueue.size(); }
-    public int storedEventsCount(){
-        ArrayList<Map<String, Object>> ar = this.getStoredQueue();
-        if(ar != null){
+    private static int storedEventsCount(Context context) {
+        ArrayList<Map<String, Object>> ar = getStoredQueue(context);
+        if (ar != null) {
             return ar.size();
         }
         return 0;
     }
 
-    protected static void PLog(String logstring, Object... objects){
+    private static void PLog(String logstring, Object... objects) {
         if (logstring.equals("")) {
             return;
         }
-        System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
+        if (!DEBUG) {
+            return;
+        }
+        try {
+            Log.d(ParselyTracker.class.getSimpleName(), new Formatter().format("[Parsely] " + logstring, objects).toString());
+        } catch (MissingFormatArgumentException e) {
+            e.printStackTrace();
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.CUPCAKE)
-    public class QueueManager extends AsyncTask<Void, Void, Void> {
+    private static void persistObject(Context context, Object o) {
+        //Cannot write to disk on the main thread
+        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+            throw new WrongThreadException();
+        }
+        try {
+            FileOutputStream fos = context.openFileOutput(storageKey, android.content.Context.MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(o);
+            oos.close();
+        } catch (Exception ex) {
+            PLog("Exception thrown during queue serialization: %s", ex.toString());
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.CUPCAKE)
+    private static class QueueManager extends AsyncTask<Map<String, Object>, Void, Void> {
+        private Context context;
+
+        public QueueManager(Context context) {
+            this.context = context;
+        }
+
         @Override
-        protected Void doInBackground(Void... params) {
-            ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
-            // if event queue is too big, push to persisted storage
-            if (eventQueue.size() >= queueSizeLimit + 1) {
-                PLog("Queue size exceeded, expelling oldest event to persistent memory");
-                persistQueue();
-                eventQueue.remove(0);
-                // if persisted storage is too big, expel one
-                if (storedQueue != null) {
-                    if (storedEventsCount() > storageSizeLimit) {
-                        expelStoredEvent();
-                    }
-                }
+        protected Void doInBackground(Map<String, Object>... params) {
+            PLog("Persisting event queue");
+            ArrayList<Map<String, Object>> storedQueue = getStoredQueue(context);
+            if (storedQueue == null) {
+                storedQueue = new ArrayList<>();
             }
+            storedQueue.add(params[0]);
+            persistObject(context, storedQueue);
             return null;
         }
     }
 
-    public class FlushQueue extends AsyncTask<Void, Void, Void> {
+    @TargetApi(Build.VERSION_CODES.CUPCAKE)
+    private static class FlushQueue extends AsyncTask<Void, Void, Void> {
+        private Context context;
+
+        public FlushQueue(Context context) {
+            this.context = context;
+        }
+
         @Override
         protected Void doInBackground(Void... params) {
-            ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
-            PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
+            ArrayList<Map<String, Object>> storedQueue = getStoredQueue(context);
+            PLog("%d stored events", storedEventsCount(context));
             // in case both queues have been flushed and app quits, don't crash
-            if (eventQueue == null && storedQueue == null) {
+            if (storedQueue == null) {
                 return null;
             }
-            if(eventQueue.size() == 0 && storedQueue.size() == 0){
-                stopFlushTimer();
+            if (storedQueue.size() == 0) {
                 return null;
             }
-            if(!isReachable()){
+            if (!isReachable(context)) {
                 PLog("Network unreachable. Not flushing.");
                 return null;
             }
-            HashSet<Map<String, Object>> hs = new HashSet<>();
-            ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
-
-            hs.addAll(eventQueue);
-            if(storedQueue != null){
-                hs.addAll(storedQueue);
-            }
-            newQueue.addAll(hs);
             PLog("Flushing queue");
-            sendBatchRequest(newQueue);
+            sendBatchRequest(storedQueue);
             return null;
         }
+
+        /*!  \brief Generate pixel requests from the queue
+        *
+        *  Empties the entire queue and sends the appropriate pixel requests.
+        *  Called automatically after a number of seconds determined by `flushInterval`.
+        */
+
+        /*!  \brief Send the entire queue as a single request
+        *
+        *   Creates a large POST request containing the JSON encoding of the entire queue.
+        *   Sends this request to the proxy server, which forwards requests to the pixel server.
+        *
+        *   @param queue The list of event dictionaries to serialize
+        */
+        private void sendBatchRequest(ArrayList<Map<String, Object>> queue) {
+            PLog("Sending batched request of size %d", queue.size());
+            Map<String, Object> batchMap = new HashMap<>();
+            // the object contains only one copy of the queue's invariant data
+            batchMap.put("data", queue.get(0).get("data"));
+            ArrayList<Map<String, Object>> events = new ArrayList<>();
+            for (Map<String, Object> event : queue) {
+                String field = null, value = null;
+                if (event.get("url") != null) {
+                    field = "url";
+                    value = (String) event.get("url");
+                } else if (event.get("postid") != null) {
+                    field = "postid";
+                    value = (String) event.get("postid");
+                }
+
+                Map<String, Object> _toAdd = new HashMap<>();
+                _toAdd.put(field, value);
+                _toAdd.put("ts", String.format("%f", (double) event.get("ts")));
+                events.add(_toAdd);
+            }
+            batchMap.put("events", events);
+            PLog("Setting API connection");
+            String jsonEncodedBatch = jsonEncode(batchMap);
+            parselyPost(rootUrl + "mobileproxy", jsonEncodedBatch);
+            PLog("Requested %s", rootUrl);
+            PLog("Data %s", jsonEncodedBatch);
+        }
+
+        private void parselyPost(String... data) {
+            try {
+                URLConnection connection = new URL(data[0]).openConnection();
+                if (data.length == 2) {  // batched (post data included)
+                    connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
+                    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    OutputStream output = connection.getOutputStream();
+                    String query = "";
+                    try {
+                        query = String.format("rqs=%s", URLEncoder.encode(data[1], "UTF-8"));
+                    } catch (UnsupportedEncodingException ex) {
+                        ParselyTracker.PLog("");
+                    }
+                    output.write(query.getBytes());
+                    output.flush();
+                    output.close();
+                }
+                ParselyTracker.PLog("Pixel request success");
+                purgeStoredQueue(context);
+
+            } catch (Exception ex) {
+                ParselyTracker.PLog("Pixel request exception");
+                ParselyTracker.PLog(ex.toString());
+            }
+        }
+    }
+
+    private static class WrongThreadException extends RuntimeException {
+
     }
 }
