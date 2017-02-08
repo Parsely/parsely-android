@@ -138,7 +138,9 @@ public class ParselyTracker {
     */
     private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
         PLog("Sending batched request of size %d", queue.size());
-
+        if (queue == null || queue.size() == 0) {
+            return;
+        }
         Map<String, Object> batchMap = new HashMap<>();
 
         // the object contains only one copy of the queue's invariant data
@@ -444,10 +446,9 @@ public class ParselyTracker {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
-            if (eventQueue == null && storedQueue == null) {
-                return null;
-            }
-            if(eventQueue.size() == 0 && storedQueue.size() == 0){
+            if ((eventQueue == null || eventQueue.size() == 0) &&
+                (storedQueue == null || storedQueue.size() == 0))
+            {
                 stopFlushTimer();
                 return null;
             }
