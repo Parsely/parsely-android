@@ -287,7 +287,7 @@ public class ParselyTracker {
         this.timer = null;
     }
 
-    private String generateSiteUuid(){
+    private String generateSiteUuid() {
         String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
                 Secure.ANDROID_ID);
         PLog(String.format("Generated UUID: %s", uuid));
@@ -310,7 +310,8 @@ public class ParselyTracker {
     private Map<String, String> collectDeviceInfo(){
         Map<String, String> dInfo = new HashMap<>();
 
-        dInfo.put("parsely_site_uuid", this.getSiteUuid());
+        uuid = (this.adKey != null) ? this.adKey : this.getSiteUuid();
+        dInfo.put("parsely_site_uuid", uuid);
         dInfo.put("idsite", this.apikey);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
@@ -331,6 +332,9 @@ public class ParselyTracker {
 
         this.apikey = apikey;
         this.uuidkey = "parsely-uuid";
+        this.adKey = null;
+        // get the adkey straight away on instantiation
+        getAdKey.execute();
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
@@ -469,4 +473,30 @@ public class ParselyTracker {
             return null;
         }
     }
+
+    public class getUuid extends AsyncTask<Void, Void, String> {
+        @Override
+        protected String doInBackground(Void... params) {
+            AdvertisingIdClient.Info idInfo = null;
+            String advertId = null;
+            try {
+                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(getApplicationContext());
+            } catch (GooglePlayServicesRepairableException|IOException|GooglePlayServicesNotAvailableException e) {
+                // fall back to device uuid on google play errors
+                advertId = getSiteUuid();
+            try {
+                advertId = idInfo.getId();
+            } catch (NullPointerException e) {
+                advertId = getSiteUuid();
+            }
+
+            return advertId;
+        }
+
+        @Override
+        protected void onPostExecute(String advertId) {
+            this.adKey = advertId;
+        }
+
+    };
 }
