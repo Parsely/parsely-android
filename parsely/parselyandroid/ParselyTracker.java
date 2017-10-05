@@ -43,6 +43,10 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings.Secure;
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+
 import org.codehaus.jackson.map.ObjectMapper;
 
 /*! \brief Tracks Parse.ly app views in Android apps
@@ -61,7 +65,7 @@ public class ParselyTracker {
     */
     private enum kIdType{ kUrl, kPostId }
 
-    private String apikey, rootUrl, storageKey, uuidkey, urlref;
+    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
@@ -310,7 +314,8 @@ public class ParselyTracker {
     private Map<String, String> collectDeviceInfo(){
         Map<String, String> dInfo = new HashMap<>();
 
-        uuid = (this.adKey != null) ? this.adKey : this.getSiteUuid();
+        PLog("adkey is: %s, uuid is %s", this.adKey, this.getSiteUuid());
+        String uuid = (this.adKey != null) ? this.adKey : this.getSiteUuid();
         dInfo.put("parsely_site_uuid", uuid);
         dInfo.put("idsite", this.apikey);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
@@ -334,11 +339,10 @@ public class ParselyTracker {
         this.uuidkey = "parsely-uuid";
         this.adKey = null;
         // get the adkey straight away on instantiation
-        getAdKey.execute();
+        new GetAdKey(c).execute();
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
-        this.rootUrl = "http://srv.pixel.parsely.com/";
         this.urlref = urlref;
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
@@ -474,28 +478,36 @@ public class ParselyTracker {
         }
     }
 
-    public class getUuid extends AsyncTask<Void, Void, String> {
+    public class GetAdKey extends AsyncTask<Void, Void, String> {
+        private Context mContext;
+
+        public GetAdKey(Context context) {
+            mContext = context;
+        }
+
         @Override
         protected String doInBackground(Void... params) {
             AdvertisingIdClient.Info idInfo = null;
             String advertId = null;
             try {
-                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(getApplicationContext());
-            } catch (GooglePlayServicesRepairableException|IOException|GooglePlayServicesNotAvailableException e) {
+                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(mContext);
+            } catch (GooglePlayServicesRepairableException |IOException|GooglePlayServicesNotAvailableException e) {
+                PLog("No Google play services or error! falling back to device uuid");
                 // fall back to device uuid on google play errors
                 advertId = getSiteUuid();
+            }
             try {
                 advertId = idInfo.getId();
             } catch (NullPointerException e) {
                 advertId = getSiteUuid();
             }
-
             return advertId;
         }
 
         @Override
         protected void onPostExecute(String advertId) {
-            this.adKey = advertId;
+            adKey = advertId;
+            deviceInfo.put("parsely_site_uuid", adKey);
         }
 
     };
