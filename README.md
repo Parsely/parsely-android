@@ -39,7 +39,6 @@ To integrate Parse.ly mobile tracking with your Android Studio app:
 3. Add the following lines to your `AndroidManifest.xml` file:
 
         <uses-permission android:name="android.permission.INTERNET"/>
-        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
         <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
 4. Add the following lines to `app/build.gradle`:
