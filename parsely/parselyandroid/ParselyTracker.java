@@ -326,7 +326,7 @@ public class ParselyTracker {
     }
 
     protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
-        this.context = c;
+        this.context = c.getApplicationContext();
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
         this.apikey = apikey;
