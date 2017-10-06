@@ -317,9 +317,7 @@ public class ParselyTracker {
         dInfo.put("urlref", this.urlref);
         dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
 
-        Resources appR = this.context.getApplicationContext().getResources();
-        CharSequence txt = appR.getText(appR.getIdentifier("app_name","string",
-                this.context.getApplicationContext().getPackageName()));
+        CharSequence txt = this.context.getPackageManager().getApplicationLabel(context.getApplicationInfo());
         dInfo.put("appname", txt.toString());
 
         return dInfo;
