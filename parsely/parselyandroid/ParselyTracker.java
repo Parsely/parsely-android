@@ -148,7 +148,12 @@ public class ParselyTracker {
         Map<String, Object> batchMap = new HashMap<>();
 
         // the object contains only one copy of the queue's invariant data
-        batchMap.put("data", queue.get(0).get("data"));
+        Map<String, String> pixelData = new HashMap<>();
+        pixelData = (Map<String, String>) queue.get(0).get("data");
+        if (!pixelData.get("parsely_site_uuid").equals(this.adKey) && this.adKey != null) {
+            pixelData.put("parsely_site_uuid", this.adKey);
+        }
+        batchMap.put("data", pixelData);
         ArrayList<Map<String, Object>> events = new ArrayList<>();
 
         for(Map<String, Object> event : queue){
