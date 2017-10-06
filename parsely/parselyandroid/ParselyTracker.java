@@ -343,6 +343,7 @@ public class ParselyTracker {
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
+        this.rootUrl = "http://srv.pixel.parsely.com/";
         this.urlref = urlref;
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
