@@ -492,14 +492,16 @@ public class ParselyTracker {
             String advertId = null;
             try {
                 idInfo = AdvertisingIdClient.getAdvertisingIdInfo(mContext);
-            } catch (GooglePlayServicesRepairableException |IOException|GooglePlayServicesNotAvailableException e) {
+            }
+            catch (GooglePlayServicesRepairableException | IOException | GooglePlayServicesNotAvailableException e) {
                 PLog("No Google play services or error! falling back to device uuid");
                 // fall back to device uuid on google play errors
                 advertId = getSiteUuid();
             }
             try {
                 advertId = idInfo.getId();
-            } catch (NullPointerException e) {
+            }
+            catch (NullPointerException e) {
                 advertId = getSiteUuid();
             }
             return advertId;
