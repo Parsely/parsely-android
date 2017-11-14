@@ -282,7 +282,11 @@ public class ParselyTracker {
     public void stopFlushTimer(){
         if(this.timer != null){
             this.timer.cancel();
-            this.timer.purge();
+            try {
+                this.timer.purge();
+            } catch (NullPointerException ex) {
+                PLog("Exception caught during Timer.purge(): %s", ex.toString());
+            }
         }
         this.timer = null;
     }
