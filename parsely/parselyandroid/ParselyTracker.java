@@ -43,6 +43,10 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings.Secure;
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+
 import org.codehaus.jackson.map.ObjectMapper;
 
 /*! \brief Tracks Parse.ly app views in Android apps
@@ -61,7 +65,7 @@ public class ParselyTracker {
     */
     private enum kIdType{ kUrl, kPostId }
 
-    private String apikey, rootUrl, storageKey, uuidkey, urlref;
+    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
@@ -144,7 +148,12 @@ public class ParselyTracker {
         Map<String, Object> batchMap = new HashMap<>();
 
         // the object contains only one copy of the queue's invariant data
-        batchMap.put("data", queue.get(0).get("data"));
+        Map<String, String> pixelData = new HashMap<>();
+        pixelData = (Map<String, String>) queue.get(0).get("data");
+        if (!pixelData.get("parsely_site_uuid").equals(this.adKey) && this.adKey != null) {
+            pixelData.put("parsely_site_uuid", this.adKey);
+        }
+        batchMap.put("data", pixelData);
         ArrayList<Map<String, Object>> events = new ArrayList<>();
 
         for(Map<String, Object> event : queue){
@@ -291,7 +300,7 @@ public class ParselyTracker {
         this.timer = null;
     }
 
-    private String generateSiteUuid(){
+    private String generateSiteUuid() {
         String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
                 Secure.ANDROID_ID);
         PLog(String.format("Generated UUID: %s", uuid));
@@ -314,7 +323,9 @@ public class ParselyTracker {
     private Map<String, String> collectDeviceInfo(){
         Map<String, String> dInfo = new HashMap<>();
 
-        dInfo.put("parsely_site_uuid", this.getSiteUuid());
+        PLog("adkey is: %s, uuid is %s", this.adKey, this.getSiteUuid());
+        String uuid = (this.adKey != null) ? this.adKey : this.getSiteUuid();
+        dInfo.put("parsely_site_uuid", uuid);
         dInfo.put("idsite", this.apikey);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
@@ -333,6 +344,9 @@ public class ParselyTracker {
 
         this.apikey = apikey;
         this.uuidkey = "parsely-uuid";
+        this.adKey = null;
+        // get the adkey straight away on instantiation
+        new GetAdKey(c).execute();
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
@@ -471,4 +485,40 @@ public class ParselyTracker {
             return null;
         }
     }
+
+    public class GetAdKey extends AsyncTask<Void, Void, String> {
+        private Context mContext;
+
+        public GetAdKey(Context context) {
+            mContext = context;
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            AdvertisingIdClient.Info idInfo = null;
+            String advertId = null;
+            try {
+                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(mContext);
+            }
+            catch (GooglePlayServicesRepairableException | IOException | GooglePlayServicesNotAvailableException e) {
+                PLog("No Google play services or error! falling back to device uuid");
+                // fall back to device uuid on google play errors
+                advertId = getSiteUuid();
+            }
+            try {
+                advertId = idInfo.getId();
+            }
+            catch (NullPointerException e) {
+                advertId = getSiteUuid();
+            }
+            return advertId;
+        }
+
+        @Override
+        protected void onPostExecute(String advertId) {
+            adKey = advertId;
+            deviceInfo.put("parsely_site_uuid", adKey);
+        }
+
+    };
 }
