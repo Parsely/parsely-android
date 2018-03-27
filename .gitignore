@@ -8,5 +8,4 @@ bin/
 gen
 build
 nohup.out
-docs
 *.bak
