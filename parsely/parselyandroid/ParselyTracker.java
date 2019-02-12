@@ -93,6 +93,19 @@ public class ParselyTracker {
         this.track(pid, kIdType.kPostId);
     }
 
+    public void startEngagement(String url) { PLog("startEngagement called");
+    }
+
+    public void stopEngagement() { PLog("stopEngagement called");
+    }
+
+    public void trackPlay(String url, String vId) { PLog("trackPlay called");
+    }
+
+    public void trackPause() { PLog("trackPause called");
+    }
+
+
     /*! \brief Register a pageview event
     *
     *  Places a data structure representing the event into the in-memory queue for later use
@@ -122,15 +135,16 @@ public class ParselyTracker {
         }
     }
 
+    /*!  \brief Generate pixel requests from the queue
+     *
+     *  Empties the entire queue and sends the appropriate pixel requests.
+     *  Called automatically after a number of seconds determined by `flushInterval`.
+     */
     public void flush() {
         // needed for call from MainActivity
         new FlushQueue().execute();
     }
-    /*!  \brief Generate pixel requests from the queue
-    *
-    *  Empties the entire queue and sends the appropriate pixel requests.
-    *  Called automatically after a number of seconds determined by `flushInterval`.
-    */
+
 
 
     /*!  \brief Send the entire queue as a single request

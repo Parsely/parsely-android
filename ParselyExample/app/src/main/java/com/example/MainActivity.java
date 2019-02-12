@@ -80,10 +80,26 @@ public class MainActivity extends Activity {
     }
 
     public void trackURL(View view) {
-        ParselyTracker.sharedInstance().trackURL("http://examplesite.com/something-whatever.html");
+        ParselyTracker.sharedInstance().trackURL("http://example.com/article1.html");
     }
 
     public void trackPID(View view) {
         ParselyTracker.sharedInstance().trackPostId("1987263412-341872361023-12783461234");
+    }
+
+    public void startEngagement(View view) {
+        ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html");
+    }
+
+    public void stopEngagement(View view) {
+        ParselyTracker.sharedInstance().stopEngagement();
+    }
+
+    public void trackPlay(View view) {
+        ParselyTracker.sharedInstance().trackPlay("http://example.com/article1", "video1");
+    }
+
+    public void trackPause(View view) {
+        ParselyTracker.sharedInstance().trackPause();
     }
 }

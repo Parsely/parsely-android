@@ -30,13 +30,50 @@
         android:layout_below="@id/url_button"
         android:text="@string/button_track_pid"
         android:onClick="trackPID" />
-        
-    <TextView android:id="@+id/queue_size"
+
+    <Button
+        android:id="@+id/start_engagement_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/pid_button"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/pid_button" 
-        android:text=""/>
+        android:onClick="startEngagement"
+        android:text="@string/button_start_engagement" />
+
+    <Button
+        android:id="@+id/stop_engagement_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/start_engagement_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="stopEngagement"
+        android:text="@string/button_stop_engagement" />
+
+    <Button
+        android:id="@+id/track_video_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/stop_engagement_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackPlay"
+        android:text="@string/button_track_video" />
+
+    <Button
+        android:id="@+id/pause_video_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/track_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackPause"
+        android:text="@string/button_pause_video" />
+
+    <TextView
+        android:id="@+id/queue_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pause_video_button"
+        android:layout_centerHorizontal="true"
+        android:text="" />
 
     <TextView android:id="@+id/stored_size"
         android:layout_width="wrap_content"
