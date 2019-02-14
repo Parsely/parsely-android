@@ -21,7 +21,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         
         // initialize the Parsely tracker with your API key and the current Context
-        ParselyTracker.sharedInstance("examplesite.com", this);
+        ParselyTracker.sharedInstance("examplesite.com", 15, this);
+
+        // Set debugging to true so we don't actually send things to Parse.ly
+        ParselyTracker.sharedInstance().setDebug(true);
         
         final TextView queueView = (TextView)findViewById(R.id.queue_size);
         queueView.setText(String.format("Queued events: %d", ParselyTracker.sharedInstance().queueSize()));

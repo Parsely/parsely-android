@@ -17,6 +17,7 @@
 package com.parsely.parselyandroid;
 
 import java.io.EOFException;
+import java.io.FileNotFoundException;
 import java.util.Calendar;
 import java.util.Formatter;
 import java.util.HashSet;
@@ -66,6 +67,7 @@ public class ParselyTracker {
     private enum kIdType{ kUrl, kPostId }
 
     private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
+    private boolean isDebug = false;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
@@ -74,6 +76,25 @@ public class ParselyTracker {
     private Map<String, String> deviceInfo;
     private Context context;
     private Timer timer;
+
+    /*! \brief Getter for this.isDebug
+     */
+    public boolean getDebug() {
+        return isDebug;
+    }
+
+    /*! \brief Set a debug flag which will prevent data from being sent to Parse.ly
+
+        Use this flag when developing to prevent the SDK from actually sending requests
+        to Parse.ly servers.
+
+        @param debug Value to use for debug flag.
+     */
+    public void setDebug(boolean debug) {
+        isDebug = debug;
+        PLog("Debugging is now set to " + isDebug);
+    }
+
 
     /*! \brief Register a pageview event using a canonical URL
     *
@@ -188,9 +209,15 @@ public class ParselyTracker {
         batchMap.put("events", events);
 
         PLog("Setting API connection");
-        new ParselyAPIConnection().execute(this.rootUrl + "mobileproxy", this.JsonEncode(batchMap));
-        PLog("Requested %s", this.rootUrl);
-        PLog("Data %s", this.JsonEncode(batchMap));
+        if (this.isDebug == true) {
+            PLog("Debug mode on. Not sending to Parse.ly");
+            this.eventQueue.clear();
+            this.purgeStoredQueue();
+        } else {
+            new ParselyAPIConnection().execute(this.rootUrl + "mobileproxy", this.JsonEncode(batchMap));
+            PLog("Requested %s", this.rootUrl);
+        }
+        PLog("POST Data %s", this.JsonEncode(batchMap));
     }
 
     private boolean isReachable(){
@@ -219,16 +246,18 @@ public class ParselyTracker {
         try{
             FileInputStream fis = this.context.getApplicationContext().openFileInput(
                     this.storageKey);
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        //noinspection unchecked
-        storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
-        ois.close();
-        } catch(EOFException ex){
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            //noinspection unchecked
+            storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
+            ois.close();
+        } catch(EOFException ex) {
             PLog("");
-        }
-        catch(Exception ex){
+        } catch (FileNotFoundException ex) {
+            // Nothing to do here. Means there was no saved queue.
+        } catch(Exception ex) {
             PLog("Exception thrown during queue deserialization: %s", ex.toString());
         }
+
         assert storedQueue != null;
         return storedQueue;
     }
