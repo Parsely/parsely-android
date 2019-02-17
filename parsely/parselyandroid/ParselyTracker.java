@@ -37,7 +37,6 @@ import java.io.StringWriter;
 import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.content.Context;
-import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -58,21 +57,52 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class ParselyTracker {
     private static ParselyTracker instance = null;
     private static int DEFAULT_FLUSH_INTERVAL = 60;
+    private static double DEFAULT_ENGAGEMENT_INTERVAL = 10.5;
     private static String DEFAULT_URLREF = "parsely_mobile_sdk";
 
-    /*! \brief types of post identifiers
-    *
-    *  Representation of the allowed post identifier types
-    */
-    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
+    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey, engagementUrl;
     private boolean isDebug = false;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
+    private double engagementInterval;
     protected ArrayList<Map<String, Object>> eventQueue;
     private Map<String, String> deviceInfo;
     private Context context;
-    private Timer timer;
+    private Timer flushTimer, engagementTimer;
+
+    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
+        this.context = c.getApplicationContext();
+        this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
+
+        this.apikey = apikey;
+        this.uuidkey = "parsely-uuid";
+        this.adKey = null;
+        // get the adkey straight away on instantiation
+        new GetAdKey(c).execute();
+        this.flushInterval = flushInterval;
+        this.engagementInterval = DEFAULT_ENGAGEMENT_INTERVAL;
+        this.storageKey = "parsely-events.ser";
+        this.rootUrl = "https://srv.pixel.parsely.com/";
+        this.urlref = urlref;
+        this.queueSizeLimit = 50;
+        this.storageSizeLimit = 100;
+        this.deviceInfo = this.collectDeviceInfo();
+
+        this.eventQueue = new ArrayList<>();
+
+        if(this.getStoredQueue() != null && this.getStoredQueue().size() > 0){
+            this.setFlushTimer();
+        }
+    }
+
+    public double getEngagementInterval() {
+        return this.engagementInterval;
+    }
+
+    public boolean engagementIsActive() {
+        return this.timerIsActive(this.engagementTimer);
+    }
 
     /*! \brief Getter for this.isDebug
      */
@@ -99,43 +129,47 @@ public class ParselyTracker {
     *  (eg: "http://samplesite.com/some-old/article.html")
     */
     public void trackURL(String url){
-        this.track(url, "pageview");
+        this.enqueueEvent(this.buildEvent(url, "pageview"));
     }
 
-    public void startEngagement(String url) { PLog("startEngagement called");
+    public void startEngagement(String url) {
+        PLog("startEngagement called");
+        final String targetUrl = url;
+        TimerTask task = new TimerTask(){
+            public void run(){
+                Map <String, Object> event = buildEvent(targetUrl, "heartbeat");
+                event.put("inc", String.format("%.0f", engagementInterval));
+                enqueueEvent(event);
+            }
+        };
+        this.engagementTimer = setTimer(this.engagementTimer, task, (int) (this.engagementInterval * 1000));
     }
 
-    public void stopEngagement() { PLog("stopEngagement called");
+    public void stopEngagement() {
+        PLog("stopEngagement called");
+        this.stopTimer(this.engagementTimer);
+        this.engagementTimer = null;
     }
 
-    public void trackPlay(String url, String vId) { PLog("trackPlay called");
-    }
+    public void trackPlay(String url, String vId) { PLog("trackPlay called"); }
 
-    public void trackPause() { PLog("trackPause called");
-    }
+    public void trackPause() { PLog("trackPause called"); }
 
 
-    /*! \brief Register a pageview event
+    /*! \brief Create an event Map
     *
-    *  Places a data structure representing the event into the in-memory queue for later use
-    *
-    *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
-    *  store exceeds `storageSizeLimit`.
-    *
-    *  @param identifier The post id or canonical URL uniquely identifying the post
-    *  @param idType enum element indicating what type of identifier the first argument is
+    *  @param url The canonical URL identifying the pageview/heartbeat
+    *  @param action Action kind to use (e.g. pageview, heartbeat)
     */
-    private void track(String identifier, String action){
-        PLog("Track called for %s", identifier);
+    private Map<String, Object> buildEvent(String url, String action) {
+        PLog("Track called for %s", url);
 
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         double timestamp = calendar.getTimeInMillis() / 1000.0;
 
-        // TODO: screen dimensions (?), inc, and tt (for video)
-
         // Main event info
         Map<String, Object> event = new HashMap<>();
-        event.put("url", identifier);
+        event.put("url", url);
         event.put("urlref", this.urlref);
         event.put("idsite", this.apikey);
         event.put("action", action);
@@ -150,14 +184,30 @@ public class ParselyTracker {
         data.put("os_version", this.deviceInfo.get("os_version"));
         event.put("data", data);
 
+        return event;
+    }
+
+    /*! \brief Add an event Map to the queue.
+     *
+     *  Place a data structure representing the event into the in-memory queue for later use
+     *
+     *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
+     *  store exceeds `storageSizeLimit`.
+     */
+
+    private void enqueueEvent(Map<String, Object> event){
         // Push it onto the queue
         PLog("%s", event);
         this.eventQueue.add(event);
         new QueueManager().execute();
-        if(this.timer == null) {
+        if(this.flushTimer == null) {
             this.setFlushTimer();
-            PLog("Flush timer set to %d", this.flushInterval);
+            PLog("Flush flushTimer set to %d", this.flushInterval);
         }
+    }
+
+    private void track(String engagementUrl, String heartbeat, double engagementInterval) {
+        PLog("Tracking heartbeat");
     }
 
     /*!  \brief Generate pixel requests from the queue
@@ -282,47 +332,64 @@ public class ParselyTracker {
 
     /*! \brief Allow Parsely to send pageview events
     *
-    *  Instantiates the callback timer responsible for flushing the events queue.
+    *  Instantiates the callback flushTimer responsible for flushing the events queue.
     *  Can be called before of after `stop`, but has no effect if used before instantiating the
     *  singleton
     */
     public void setFlushTimer(){
-        if(this.flushTimerIsActive()){
-            this.stopFlushTimer();
-        }
-        this.timer = new Timer();
-        this.timer.scheduleAtFixedRate(new TimerTask(){
+        TimerTask flushTask = new TimerTask(){
             public void run(){
                 flush();
             }
-        }, this.flushInterval * 1000, this.flushInterval * 1000);
+        };
+        this.flushTimer = setTimer(this.flushTimer, flushTask, this.flushInterval * 1000);
     }
 
-    /*! \brief Is the callback timer running
+    /*! \brief Is the callback flushTimer running
     *
-    *  @return `true` if the callback timer is currently running, `false` otherwise
+    *  @return `true` if the callback flushTimer is currently running, `false` otherwise
     */
     public boolean flushTimerIsActive(){
-        return this.timer != null;
+        return this.timerIsActive(this.flushTimer);
     }
 
     /*! \brief Disallow Parsely from sending pageview events
     *
-    *  Invalidates the callback timer responsible for flushing the events queue.
+    *  Invalidates the callback flushTimer responsible for flushing the events queue.
     *  Can be called before or after `start`, but has no effect if used before instantiating the
     *  singleton
     */
     public void stopFlushTimer(){
-        if(this.timer != null){
-            this.timer.cancel();
-            try {
-                this.timer.purge();
-            } catch (NullPointerException ex) {
-                PLog("Exception caught during Timer.purge(): %s", ex.toString());
-            }
-        }
-        this.timer = null;
+        this.stopTimer(this.flushTimer);
+        this.flushTimer = null;
     }
+
+    private Timer setTimer(Timer timer, TimerTask timerTask, int flushIntervalMillis) {
+        if(this.timerIsActive(timer)){
+            this.stopTimer(timer);
+        }
+        Timer newTimer = new Timer();
+        newTimer.scheduleAtFixedRate(timerTask, flushIntervalMillis, flushIntervalMillis);
+        return newTimer;
+    }
+
+    private boolean timerIsActive(Timer timer) {
+        return timer != null;
+    }
+
+    private void stopTimer(Timer timer) {
+        if(this.timerIsActive(timer) == false) {
+            return;
+        }
+        timer.cancel();
+        try {
+            timer.purge();
+        } catch (NullPointerException ex) {
+            PLog("Exception caught during Timer.purge(): %s", ex.toString());
+        }
+    }
+
+
 
     private String generateSiteUuid() {
         String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
@@ -347,6 +414,7 @@ public class ParselyTracker {
     private Map<String, String> collectDeviceInfo(){
         Map<String, String> dInfo = new HashMap<>();
 
+        // TODO: screen dimensions (maybe?)
         PLog("adkey is: %s, uuid is %s", this.adKey, this.getSiteUuid());
         String uuid = (this.adKey != null) ? this.adKey : this.getSiteUuid();
         dInfo.put("parsely_site_uuid", uuid);
@@ -359,30 +427,6 @@ public class ParselyTracker {
         dInfo.put("appname", txt.toString());
 
         return dInfo;
-    }
-
-    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
-        this.context = c.getApplicationContext();
-        this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
-
-        this.apikey = apikey;
-        this.uuidkey = "parsely-uuid";
-        this.adKey = null;
-        // get the adkey straight away on instantiation
-        new GetAdKey(c).execute();
-        this.flushInterval = flushInterval;
-        this.storageKey = "parsely-events.ser";
-        this.rootUrl = "https://srv.pixel.parsely.com/";
-        this.urlref = urlref;
-        this.queueSizeLimit = 50;
-        this.storageSizeLimit = 100;
-        this.deviceInfo = this.collectDeviceInfo();
-
-        this.eventQueue = new ArrayList<>();
-
-        if(this.getStoredQueue() != null && this.getStoredQueue().size() > 0){
-            this.setFlushTimer();
-        }
     }
 
     /*! \brief Singleton instance accessor. Note: This must be called after

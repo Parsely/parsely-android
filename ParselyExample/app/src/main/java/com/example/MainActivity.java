@@ -34,6 +34,8 @@ public class MainActivity extends Activity {
         
         final TextView intervalView = (TextView)findViewById(R.id.interval);
         storedView.setText(String.format("Flush interval: %d", ParselyTracker.sharedInstance().flushInterval));
+
+        updateEngagementString();
         
         final TextView views[] = new TextView[3];
         views[0] = queueView;
@@ -56,6 +58,8 @@ public class MainActivity extends Activity {
                 } else {
                     iView.setText("Flush timer inactive");
                 }
+
+                updateEngagementString();
             }
         };
         
@@ -82,16 +86,31 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    private void updateEngagementString() {
+        StringBuilder message = new StringBuilder("Engagement is ");
+        if(ParselyTracker.sharedInstance().engagementIsActive() == true) {
+            message.append("active.");
+        } else {
+            message.append("inactive.");
+        }
+        message.append(String.format(" (interval: %.01fs)", ParselyTracker.sharedInstance().getEngagementInterval()));
+
+        TextView view = findViewById(R.id.et_interval);
+        view.setText(message.toString());
+    }
+
     public void trackURL(View view) {
         ParselyTracker.sharedInstance().trackURL("http://example.com/article1.html");
     }
 
     public void startEngagement(View view) {
         ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html");
+        updateEngagementString();
     }
 
     public void stopEngagement(View view) {
         ParselyTracker.sharedInstance().stopEngagement();
+        updateEngagementString();
     }
 
     public void trackPlay(View view) {
