@@ -64,15 +64,12 @@ public class ParselyTracker {
     *
     *  Representation of the allowed post identifier types
     */
-    private enum kIdType{ kUrl, kPostId }
-
     private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
     private boolean isDebug = false;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
     protected ArrayList<Map<String, Object>> eventQueue;
-    private Map<kIdType, String> idNameMap;
     private Map<String, String> deviceInfo;
     private Context context;
     private Timer timer;
@@ -102,16 +99,7 @@ public class ParselyTracker {
     *  (eg: "http://samplesite.com/some-old/article.html")
     */
     public void trackURL(String url){
-        this.track(url, kIdType.kUrl);
-    }
-
-    /*! \brief Register a pageview event using a CMS post identifier
-    *
-    *  @param pid A string uniquely identifying this post. This **must** be unique within Parsely's
-    *  database.
-    */
-    public void trackPostId(String pid){
-        this.track(pid, kIdType.kPostId);
+        this.track(url, "pageview");
     }
 
     public void startEngagement(String url) { PLog("startEngagement called");
@@ -137,20 +125,36 @@ public class ParselyTracker {
     *  @param identifier The post id or canonical URL uniquely identifying the post
     *  @param idType enum element indicating what type of identifier the first argument is
     */
-    private void track(String identifier, kIdType idType){
+    private void track(String identifier, String action){
         PLog("Track called for %s", identifier);
 
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         double timestamp = calendar.getTimeInMillis() / 1000.0;
 
-        Map<String, Object> params = new HashMap<>();
-        params.put(this.idNameMap.get(idType), identifier);
-        params.put("ts", timestamp);
-        params.put("data", this.deviceInfo);
-        this.eventQueue.add(params);
-        PLog("%s", params);
+        // TODO: screen dimensions (?), inc, and tt (for video)
+
+        // Main event info
+        Map<String, Object> event = new HashMap<>();
+        event.put("url", identifier);
+        event.put("urlref", this.urlref);
+        event.put("idsite", this.apikey);
+        event.put("action", action);
+        event.put("ts", String.format("%.0f", timestamp));
+        event.put("parsley_site_uuid", this.deviceInfo.get("uuid"));
+
+
+        // Extra data Map
+        Map<String, Object> data = new HashMap<>();
+        data.put("manufacturer", this.deviceInfo.get("manufacturer"));
+        data.put("os", this.deviceInfo.get("os"));
+        data.put("os_version", this.deviceInfo.get("os_version"));
+        event.put("data", data);
+
+        // Push it onto the queue
+        PLog("%s", event);
+        this.eventQueue.add(event);
         new QueueManager().execute();
-        if(this.timer == null){
+        if(this.timer == null) {
             this.setFlushTimer();
             PLog("Flush timer set to %d", this.flushInterval);
         }
@@ -175,37 +179,14 @@ public class ParselyTracker {
     *
     *   @param queue The list of event dictionaries to serialize
     */
-    private void sendBatchRequest(ArrayList<Map<String, Object>> queue){
-        PLog("Sending batched request of size %d", queue.size());
-        if (queue == null || queue.size() == 0) {
+    private void sendBatchRequest(ArrayList<Map<String, Object>> events){
+        PLog("Sending batched request of %d events", events.size());
+        if (events == null || events.size() == 0) {
             return;
         }
+
+        // Put in a Map for the proxy server
         Map<String, Object> batchMap = new HashMap<>();
-
-        // the object contains only one copy of the queue's invariant data
-        Map<String, String> pixelData = new HashMap<>();
-        pixelData = (Map<String, String>) queue.get(0).get("data");
-        if (!pixelData.get("parsely_site_uuid").equals(this.adKey) && this.adKey != null) {
-            pixelData.put("parsely_site_uuid", this.adKey);
-        }
-        batchMap.put("data", pixelData);
-        ArrayList<Map<String, Object>> events = new ArrayList<>();
-
-        for(Map<String, Object> event : queue){
-            String field = null, value = null;
-            if(event.get("url") != null){
-                field = "url";
-                value = (String)event.get("url");
-            } else if(event.get("postid") != null){
-                field = "postid";
-                value = (String)event.get("postid");
-            }
-
-            Map<String, Object> _toAdd = new HashMap<>();
-            _toAdd.put(field, value);
-            _toAdd.put("ts", String.format("%f", (double)event.get("ts")));
-            events.add(_toAdd);
-        }
         batchMap.put("events", events);
 
         PLog("Setting API connection");
@@ -369,12 +350,11 @@ public class ParselyTracker {
         PLog("adkey is: %s, uuid is %s", this.adKey, this.getSiteUuid());
         String uuid = (this.adKey != null) ? this.adKey : this.getSiteUuid();
         dInfo.put("parsely_site_uuid", uuid);
-        dInfo.put("idsite", this.apikey);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
-        dInfo.put("urlref", this.urlref);
         dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
 
+        // FIXME: Not passed in event or used anywhere else.
         CharSequence txt = this.context.getPackageManager().getApplicationLabel(context.getApplicationInfo());
         dInfo.put("appname", txt.toString());
 
@@ -392,7 +372,6 @@ public class ParselyTracker {
         new GetAdKey(c).execute();
         this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
-        //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
         this.rootUrl = "https://srv.pixel.parsely.com/";
         this.urlref = urlref;
         this.queueSizeLimit = 50;
@@ -400,11 +379,6 @@ public class ParselyTracker {
         this.deviceInfo = this.collectDeviceInfo();
 
         this.eventQueue = new ArrayList<>();
-
-        // set up a map of enumerated type to identifier name
-        this.idNameMap = new HashMap<>();
-        this.idNameMap.put(kIdType.kUrl, "url");
-        this.idNameMap.put(kIdType.kPostId, "postid");
 
         if(this.getStoredQueue() != null && this.getStoredQueue().size() > 0){
             this.setFlushTimer();

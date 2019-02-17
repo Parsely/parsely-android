@@ -22,20 +22,12 @@
         android:layout_below="@id/imageView1"
         android:text="@string/button_track_url"
         android:onClick="trackURL" />
-        
-    <Button android:id="@+id/pid_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/url_button"
-        android:text="@string/button_track_pid"
-        android:onClick="trackPID" />
 
     <Button
         android:id="@+id/start_engagement_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/pid_button"
+        android:layout_below="@+id/url_button"
         android:layout_centerHorizontal="true"
         android:onClick="startEngagement"
         android:text="@string/button_start_engagement" />

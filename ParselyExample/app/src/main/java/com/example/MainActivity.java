@@ -86,10 +86,6 @@ public class MainActivity extends Activity {
         ParselyTracker.sharedInstance().trackURL("http://example.com/article1.html");
     }
 
-    public void trackPID(View view) {
-        ParselyTracker.sharedInstance().trackPostId("1987263412-341872361023-12783461234");
-    }
-
     public void startEngagement(View view) {
         ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html");
     }
