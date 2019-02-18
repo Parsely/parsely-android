@@ -61,17 +61,20 @@ public class ParselyTracker {
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     private static String DEFAULT_URLREF = "parsely_mobile_sdk";
 
-    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey, engagementUrl;
-    private boolean isDebug = false;
+    protected ArrayList<Map<String, Object>> eventQueue;
+
+    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
+    private boolean isDebug, flushTimerRunning;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
-    public int flushInterval;
-    protected ArrayList<Map<String, Object>> eventQueue;
     private Map<String, String> deviceInfo;
     private Context context;
-    // TODO: Get rid of flushTimer
-    private Timer flushTimer, timer;
+    private Timer timer;
+    private FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
+
+    // Here for backwards compat
+    public int flushInterval;
 
     protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
         this.context = c.getApplicationContext();
@@ -82,7 +85,6 @@ public class ParselyTracker {
         this.adKey = null;
         // get the adkey straight away on instantiation
         new GetAdKey(c).execute();
-        this.flushInterval = flushInterval;
         this.storageKey = "parsely-events.ser";
         this.rootUrl = "https://srv.pixel.parsely.com/";
         this.urlref = urlref;
@@ -90,8 +92,12 @@ public class ParselyTracker {
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
         this.timer = new Timer();
+        this.isDebug = false;
+        this.flushInterval = flushInterval;
 
         this.eventQueue = new ArrayList<>();
+
+        this.flushManager = new FlushManager(this.timer, flushInterval * 1000);
 
         if(this.getStoredQueue() != null && this.getStoredQueue().size() > 0){
             this.setFlushTimer();
@@ -212,10 +218,10 @@ public class ParselyTracker {
 
 
     /*! \brief Create an event Map
-    *
-    *  @param url The canonical URL identifying the pageview/heartbeat
-    *  @param action Action kind to use (e.g. pageview, heartbeat)
-    */
+     *
+     *  @param url The canonical URL identifying the pageview/heartbeat
+     *  @param action Action kind to use (e.g. pageview, heartbeat)
+     */
     private Map<String, Object> buildEvent(String url, String action, ParselyMetadata metadata) {
         PLog("buildEvent called for %s", url);
 
@@ -258,9 +264,9 @@ public class ParselyTracker {
         PLog("%s", event);
         this.eventQueue.add(event);
         new QueueManager().execute();
-        if(this.flushTimer == null) {
+        if(this.flushManager.isRunning() == false) {
             this.setFlushTimer();
-            PLog("Flush flushTimer set to %d", this.flushInterval);
+            PLog("Flush flushTimer set to %ds", (this.flushManager.getIntervalMillis()/1000));
         }
     }
 
@@ -391,12 +397,7 @@ public class ParselyTracker {
     *  singleton
     */
     public void setFlushTimer(){
-        TimerTask flushTask = new TimerTask(){
-            public void run(){
-                flush();
-            }
-        };
-        this.flushTimer = setTimer(this.flushTimer, flushTask, this.flushInterval * 1000);
+        this.flushManager.start();
     }
 
     /*! \brief Is the callback flushTimer running
@@ -404,7 +405,7 @@ public class ParselyTracker {
     *  @return `true` if the callback flushTimer is currently running, `false` otherwise
     */
     public boolean flushTimerIsActive(){
-        return this.timerIsActive(this.flushTimer);
+        return this.flushManager.isRunning();
     }
 
     /*! \brief Disallow Parsely from sending pageview events
@@ -414,33 +415,7 @@ public class ParselyTracker {
     *  singleton
     */
     public void stopFlushTimer(){
-        this.stopTimer(this.flushTimer);
-        this.flushTimer = null;
-    }
-
-    private Timer setTimer(Timer timer, TimerTask timerTask, int flushIntervalMillis) {
-        if(this.timerIsActive(timer)){
-            this.stopTimer(timer);
-        }
-        Timer newTimer = new Timer();
-        newTimer.scheduleAtFixedRate(timerTask, flushIntervalMillis, flushIntervalMillis);
-        return newTimer;
-    }
-
-    private boolean timerIsActive(Timer timer) {
-        return timer != null;
-    }
-
-    private void stopTimer(Timer timer) {
-        if(this.timerIsActive(timer) == false) {
-            return;
-        }
-        timer.cancel();
-        try {
-            timer.purge();
-        } catch (NullPointerException ex) {
-            PLog("Exception caught during Timer.purge(): %s", ex.toString());
-        }
+        this.flushManager.stop();
     }
 
 
@@ -638,6 +613,52 @@ public class ParselyTracker {
     };
 
 
+    /*! \brief Manager for the event flush timer.
+     *
+     * Handles stopping and starting the flush timer. The flush timer
+     * controls how often we send events to Parse.ly servers.
+     */
+    private class FlushManager {
+
+        private Timer parentTimer;
+        private long intervalMillis;
+        private TimerTask runningTask;
+
+        public FlushManager(Timer parentTimer, long intervalMillis) {
+            this.parentTimer = parentTimer;
+            this.intervalMillis = intervalMillis;
+        }
+
+        public void start() {
+            if (this.runningTask != null) {
+                return;
+            }
+
+            this.runningTask = new TimerTask(){
+                public void run(){ flush(); }
+            };
+            this.parentTimer.scheduleAtFixedRate(this.runningTask, intervalMillis, intervalMillis);
+        }
+
+        public boolean stop() {
+            if (this.runningTask == null) {
+                return false;
+            } else {
+                boolean output = this.runningTask.cancel();
+                this.runningTask = null;
+                return output;
+            }
+        }
+
+        public boolean isRunning() {
+            return this.runningTask != null;
+        }
+
+        public long getIntervalMillis() {
+            return this.intervalMillis;
+        }
+    }
+
     /*! \brief Engagement manager for article and video engagement.
      *
      * Implemented to handle its own queuing of future executions to accomplish
@@ -655,7 +676,7 @@ public class ParselyTracker {
         private long latestDelayMillis, totalTime;
 
 
-        public EngagementManager(Timer parentTimer, int intervalMillis, Map<String, Object> baseEvent) {
+        public EngagementManager(Timer parentTimer, long intervalMillis, Map<String, Object> baseEvent) {
             this.baseEvent = baseEvent;
             this.parentTimer = parentTimer;
             this.latestDelayMillis = intervalMillis;
