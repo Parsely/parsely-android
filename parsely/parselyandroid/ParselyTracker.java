@@ -234,7 +234,7 @@ public class ParselyTracker {
         event.put("idsite", this.apikey);
         event.put("action", action);
         event.put("ts", now.getTimeInMillis() / 1000);
-        event.put("parsley_site_uuid", this.deviceInfo.get("uuid"));
+        event.put("parsely_site_uuid", this.deviceInfo.get("parsely_site_uuid"));
 
 
         // Extra data Map
