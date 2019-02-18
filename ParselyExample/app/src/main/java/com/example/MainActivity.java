@@ -1,5 +1,7 @@
 package com.example;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,7 +23,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         
         // initialize the Parsely tracker with your API key and the current Context
-        ParselyTracker.sharedInstance("examplesite.com", 30, this);
+        ParselyTracker.sharedInstance("example.com", 30, this);
 
         // Set debugging to true so we don't actually send things to Parse.ly
         ParselyTracker.sharedInstance().setDebug(true);
@@ -111,6 +113,9 @@ public class MainActivity extends Activity {
     }
 
     public void trackURL(View view) {
+        // NOTE: urlMetadata is only used when "url" has no version accessible outside the app. If
+        //       the post has an internet-accessible URL, we will crawl it. urlMetadata is only used
+        //       in the case of app-only content that we can't crawl.
         ParselyTracker.sharedInstance().trackURL("http://example.com/article1.html", null);
     }
 
@@ -125,7 +130,19 @@ public class MainActivity extends Activity {
     }
 
     public void trackPlay(View view) {
-        ParselyTracker.sharedInstance().trackPlay("http://example.com/article1", null);
+        ParselyVideoMetadata metadata = new ParselyVideoMetadata(
+                new ArrayList<String>(),
+                "video-1234",
+                "videos",
+                new ArrayList<String>(),
+                "http://example.com/thumbs/video-1234",
+                "Awesome Video #1234",
+                Calendar.getInstance(),
+                90
+        );
+        // NOTE: For videos embedded in an article, "url" should be the URL for that article.
+        ParselyTracker.sharedInstance().trackPlay("video-1234", metadata);
+
     }
 
     public void trackPause(View view) {

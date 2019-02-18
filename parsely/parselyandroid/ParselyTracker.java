@@ -135,7 +135,7 @@ public class ParselyTracker {
     *  (eg: "http://samplesite.com/some-old/article.html")
     */
     public void trackURL(String url, ParselyMetadata urlMetadata){
-        this.enqueueEvent(this.buildEvent(url, "pageview"));
+        this.enqueueEvent(this.buildEvent(url, "pageview", urlMetadata));
     }
 
     public void startEngagement(String url) {
@@ -145,7 +145,8 @@ public class ParselyTracker {
         this.stopEngagement();
 
         // Start a new EngagementTask
-        this.engagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, "heartbeat", url);
+        Map<String, Object> event = this.buildEvent(url, "heartbeat", null);
+        this.engagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         this.engagementManager.start();
     }
 
@@ -162,13 +163,17 @@ public class ParselyTracker {
     public void trackPlay(String url, ParselyVideoMetadata videoMetadata) {
         PLog("trackPlay called");
 
-        this.enqueueEvent(this.buildEvent(url, "videostart"));
-
+        // TODO: Do we always want to send a video start for pause/resume?
         // Cancel anything running
         this.trackPause();
 
+        // Enqueue the videostart
+        this.enqueueEvent(this.buildEvent(url, "videostart", videoMetadata));
+
         // Start a new EngagementTask
-        this.videoEngagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, "vheartbeat", url);
+        Map<String, Object> hbEvent = this.buildEvent(url, "vheartbeat", videoMetadata);
+        // TODO: Can we remove some metadata fields from this request?
+        this.videoEngagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
         this.videoEngagementManager.start();
     }
 
@@ -189,11 +194,10 @@ public class ParselyTracker {
     *  @param url The canonical URL identifying the pageview/heartbeat
     *  @param action Action kind to use (e.g. pageview, heartbeat)
     */
-    private Map<String, Object> buildEvent(String url, String action) {
+    private Map<String, Object> buildEvent(String url, String action, ParselyMetadata metadata) {
         PLog("buildEvent called for %s", url);
 
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        double timestamp = calendar.getTimeInMillis() / 1000.0;
+        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
         // Main event info
         Map<String, Object> event = new HashMap<>();
@@ -201,7 +205,7 @@ public class ParselyTracker {
         event.put("urlref", this.urlref);
         event.put("idsite", this.apikey);
         event.put("action", action);
-        event.put("ts", String.format("%.0f", timestamp));
+        event.put("ts", now.getTimeInMillis() / 1000);
         event.put("parsley_site_uuid", this.deviceInfo.get("uuid"));
 
 
@@ -211,6 +215,10 @@ public class ParselyTracker {
         data.put("os", this.deviceInfo.get("os"));
         data.put("os_version", this.deviceInfo.get("os_version"));
         event.put("data", data);
+
+        if(metadata != null) {
+            event.put("metadata", metadata.toMap());
+        }
 
         return event;
     }
@@ -618,16 +626,15 @@ public class ParselyTracker {
      */
     private class EngagementManager {
 
-        private String action, url;
+        private Map<String, Object> baseEvent;
         private Timer parentTimer;
         private TimerTask waitingTimerTask;
         private long latestDelayMillis, totalTime;
 
 
-        public EngagementManager(Timer parentTimer, int intervalMillis, String action, String url) {
+        public EngagementManager(Timer parentTimer, int intervalMillis, Map<String, Object> baseEvent) {
+            this.baseEvent = baseEvent;
             this.parentTimer = parentTimer;
-            this.action = action;
-            this.url = url;
             this.latestDelayMillis = intervalMillis;
             this.totalTime = 0;
         }
@@ -660,8 +667,9 @@ public class ParselyTracker {
         }
 
         private void doEnqueue(long scheduledExecutionTime) {
-            PLog(String.format("Enqueuing %s event.", this.action));
-            Map <String, Object> event = buildEvent(this.url, this.action);
+            // Create a copy of the base event to enqueue
+            Map<String, Object> event = new HashMap(this.baseEvent);
+            PLog(String.format("Enqueuing %s event.", event.get("action")));
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);

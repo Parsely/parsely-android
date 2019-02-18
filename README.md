@@ -64,7 +64,7 @@ api key. This is usually best to do in the `MainActivity`'s `onCreate` method.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ParselyTracker.sharedInstance("examplesite.com", this);
+        ParselyTracker.sharedInstance("example.com", this);
     }
 
 The `this` parameter is necessary to give Parsely access to the app's context.
@@ -84,7 +84,7 @@ at this time, make sure to include a call to `flush()` in your main activity's
 
 To register a pageview event with Parsely, simply use the `track` call.
 
-    ParselyTracker.sharedInstance().trackURL("http://examplesite.com/something-whatever.html");
+    ParselyTracker.sharedInstance().trackURL("http://example.com/something-whatever.html");
 
 This call requires the canonical URL of the page corresponding to the post currently being viewed.
 
