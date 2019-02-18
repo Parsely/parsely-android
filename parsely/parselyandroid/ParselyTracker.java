@@ -42,6 +42,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings.Secure;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -156,21 +157,34 @@ public class ParselyTracker {
             return;
         }
         PLog("stopEngagement called");
-        this.engagementManager.cancel();
+        this.engagementManager.stop();
         this.engagementManager = null;
     }
 
-    public void trackPlay(String url, ParselyVideoMetadata videoMetadata) {
+    public void trackPlay(String url, @NonNull ParselyVideoMetadata videoMetadata) {
         PLog("trackPlay called");
+        if (videoMetadata == null) {
+            throw new NullPointerException("videoMetadata cannot be null.");
+        }
 
-        // TODO: Do we always want to send a video start for pause/resume?
-        // Cancel anything running
-        this.trackPause();
+        // If there is already an engagement manager for this video make sure it is started.
+        if (this.videoEngagementManager != null) {
+            if (this.videoEngagementManager.isSameVideo(url, videoMetadata)) {
+                if (!this.videoEngagementManager.isRunning()) {
+                    this.videoEngagementManager.start();
+                }
+                return; // all done here. early exit.
+            } else {
+                // Different video. Stop and remove it so we can start fresh.
+                this.videoEngagementManager.stop();
+                this.videoEngagementManager = null;
+            }
+        }
 
         // Enqueue the videostart
         this.enqueueEvent(this.buildEvent(url, "videostart", videoMetadata));
 
-        // Start a new EngagementTask
+        // Start a new engagement manager for the video.
         Map<String, Object> hbEvent = this.buildEvent(url, "vheartbeat", videoMetadata);
         // TODO: Can we remove some metadata fields from this request?
         this.videoEngagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
@@ -183,7 +197,15 @@ public class ParselyTracker {
             return;
         }
         PLog("trackPause called");
-        this.videoEngagementManager.cancel();
+        this.videoEngagementManager.stop();
+    }
+
+    public void resetVideo() {
+        if(this.videoEngagementManager == null) {
+            PLog("No ongoing video to reset.");
+            return;
+        }
+        this.videoEngagementManager.stop();
         this.videoEngagementManager = null;
     }
 
@@ -626,7 +648,8 @@ public class ParselyTracker {
      */
     private class EngagementManager {
 
-        private Map<String, Object> baseEvent;
+        public Map<String, Object> baseEvent;
+        private boolean started;
         private Timer parentTimer;
         private TimerTask waitingTimerTask;
         private long latestDelayMillis, totalTime;
@@ -639,12 +662,24 @@ public class ParselyTracker {
             this.totalTime = 0;
         }
 
+        public boolean isRunning() { return this.started; }
+
         public void start() {
             this.scheduleNextExecution(this.latestDelayMillis);
+            this.started = true;
         }
 
-        public boolean cancel() {
-            return this.waitingTimerTask.cancel();
+        public void stop() {
+            this.waitingTimerTask.cancel();
+            this.started = false;
+
+        }
+
+        public boolean isSameVideo(String url, ParselyVideoMetadata metadata) {
+            Map<String, Object> baseMetadata = (Map<String, Object>) baseEvent.get("metadata");
+            return (baseEvent.get("url") == url &&
+                    baseMetadata.get("canonical_url") == metadata.canonical_url &&
+                    (int) (baseMetadata.get("duration")) == metadata.durationSeconds);
         }
 
         private void scheduleNextExecution(long delay) {
@@ -687,7 +722,5 @@ public class ParselyTracker {
             // data use for very long engagements (e.g. streaming video).
             this.latestDelayMillis = (int) Math.min(90000, this.latestDelayMillis * 1.25);
         }
-
-
     }
 }

@@ -21,12 +21,15 @@ public class ParselyVideoMetadata extends ParselyMetadata {
             @NonNull int durationSeconds
     ) {
         super(authors, videoId, section, tags, thumbUrl, title, pubDate);
+        if(videoId == null) {
+            throw new NullPointerException("videoId cannot be null");
+        }
         this.durationSeconds = durationSeconds;
     }
 
     public Map<String, Object> toMap() {
         Map<String, Object> output = super.toMap();
-        output.put("durationSeconds", this.durationSeconds);
+        output.put("duration", this.durationSeconds);
         return output;
     }
 }
