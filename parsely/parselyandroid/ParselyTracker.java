@@ -57,7 +57,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class ParselyTracker {
     private static ParselyTracker instance = null;
     private static int DEFAULT_FLUSH_INTERVAL = 60;
-    private static double DEFAULT_ENGAGEMENT_INTERVAL = 10.5;
+    private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     private static String DEFAULT_URLREF = "parsely_mobile_sdk";
 
     private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey, engagementUrl;
@@ -65,11 +65,12 @@ public class ParselyTracker {
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     public int flushInterval;
-    private double engagementInterval;
     protected ArrayList<Map<String, Object>> eventQueue;
     private Map<String, String> deviceInfo;
     private Context context;
-    private Timer flushTimer, engagementTimer;
+    // TODO: Get rid of flushTimer
+    private Timer flushTimer, timer;
+    private EngagementManager engagementManager, videoEngagementManager;
 
     protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
         this.context = c.getApplicationContext();
@@ -81,13 +82,13 @@ public class ParselyTracker {
         // get the adkey straight away on instantiation
         new GetAdKey(c).execute();
         this.flushInterval = flushInterval;
-        this.engagementInterval = DEFAULT_ENGAGEMENT_INTERVAL;
         this.storageKey = "parsely-events.ser";
         this.rootUrl = "https://srv.pixel.parsely.com/";
         this.urlref = urlref;
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
+        this.timer = new Timer();
 
         this.eventQueue = new ArrayList<>();
 
@@ -97,12 +98,17 @@ public class ParselyTracker {
     }
 
     public double getEngagementInterval() {
-        return this.engagementInterval;
+        return DEFAULT_ENGAGEMENT_INTERVAL_MILLIS;
     }
 
     public boolean engagementIsActive() {
-        return this.timerIsActive(this.engagementTimer);
+        return this.engagementManager != null;
     }
+
+    public boolean videoIsActive() {
+        return this.videoEngagementManager != null;
+    }
+
 
     /*! \brief Getter for this.isDebug
      */
@@ -128,32 +134,54 @@ public class ParselyTracker {
     *  @param url The canonical URL of the article being tracked
     *  (eg: "http://samplesite.com/some-old/article.html")
     */
-    public void trackURL(String url){
+    public void trackURL(String url, ParselyMetadata urlMetadata){
         this.enqueueEvent(this.buildEvent(url, "pageview"));
     }
 
     public void startEngagement(String url) {
         PLog("startEngagement called");
-        final String targetUrl = url;
-        TimerTask task = new TimerTask(){
-            public void run(){
-                Map <String, Object> event = buildEvent(targetUrl, "heartbeat");
-                event.put("inc", String.format("%.0f", engagementInterval));
-                enqueueEvent(event);
-            }
-        };
-        this.engagementTimer = setTimer(this.engagementTimer, task, (int) (this.engagementInterval * 1000));
+
+        // Cancel anything running
+        this.stopEngagement();
+
+        // Start a new EngagementTask
+        this.engagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, "heartbeat", url);
+        this.engagementManager.start();
     }
 
     public void stopEngagement() {
+        if(this.engagementManager == null) {
+            PLog("No ongoing engagement to stop.");
+            return;
+        }
         PLog("stopEngagement called");
-        this.stopTimer(this.engagementTimer);
-        this.engagementTimer = null;
+        this.engagementManager.cancel();
+        this.engagementManager = null;
     }
 
-    public void trackPlay(String url, String vId) { PLog("trackPlay called"); }
+    public void trackPlay(String url, ParselyVideoMetadata videoMetadata) {
+        PLog("trackPlay called");
 
-    public void trackPause() { PLog("trackPause called"); }
+        this.enqueueEvent(this.buildEvent(url, "videostart"));
+
+        // Cancel anything running
+        this.trackPause();
+
+        // Start a new EngagementTask
+        this.videoEngagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, "vheartbeat", url);
+        this.videoEngagementManager.start();
+    }
+
+    public void trackPause() {
+        if(this.videoEngagementManager == null) {
+            PLog("No ongoing video to stop.");
+            return;
+        }
+        PLog("trackPause called");
+        this.videoEngagementManager.cancel();
+        this.videoEngagementManager = null;
+    }
+
 
 
     /*! \brief Create an event Map
@@ -162,7 +190,7 @@ public class ParselyTracker {
     *  @param action Action kind to use (e.g. pageview, heartbeat)
     */
     private Map<String, Object> buildEvent(String url, String action) {
-        PLog("Track called for %s", url);
+        PLog("buildEvent called for %s", url);
 
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         double timestamp = calendar.getTimeInMillis() / 1000.0;
@@ -204,10 +232,6 @@ public class ParselyTracker {
             this.setFlushTimer();
             PLog("Flush flushTimer set to %d", this.flushInterval);
         }
-    }
-
-    private void track(String engagementUrl, String heartbeat, double engagementInterval) {
-        PLog("Tracking heartbeat");
     }
 
     /*!  \brief Generate pixel requests from the queue
@@ -582,4 +606,80 @@ public class ParselyTracker {
         }
 
     };
+
+
+    /*! \brief Engagement manager for article and video engagement.
+     *
+     * Implemented to handle its own queuing of future executions to accomplish
+     * two things:
+     *
+     * 1. Flushing any engaged time before canceling.
+     * 2. Progressive backoff for long engagements to save data.
+     */
+    private class EngagementManager {
+
+        private String action, url;
+        private Timer parentTimer;
+        private TimerTask waitingTimerTask;
+        private long latestDelayMillis, totalTime;
+
+
+        public EngagementManager(Timer parentTimer, int intervalMillis, String action, String url) {
+            this.parentTimer = parentTimer;
+            this.action = action;
+            this.url = url;
+            this.latestDelayMillis = intervalMillis;
+            this.totalTime = 0;
+        }
+
+        public void start() {
+            this.scheduleNextExecution(this.latestDelayMillis);
+        }
+
+        public boolean cancel() {
+            return this.waitingTimerTask.cancel();
+        }
+
+        private void scheduleNextExecution(long delay) {
+            TimerTask task = new TimerTask(){
+                public void run(){
+                    doEnqueue(this.scheduledExecutionTime());
+                    updateLatestInterval();
+                    scheduleNextExecution(latestDelayMillis);
+                }
+
+                public boolean cancel() {
+                    doEnqueue(this.scheduledExecutionTime());
+                    return super.cancel();
+                }
+            };
+            PLog(String.format("latestDelayMillis: %d", delay));
+            this.latestDelayMillis = delay;
+            this.parentTimer.schedule(task, delay);
+            this.waitingTimerTask = task;
+        }
+
+        private void doEnqueue(long scheduledExecutionTime) {
+            PLog(String.format("Enqueuing %s event.", this.action));
+            Map <String, Object> event = buildEvent(this.url, this.action);
+
+            // Adjust inc by execution time in case we're late or early.
+            long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
+            long inc = (this.latestDelayMillis + executionDiff) / 1000;
+            this.totalTime += inc;
+            event.put("inc", inc);
+            event.put("tt", this.totalTime);
+
+            enqueueEvent(event);
+        }
+
+        private void updateLatestInterval() {
+            // Update latestDelayMillis to be used for next execution. The interval
+            // increases by 25% for each successive call, up to a max of 90s, to cut down on
+            // data use for very long engagements (e.g. streaming video).
+            this.latestDelayMillis = (int) Math.min(90000, this.latestDelayMillis * 1.25);
+        }
+
+
+    }
 }

@@ -21,7 +21,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         
         // initialize the Parsely tracker with your API key and the current Context
-        ParselyTracker.sharedInstance("examplesite.com", 15, this);
+        ParselyTracker.sharedInstance("examplesite.com", 30, this);
 
         // Set debugging to true so we don't actually send things to Parse.ly
         ParselyTracker.sharedInstance().setDebug(true);
@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
         final TextView intervalView = (TextView)findViewById(R.id.interval);
         storedView.setText(String.format("Flush interval: %d", ParselyTracker.sharedInstance().flushInterval));
 
-        updateEngagementString();
+        updateEngagementStrings();
         
         final TextView views[] = new TextView[3];
         views[0] = queueView;
@@ -59,7 +59,7 @@ public class MainActivity extends Activity {
                     iView.setText("Flush timer inactive");
                 }
 
-                updateEngagementString();
+                updateEngagementStrings();
             }
         };
         
@@ -86,35 +86,46 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    private void updateEngagementString() {
-        StringBuilder message = new StringBuilder("Engagement is ");
+    private void updateEngagementStrings() {
+        StringBuilder eMsg = new StringBuilder("Engagement is ");
         if(ParselyTracker.sharedInstance().engagementIsActive() == true) {
-            message.append("active.");
+            eMsg.append("active.");
         } else {
-            message.append("inactive.");
+            eMsg.append("inactive.");
         }
-        message.append(String.format(" (interval: %.01fs)", ParselyTracker.sharedInstance().getEngagementInterval()));
+        eMsg.append(String.format(" (interval: %.01fs)", ParselyTracker.sharedInstance().getEngagementInterval()));
 
-        TextView view = findViewById(R.id.et_interval);
-        view.setText(message.toString());
+        TextView eView = findViewById(R.id.et_interval);
+        eView.setText(eMsg.toString());
+
+        StringBuilder vMsg = new StringBuilder("Video is ");
+        if(ParselyTracker.sharedInstance().videoIsActive() == true) {
+            vMsg.append("active.");
+        } else {
+            vMsg.append("inactive.");
+        }
+        vMsg.append(String.format(" (interval: %.01fs)", ParselyTracker.sharedInstance().getEngagementInterval()));
+
+        TextView vView = findViewById(R.id.video_interval);
+        vView.setText(vMsg.toString());
     }
 
     public void trackURL(View view) {
-        ParselyTracker.sharedInstance().trackURL("http://example.com/article1.html");
+        ParselyTracker.sharedInstance().trackURL("http://example.com/article1.html", null);
     }
 
     public void startEngagement(View view) {
         ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html");
-        updateEngagementString();
+        updateEngagementStrings();
     }
 
     public void stopEngagement(View view) {
         ParselyTracker.sharedInstance().stopEngagement();
-        updateEngagementString();
+        updateEngagementStrings();
     }
 
     public void trackPlay(View view) {
-        ParselyTracker.sharedInstance().trackPlay("http://example.com/article1", "video1");
+        ParselyTracker.sharedInstance().trackPlay("http://example.com/article1", null);
     }
 
     public void trackPause(View view) {
