@@ -16,27 +16,9 @@
 
 package com.parsely.parselyandroid;
 
-import java.io.EOFException;
-import java.io.FileNotFoundException;
-import java.util.Calendar;
-import java.util.Formatter;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
-import java.io.StringWriter;
-
 import android.annotation.TargetApi;
-import android.content.SharedPreferences;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -50,19 +32,37 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.EOFException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.Timer;
+import java.util.TimerTask;
+
 /*! \brief Tracks Parse.ly app views in Android apps
-*
-*  Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
-*  flushes the queue to the Parse.ly pixel proxy server.
-*/
+ *
+ *  Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
+ *  flushes the queue to the Parse.ly pixel proxy server.
+ */
 public class ParselyTracker {
     private static ParselyTracker instance = null;
     private static int DEFAULT_FLUSH_INTERVAL = 60;
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     private static String DEFAULT_URLREF = "parsely_mobile_sdk";
-
+    // Here for backwards compat
+    public int flushInterval;
     protected ArrayList<Map<String, Object>> eventQueue;
-
     private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
     private boolean isDebug, flushTimerRunning;
     private SharedPreferences settings;
@@ -73,10 +73,7 @@ public class ParselyTracker {
     private FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
 
-    // Here for backwards compat
-    public int flushInterval;
-
-    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c){
+    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c) {
         this.context = c.getApplicationContext();
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
@@ -99,9 +96,67 @@ public class ParselyTracker {
 
         this.flushManager = new FlushManager(this.timer, flushInterval * 1000);
 
-        if(this.getStoredQueue() != null && this.getStoredQueue().size() > 0){
+        if (this.getStoredQueue() != null && this.getStoredQueue().size() > 0) {
             this.setFlushTimer();
         }
+    }
+
+    /*! \brief Singleton instance accessor. Note: This must be called after
+    sharedInstance(String, Context)
+    *
+    *  @return The singleton instance
+    */
+    public static ParselyTracker sharedInstance() {
+        if (instance == null) {
+            return null;
+        }
+        return instance;
+    }
+
+    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+     *
+     *  @param apikey The Parsely public API key (eg "samplesite.com")
+     *  @param c The current Android application context
+     *  @return The singleton instance
+     */
+    public static ParselyTracker sharedInstance(String apikey, Context c) {
+        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, DEFAULT_URLREF, c);
+    }
+
+    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+     *
+     *  @param apikey The Parsely public API key (eg "samplesite.com")
+     *  @param flushInterval The interval at which the events queue should flush, in seconds
+     *  @param c The current Android application context
+     *  @return The singleton instance
+     */
+    public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c) {
+        if (instance == null) {
+            instance = new ParselyTracker(apikey, flushInterval, DEFAULT_URLREF, c);
+        }
+        return instance;
+    }
+
+    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+     *
+     *  @param apikey The Parsely public API key (eg "samplesite.com")
+     *  @param flushInterval The interval at which the events queue should flush, in seconds
+     *  @param urlref The referrer string to send with pixel requests
+     *  @param c The current Android application context
+     *  @return The singleton instance
+     */
+    public static ParselyTracker sharedInstance(String apikey, int flushInterval, String urlref, Context c) {
+        if (instance == null) {
+            instance = new ParselyTracker(apikey, flushInterval, urlref, c);
+        }
+        return instance;
+    }
+
+    protected static void PLog(String logstring, Object... objects) {
+        if (logstring.equals("")) {
+            return;
+        }
+        System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
     }
 
     public double getEngagementInterval() {
@@ -115,7 +170,6 @@ public class ParselyTracker {
     public boolean videoIsActive() {
         return this.videoEngagementManager != null;
     }
-
 
     /*! \brief Getter for this.isDebug
      */
@@ -135,13 +189,12 @@ public class ParselyTracker {
         PLog("Debugging is now set to " + isDebug);
     }
 
-
     /*! \brief Register a pageview event using a canonical URL
-    *
-    *  @param url The canonical URL of the article being tracked
-    *  (eg: "http://samplesite.com/some-old/article.html")
-    */
-    public void trackURL(String url, ParselyMetadata urlMetadata){
+     *
+     *  @param url The canonical URL of the article being tracked
+     *  (eg: "http://samplesite.com/some-old/article.html")
+     */
+    public void trackURL(String url, ParselyMetadata urlMetadata) {
         this.enqueueEvent(this.buildEvent(url, "pageview", urlMetadata));
     }
 
@@ -157,8 +210,16 @@ public class ParselyTracker {
         this.engagementManager.start();
     }
 
+    /*! \brief Add an event Map to the queue.
+     *
+     *  Place a data structure representing the event into the in-memory queue for later use
+     *
+     *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
+     *  store exceeds `storageSizeLimit`.
+     */
+
     public void stopEngagement() {
-        if(this.engagementManager == null) {
+        if (this.engagementManager == null) {
             PLog("No ongoing engagement to stop.");
             return;
         }
@@ -198,7 +259,7 @@ public class ParselyTracker {
     }
 
     public void trackPause() {
-        if(this.videoEngagementManager == null) {
+        if (this.videoEngagementManager == null) {
             PLog("No ongoing video to stop.");
             return;
         }
@@ -207,15 +268,13 @@ public class ParselyTracker {
     }
 
     public void resetVideo() {
-        if(this.videoEngagementManager == null) {
+        if (this.videoEngagementManager == null) {
             PLog("No ongoing video to reset.");
             return;
         }
         this.videoEngagementManager.stop();
         this.videoEngagementManager = null;
     }
-
-
 
     /*! \brief Create an event Map
      *
@@ -244,29 +303,21 @@ public class ParselyTracker {
         data.put("os_version", this.deviceInfo.get("os_version"));
         event.put("data", data);
 
-        if(metadata != null) {
+        if (metadata != null) {
             event.put("metadata", metadata.toMap());
         }
 
         return event;
     }
 
-    /*! \brief Add an event Map to the queue.
-     *
-     *  Place a data structure representing the event into the in-memory queue for later use
-     *
-     *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
-     *  store exceeds `storageSizeLimit`.
-     */
-
-    private void enqueueEvent(Map<String, Object> event){
+    private void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
         PLog("%s", event);
         this.eventQueue.add(event);
         new QueueManager().execute();
-        if(this.flushManager.isRunning() == false) {
+        if (this.flushManager.isRunning() == false) {
             this.setFlushTimer();
-            PLog("Flush flushTimer set to %ds", (this.flushManager.getIntervalMillis()/1000));
+            PLog("Flush flushTimer set to %ds", (this.flushManager.getIntervalMillis() / 1000));
         }
     }
 
@@ -280,16 +331,14 @@ public class ParselyTracker {
         new FlushQueue().execute();
     }
 
-
-
     /*!  \brief Send the entire queue as a single request
-    *
-    *   Creates a large POST request containing the JSON encoding of the entire queue.
-    *   Sends this request to the proxy server, which forwards requests to the pixel server.
-    *
-    *   @param queue The list of event dictionaries to serialize
-    */
-    private void sendBatchRequest(ArrayList<Map<String, Object>> events){
+     *
+     *   Creates a large POST request containing the JSON encoding of the entire queue.
+     *   Sends this request to the proxy server, which forwards requests to the pixel server.
+     *
+     *   @param queue The list of event dictionaries to serialize
+     */
+    private void sendBatchRequest(ArrayList<Map<String, Object>> events) {
         PLog("Sending batched request of %d events", events.size());
         if (events == null || events.size() == 0) {
             return;
@@ -311,14 +360,14 @@ public class ParselyTracker {
         PLog("POST Data %s", this.JsonEncode(batchMap));
     }
 
-    private boolean isReachable(){
-        ConnectivityManager cm = (ConnectivityManager)this.context.getSystemService(
+    private boolean isReachable() {
+        ConnectivityManager cm = (ConnectivityManager) this.context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    private void persistQueue(){
+    private void persistQueue() {
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         if (storedQueue == null) {
@@ -334,18 +383,18 @@ public class ParselyTracker {
 
     private ArrayList<Map<String, Object>> getStoredQueue() {
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
-        try{
+        try {
             FileInputStream fis = this.context.getApplicationContext().openFileInput(
                     this.storageKey);
             ObjectInputStream ois = new ObjectInputStream(fis);
             //noinspection unchecked
-            storedQueue = (ArrayList<Map<String, Object>>)ois.readObject();
+            storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
             ois.close();
-        } catch(EOFException ex) {
+        } catch (EOFException ex) {
             PLog("");
         } catch (FileNotFoundException ex) {
             // Nothing to do here. Means there was no saved queue.
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             PLog("Exception thrown during queue deserialization: %s", ex.toString());
         }
 
@@ -353,72 +402,70 @@ public class ParselyTracker {
         return storedQueue;
     }
 
-    protected void purgeStoredQueue(){
+    protected void purgeStoredQueue() {
         this.persistObject(null);
     }
 
-    private void expelStoredEvent(){
+    private void expelStoredEvent() {
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         storedQueue.remove(0);
     }
 
     @TargetApi(Build.VERSION_CODES.CUPCAKE)
-    private void persistObject(Object o){
-        try{
+    private void persistObject(Object o) {
+        try {
             FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
-                                       this.storageKey,
-                                       android.content.Context.MODE_PRIVATE
-                                   );
+                    this.storageKey,
+                    android.content.Context.MODE_PRIVATE
+            );
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(o);
             oos.close();
-        } catch (Exception ex){
+        } catch (Exception ex) {
             PLog("Exception thrown during queue serialization: %s", ex.toString());
         }
     }
 
-    private String JsonEncode(Map<String, Object> map){
+    private String JsonEncode(Map<String, Object> map) {
         ObjectMapper mapper = new ObjectMapper();
         String ret = null;
         try {
             StringWriter strWriter = new StringWriter();
             mapper.writeValue(strWriter, map);
             ret = strWriter.toString();
-          } catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-          }
+        }
         return ret;
     }
 
     /*! \brief Allow Parsely to send pageview events
-    *
-    *  Instantiates the callback flushTimer responsible for flushing the events queue.
-    *  Can be called before of after `stop`, but has no effect if used before instantiating the
-    *  singleton
-    */
-    public void setFlushTimer(){
+     *
+     *  Instantiates the callback flushTimer responsible for flushing the events queue.
+     *  Can be called before of after `stop`, but has no effect if used before instantiating the
+     *  singleton
+     */
+    public void setFlushTimer() {
         this.flushManager.start();
     }
 
     /*! \brief Is the callback flushTimer running
-    *
-    *  @return `true` if the callback flushTimer is currently running, `false` otherwise
-    */
-    public boolean flushTimerIsActive(){
+     *
+     *  @return `true` if the callback flushTimer is currently running, `false` otherwise
+     */
+    public boolean flushTimerIsActive() {
         return this.flushManager.isRunning();
     }
 
     /*! \brief Disallow Parsely from sending pageview events
-    *
-    *  Invalidates the callback flushTimer responsible for flushing the events queue.
-    *  Can be called before or after `start`, but has no effect if used before instantiating the
-    *  singleton
-    */
-    public void stopFlushTimer(){
+     *
+     *  Invalidates the callback flushTimer responsible for flushing the events queue.
+     *  Can be called before or after `start`, but has no effect if used before instantiating the
+     *  singleton
+     */
+    public void stopFlushTimer() {
         this.flushManager.stop();
     }
-
-
 
     private String generateSiteUuid() {
         String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
@@ -427,20 +474,20 @@ public class ParselyTracker {
         return uuid;
     }
 
-    private String getSiteUuid(){
+    private String getSiteUuid() {
         String uuid = "";
-        try{
+        try {
             uuid = this.settings.getString(this.uuidkey, "");
-            if(uuid.equals("")){
+            if (uuid.equals("")) {
                 uuid = this.generateSiteUuid();
             }
-        } catch(Exception ex){
+        } catch (Exception ex) {
             PLog("Exception caught during site uuid generation: %s", ex.toString());
         }
         return uuid;
     }
 
-    private Map<String, String> collectDeviceInfo(){
+    private Map<String, String> collectDeviceInfo() {
         Map<String, String> dInfo = new HashMap<>();
 
         // TODO: screen dimensions (maybe?)
@@ -458,71 +505,16 @@ public class ParselyTracker {
         return dInfo;
     }
 
-    /*! \brief Singleton instance accessor. Note: This must be called after
-    sharedInstance(String, Context)
-    *
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(){
-        if(instance == null){
-            return null;
-        }
-        return instance;
+    public int queueSize() {
+        return this.eventQueue.size();
     }
 
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
-    *
-    *  @param apikey The Parsely public API key (eg "samplesite.com")
-    *  @param c The current Android application context
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(String apikey, Context c){
-        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, DEFAULT_URLREF, c);
-    }
-
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
-    *
-    *  @param apikey The Parsely public API key (eg "samplesite.com")
-    *  @param flushInterval The interval at which the events queue should flush, in seconds
-    *  @param c The current Android application context
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c){
-        if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, DEFAULT_URLREF, c);
-        }
-        return instance;
-    }
-
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
-    *
-    *  @param apikey The Parsely public API key (eg "samplesite.com")
-    *  @param flushInterval The interval at which the events queue should flush, in seconds
-    *  @param urlref The referrer string to send with pixel requests
-    *  @param c The current Android application context
-    *  @return The singleton instance
-    */
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval, String urlref, Context c){
-        if(instance == null){
-            instance = new ParselyTracker(apikey, flushInterval, urlref, c);
-        }
-        return instance;
-    }
-
-    public int queueSize(){ return this.eventQueue.size(); }
-    public int storedEventsCount(){
+    public int storedEventsCount() {
         ArrayList<Map<String, Object>> ar = this.getStoredQueue();
-        if(ar != null){
+        if (ar != null) {
             return ar.size();
         }
         return 0;
-    }
-
-    protected static void PLog(String logstring, Object... objects){
-        if (logstring.equals("")) {
-            return;
-        }
-        System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
     }
 
     @TargetApi(Build.VERSION_CODES.CUPCAKE)
@@ -553,12 +545,11 @@ public class ParselyTracker {
             PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
             if ((eventQueue == null || eventQueue.size() == 0) &&
-                (storedQueue == null || storedQueue.size() == 0))
-            {
+                    (storedQueue == null || storedQueue.size() == 0)) {
                 stopFlushTimer();
                 return null;
             }
-            if(!isReachable()){
+            if (!isReachable()) {
                 PLog("Network unreachable. Not flushing.");
                 return null;
             }
@@ -566,7 +557,7 @@ public class ParselyTracker {
             ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
 
             hs.addAll(eventQueue);
-            if(storedQueue != null){
+            if (storedQueue != null) {
                 hs.addAll(storedQueue);
             }
             newQueue.addAll(hs);
@@ -589,16 +580,14 @@ public class ParselyTracker {
             String advertId = null;
             try {
                 idInfo = AdvertisingIdClient.getAdvertisingIdInfo(mContext);
-            }
-            catch (GooglePlayServicesRepairableException | IOException | GooglePlayServicesNotAvailableException e) {
+            } catch (GooglePlayServicesRepairableException | IOException | GooglePlayServicesNotAvailableException e) {
                 PLog("No Google play services or error! falling back to device uuid");
                 // fall back to device uuid on google play errors
                 advertId = getSiteUuid();
             }
             try {
                 advertId = idInfo.getId();
-            }
-            catch (NullPointerException e) {
+            } catch (NullPointerException e) {
                 advertId = getSiteUuid();
             }
             return advertId;
@@ -610,7 +599,9 @@ public class ParselyTracker {
             deviceInfo.put("parsely_site_uuid", adKey);
         }
 
-    };
+    }
+
+    ;
 
 
     /*! \brief Manager for the event flush timer.
@@ -634,8 +625,10 @@ public class ParselyTracker {
                 return;
             }
 
-            this.runningTask = new TimerTask(){
-                public void run(){ flush(); }
+            this.runningTask = new TimerTask() {
+                public void run() {
+                    flush();
+                }
             };
             this.parentTimer.scheduleAtFixedRate(this.runningTask, intervalMillis, intervalMillis);
         }
@@ -683,7 +676,9 @@ public class ParselyTracker {
             this.totalTime = 0;
         }
 
-        public boolean isRunning() { return this.started; }
+        public boolean isRunning() {
+            return this.started;
+        }
 
         public void start() {
             this.scheduleNextExecution(this.latestDelayMillis);
@@ -704,8 +699,8 @@ public class ParselyTracker {
         }
 
         private void scheduleNextExecution(long delay) {
-            TimerTask task = new TimerTask(){
-                public void run(){
+            TimerTask task = new TimerTask() {
+                public void run() {
                     doEnqueue(this.scheduledExecutionTime());
                     updateLatestInterval();
                     scheduleNextExecution(latestDelayMillis);

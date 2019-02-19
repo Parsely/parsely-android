@@ -24,7 +24,7 @@ public class ParselyMetadata {
             String thumbUrl,
             String title,
             Calendar pubDate
-            ) {
+    ) {
         this.authors = authors;
         this.canonical_url = canonical_url;
         this.section = section;
@@ -36,19 +36,19 @@ public class ParselyMetadata {
 
     public Map<String, Object> toMap() {
         Map<String, Object> output = new HashMap<>();
-        if(this.authors != null)
+        if (this.authors != null)
             output.put("authors", this.authors);
-        if(this.canonical_url != null)
+        if (this.canonical_url != null)
             output.put("canonical_url", this.canonical_url);
-        if(this.section != null)
+        if (this.section != null)
             output.put("section", this.section);
-        if(this.tags != null)
+        if (this.tags != null)
             output.put("tags", this.tags);
-        if(this.thumbUrl != null)
+        if (this.thumbUrl != null)
             output.put("thumbUrl", this.thumbUrl);
-        if(this.title != null)
+        if (this.title != null)
             output.put("title", this.title);
-        if(this.pubDate != null)
+        if (this.pubDate != null)
             output.put("pub_date_tmsp", this.pubDate.getTimeInMillis());
         return output;
     }

@@ -16,13 +16,14 @@
 
 package com.parsely.parselyandroid;
 
+import android.os.AsyncTask;
+
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
-import javax.net.ssl.HttpsURLConnection;
 
-import android.os.AsyncTask;
+import javax.net.ssl.HttpsURLConnection;
 
 public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLConnection> {
 
@@ -31,12 +32,12 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLC
     @Override
     protected HttpsURLConnection doInBackground(String... data) {
         HttpsURLConnection connection = null;
-        try{
-            if(data.length == 1){  // non-batched (since no post data is included)
-                connection = (HttpsURLConnection)new URL(data[0]).openConnection();
+        try {
+            if (data.length == 1) {  // non-batched (since no post data is included)
+                connection = (HttpsURLConnection) new URL(data[0]).openConnection();
                 connection.getInputStream();
-            } else if(data.length == 2){  // batched (post data included)
-                connection = (HttpsURLConnection)new URL(data[0]).openConnection();
+            } else if (data.length == 2) {  // batched (post data included)
+                connection = (HttpsURLConnection) new URL(data[0]).openConnection();
                 connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
                 connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
@@ -53,15 +54,15 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLC
                 connection.getInputStream();
             }
 
-        } catch (Exception ex){
+        } catch (Exception ex) {
             this.exception = ex;
             return null;
         }
         return connection;
     }
 
-    protected void onPostExecute(HttpsURLConnection conn){
-        if(this.exception != null){
+    protected void onPostExecute(HttpsURLConnection conn) {
+        if (this.exception != null) {
             ParselyTracker.PLog("Pixel request exception");
             ParselyTracker.PLog(this.exception.toString());
         } else {
@@ -79,7 +80,7 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLC
                 instance.eventQueue.clear();
                 instance.purgeStoredQueue();
 
-                if(instance.queueSize() == 0 && instance.storedEventsCount() == 0){
+                if (instance.queueSize() == 0 && instance.storedEventsCount() == 0) {
                     ParselyTracker.PLog("Event queue empty, flush timer cleared.");
                     instance.stopFlushTimer();
                 }
