@@ -60,11 +60,9 @@ public class ParselyTracker {
     private static int DEFAULT_FLUSH_INTERVAL = 60;
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     private static String DEFAULT_URLREF = "parsely_mobile_sdk";
-    // Here for backwards compat
-    public int flushInterval;
     protected ArrayList<Map<String, Object>> eventQueue;
-    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
-    private boolean isDebug, flushTimerRunning;
+    private String apikey, rootUrl, storageKey, uuidKey, urlref, adKey;
+    private boolean isDebug;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     private Map<String, String> deviceInfo;
@@ -78,7 +76,7 @@ public class ParselyTracker {
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
         this.apikey = apikey;
-        this.uuidkey = "parsely-uuid";
+        this.uuidKey = "parsely-uuid";
         this.adKey = null;
         // get the adkey straight away on instantiation
         new GetAdKey(c).execute();
@@ -90,7 +88,6 @@ public class ParselyTracker {
         this.deviceInfo = this.collectDeviceInfo();
         this.timer = new Timer();
         this.isDebug = false;
-        this.flushInterval = flushInterval;
 
         this.eventQueue = new ArrayList<>();
 
@@ -171,6 +168,10 @@ public class ParselyTracker {
         return this.videoEngagementManager != null;
     }
 
+    public long getFlushInterval() {
+        return this.flushManager.getIntervalMillis() / 1000;
+    }
+
     /*! \brief Getter for this.isDebug
      */
     public boolean getDebug() {
@@ -199,8 +200,6 @@ public class ParselyTracker {
     }
 
     public void startEngagement(String url) {
-        PLog("startEngagement called");
-
         // Cancel anything running
         this.stopEngagement();
 
@@ -220,16 +219,13 @@ public class ParselyTracker {
 
     public void stopEngagement() {
         if (this.engagementManager == null) {
-            PLog("No ongoing engagement to stop.");
             return;
         }
-        PLog("stopEngagement called");
         this.engagementManager.stop();
         this.engagementManager = null;
     }
 
     public void trackPlay(String url, @NonNull ParselyVideoMetadata videoMetadata) {
-        PLog("trackPlay called");
         if (videoMetadata == null) {
             throw new NullPointerException("videoMetadata cannot be null.");
         }
@@ -260,16 +256,13 @@ public class ParselyTracker {
 
     public void trackPause() {
         if (this.videoEngagementManager == null) {
-            PLog("No ongoing video to stop.");
             return;
         }
-        PLog("trackPause called");
         this.videoEngagementManager.stop();
     }
 
     public void resetVideo() {
         if (this.videoEngagementManager == null) {
-            PLog("No ongoing video to reset.");
             return;
         }
         this.videoEngagementManager.stop();
@@ -282,7 +275,7 @@ public class ParselyTracker {
      *  @param action Action kind to use (e.g. pageview, heartbeat)
      */
     private Map<String, Object> buildEvent(String url, String action, ParselyMetadata metadata) {
-        PLog("buildEvent called for %s", url);
+        PLog("buildEvent called for %s/%s", action, url);
 
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
@@ -312,7 +305,7 @@ public class ParselyTracker {
 
     private void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
-        PLog("%s", event);
+        // PLog("%s", event);
         this.eventQueue.add(event);
         new QueueManager().execute();
         if (this.flushManager.isRunning() == false) {
@@ -339,16 +332,15 @@ public class ParselyTracker {
      *   @param queue The list of event dictionaries to serialize
      */
     private void sendBatchRequest(ArrayList<Map<String, Object>> events) {
-        PLog("Sending batched request of %d events", events.size());
         if (events == null || events.size() == 0) {
             return;
         }
+        PLog("Sending request with %d events", events.size());
 
         // Put in a Map for the proxy server
         Map<String, Object> batchMap = new HashMap<>();
         batchMap.put("events", events);
 
-        PLog("Setting API connection");
         if (this.isDebug == true) {
             PLog("Debug mode on. Not sending to Parse.ly");
             this.eventQueue.clear();
@@ -391,7 +383,7 @@ public class ParselyTracker {
             storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
             ois.close();
         } catch (EOFException ex) {
-            PLog("");
+            // Nothing to do here.
         } catch (FileNotFoundException ex) {
             // Nothing to do here. Means there was no saved queue.
         } catch (Exception ex) {
@@ -477,7 +469,7 @@ public class ParselyTracker {
     private String getSiteUuid() {
         String uuid = "";
         try {
-            uuid = this.settings.getString(this.uuidkey, "");
+            uuid = this.settings.getString(this.uuidKey, "");
             if (uuid.equals("")) {
                 uuid = this.generateSiteUuid();
             }
@@ -711,7 +703,6 @@ public class ParselyTracker {
                     return super.cancel();
                 }
             };
-            PLog(String.format("latestDelayMillis: %d", delay));
             this.latestDelayMillis = delay;
             this.parentTimer.schedule(task, delay);
             this.waitingTimerTask = task;
