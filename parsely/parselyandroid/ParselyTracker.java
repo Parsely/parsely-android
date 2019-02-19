@@ -805,7 +805,7 @@ public class ParselyTracker {
         public boolean isSameVideo(String url, ParselyVideoMetadata metadata) {
             Map<String, Object> baseMetadata = (Map<String, Object>) baseEvent.get("metadata");
             return (baseEvent.get("url") == url &&
-                    baseMetadata.get("canonical_url") == metadata.canonical_url &&
+                    baseMetadata.get("canonical_url") == metadata.canonicalUrl &&
                     (int) (baseMetadata.get("duration")) == metadata.durationSeconds);
         }
 
