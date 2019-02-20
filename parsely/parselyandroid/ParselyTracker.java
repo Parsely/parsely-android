@@ -58,7 +58,7 @@ import java.util.TimerTask;
  */
 public class ParselyTracker {
     private static ParselyTracker instance = null;
-    private static int DEFAULT_FLUSH_INTERVAL = 60;
+    private static int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     protected ArrayList<Map<String, Object>> eventQueue;
     private String apikey, rootUrl, storageKey, uuidKey, adKey;
@@ -96,7 +96,7 @@ public class ParselyTracker {
         this.flushManager = new FlushManager(this.timer, flushInterval * 1000);
 
         if (this.getStoredQueue() != null && this.getStoredQueue().size() > 0) {
-            this.setFlushTimer();
+            this.startFlushTimer();
         }
     }
 
@@ -115,19 +115,19 @@ public class ParselyTracker {
     /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
      *
      *  @param apikey The Parsely public API key (eg "example.com")
-     *  @param c The current Android application context
-     *  @return The singleton instance
+     *  @param c      The current Android application context
+     *  @return       The singleton instance
      */
     public static ParselyTracker sharedInstance(String apikey, Context c) {
-        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, c);
+        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL_SECS, c);
     }
 
     /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
      *
-     *  @param apikey The Parsely public API key (eg "example.com")
+     *  @param apikey        The Parsely public API key (eg "example.com")
      *  @param flushInterval The interval at which the events queue should flush, in seconds
-     *  @param c The current Android application context
-     *  @return The singleton instance
+     *  @param c             The current Android application context
+     *  @return              The singleton instance
      */
     public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c) {
         if (instance == null) {
@@ -154,7 +154,7 @@ public class ParselyTracker {
      * @return The base engagement tracking interval.
      */
     public double getEngagementInterval() {
-        return DEFAULT_ENGAGEMENT_INTERVAL_MILLIS;
+        return DEFAULT_ENGAGEMENT_INTERVAL_MILLIS / 1000;
     }
 
     /*! \brief Returns whether the engagement tracker is running.
@@ -393,8 +393,8 @@ public class ParselyTracker {
         // Push it onto the queue
         this.eventQueue.add(event);
         new QueueManager().execute();
-        if (this.flushManager.isRunning() == false) {
-            this.setFlushTimer();
+        if (this.flushTimerIsActive() == false) {
+            this.startFlushTimer();
             PLog("Flush flushTimer set to %ds", (this.flushManager.getIntervalMillis() / 1000));
         }
     }
@@ -544,11 +544,11 @@ public class ParselyTracker {
 
     /*! \brief Start the timer to flush events to Parsely.
      *
-     *  Instantiates the callback flushTimer responsible for flushing the events queue.
+     *  Instantiates the callback timer responsible for flushing the events queue.
      *  Can be called before of after `stop`, but has no effect if used before instantiating the
      *  singleton
      */
-    public void setFlushTimer() {
+    public void startFlushTimer() {
         this.flushManager.start();
     }
 
@@ -841,6 +841,11 @@ public class ParselyTracker {
             // Create a copy of the base event to enqueue
             Map<String, Object> event = new HashMap(this.baseEvent);
             PLog(String.format("Enqueuing %s event.", event.get("action")));
+
+            // Update `ts` for the event since it's happening right now.
+            Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            Map<String, Object> data = (Map<String, Object>) event.get("data");
+            data.put("ts", now.getTimeInMillis() / 1000);
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);

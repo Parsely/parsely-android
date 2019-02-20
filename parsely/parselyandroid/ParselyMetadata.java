@@ -54,20 +54,27 @@ public class ParselyMetadata {
      */
     public Map<String, Object> toMap() {
         Map<String, Object> output = new HashMap<>();
-        if (this.authors != null)
+        if (this.authors != null) {
             output.put("authors", this.authors);
-        if (this.canonicalUrl != null)
+        }
+        if (this.canonicalUrl != null) {
             output.put("canonical_url", this.canonicalUrl);
-        if (this.section != null)
+        }
+        if (this.section != null) {
             output.put("section", this.section);
-        if (this.tags != null)
+        }
+        if (this.tags != null) {
             output.put("tags", this.tags);
-        if (this.thumbUrl != null)
+        }
+        if (this.thumbUrl != null) {
             output.put("thumb_url", this.thumbUrl);
-        if (this.title != null)
+        }
+        if (this.title != null) {
             output.put("title", this.title);
-        if (this.pubDate != null)
+        }
+        if (this.pubDate != null) {
             output.put("pub_date_tmsp", this.pubDate.getTimeInMillis() / 1000);
+        }
         return output;
     }
 }
