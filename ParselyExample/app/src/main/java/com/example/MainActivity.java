@@ -21,41 +21,41 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
+
         // initialize the Parsely tracker with your API key and the current Context
         ParselyTracker.sharedInstance("example.com", 30, this);
 
         // Set debugging to true so we don't actually send things to Parse.ly
         ParselyTracker.sharedInstance().setDebug(true);
-        
-        final TextView queueView = (TextView)findViewById(R.id.queue_size);
+
+        final TextView queueView = (TextView) findViewById(R.id.queue_size);
         queueView.setText(String.format("Queued events: %d", ParselyTracker.sharedInstance().queueSize()));
-        
-        final TextView storedView = (TextView)findViewById(R.id.stored_size);
+
+        final TextView storedView = (TextView) findViewById(R.id.stored_size);
         storedView.setText(String.format("Stored events: %d", ParselyTracker.sharedInstance().storedEventsCount()));
-        
-        final TextView intervalView = (TextView)findViewById(R.id.interval);
+
+        final TextView intervalView = (TextView) findViewById(R.id.interval);
         storedView.setText(String.format("Flush interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
 
         updateEngagementStrings();
-        
+
         final TextView views[] = new TextView[3];
         views[0] = queueView;
         views[1] = storedView;
         views[2] = intervalView;
-        
+
         final Handler mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                TextView[] v = (TextView[])msg.obj;
+                TextView[] v = (TextView[]) msg.obj;
                 TextView qView = v[0];
                 qView.setText(String.format("Queued events: %d", ParselyTracker.sharedInstance().queueSize()));
-                
+
                 TextView sView = v[1];
                 sView.setText(String.format("Stored events: %d", ParselyTracker.sharedInstance().storedEventsCount()));
-                
+
                 TextView iView = v[2];
-                if(ParselyTracker.sharedInstance().flushTimerIsActive()){
+                if (ParselyTracker.sharedInstance().flushTimerIsActive()) {
                     iView.setText(String.format("Flush Interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
                 } else {
                     iView.setText("Flush timer inactive");
@@ -64,16 +64,16 @@ public class MainActivity extends Activity {
                 updateEngagementStrings();
             }
         };
-        
+
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask(){
-            public void run(){
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
                 Message msg = new Message();
                 msg.obj = views;
                 mHandler.sendMessage(msg);
             }
         }, 500, 500);
-        
+
     }
 
     @Override
@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
-    
+
     @Override
     protected void onDestroy() {
         ParselyTracker.sharedInstance().flush();
@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
 
     private void updateEngagementStrings() {
         StringBuilder eMsg = new StringBuilder("Engagement is ");
-        if(ParselyTracker.sharedInstance().engagementIsActive() == true) {
+        if (ParselyTracker.sharedInstance().engagementIsActive() == true) {
             eMsg.append("active.");
         } else {
             eMsg.append("inactive.");
@@ -101,7 +101,7 @@ public class MainActivity extends Activity {
         eView.setText(eMsg.toString());
 
         StringBuilder vMsg = new StringBuilder("Video is ");
-        if(ParselyTracker.sharedInstance().videoIsActive() == true) {
+        if (ParselyTracker.sharedInstance().videoIsActive() == true) {
             vMsg.append("active.");
         } else {
             vMsg.append("inactive.");

@@ -67,7 +67,7 @@ public class ParselyMetadata {
         if (this.title != null)
             output.put("title", this.title);
         if (this.pubDate != null)
-            output.put("pub_date_tmsp", this.pubDate.getTimeInMillis()/1000);
+            output.put("pub_date_tmsp", this.pubDate.getTimeInMillis() / 1000);
         return output;
     }
 }
