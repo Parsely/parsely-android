@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
         storedView.setText(String.format("Stored events: %d", ParselyTracker.sharedInstance().storedEventsCount()));
         
         final TextView intervalView = (TextView)findViewById(R.id.interval);
-        storedView.setText(String.format("Flush interval: %d", ParselyTracker.sharedInstance().flushInterval));
+        storedView.setText(String.format("Flush interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
 
         updateEngagementStrings();
         
@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
                 
                 TextView iView = v[2];
                 if(ParselyTracker.sharedInstance().flushTimerIsActive()){
-                    iView.setText(String.format("Flush Interval: %d", ParselyTracker.sharedInstance().flushInterval));
+                    iView.setText(String.format("Flush Interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
                 } else {
                     iView.setText("Flush timer inactive");
                 }

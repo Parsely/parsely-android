@@ -5,20 +5,31 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-/*! \brief Represents article/video metadata to be passed to Parsely tracking.
+/*! \brief Represents post metadata to be passed to Parsely tracking.
  *
- *  This class is used to attach a metadata block to a Parse.ly pageview or video
- *  request. For most use cases this is only required for video data. Pageviews typically
- *  correspond to a URL which we can crawl on the customer site.
+ *  This class is used to attach a metadata block to a Parse.ly pageview
+ *  request. Pageview metadata is only required for URLs not accessible over the
+ *  internet (i.e. app-only content) or if the customer is using an "in-pixel" integration.
+ *  Otherwise, metadata will be gathered by Parse.ly's crawling infrastructure.
  */
 public class ParselyMetadata {
     public ArrayList<String> authors, tags;
-    public String canonical_url, section, thumbUrl, title;
+    public String canonicalUrl, section, thumbUrl, title;
     public Calendar pubDate;
 
+    /* \brief Create a new ParselyMetadata object.
+     *
+     * @param authors         List of authors for the post.
+     * @param canonicalUrl    Canonical URL of the post.
+     * @param section         Section of the post.
+     * @param tags            List of tags for the post.
+     * @param thumbUrl        URL of a thumbnail for the post.
+     * @param title           Title of the post.
+     * @param pubDate         Publish date of the post.
+     */
     public ParselyMetadata(
             ArrayList<String> authors,
-            String canonical_url,
+            String canonicalUrl,
             String section,
             ArrayList<String> tags,
             String thumbUrl,
@@ -26,7 +37,7 @@ public class ParselyMetadata {
             Calendar pubDate
     ) {
         this.authors = authors;
-        this.canonical_url = canonical_url;
+        this.canonicalUrl = canonicalUrl;
         this.section = section;
         this.tags = tags;
         this.thumbUrl = thumbUrl;
@@ -34,22 +45,26 @@ public class ParselyMetadata {
         this.pubDate = pubDate;
     }
 
+    /* \brief Turn this object into a Map
+     *
+     * @return a Map object representing the metadata.
+     */
     public Map<String, Object> toMap() {
         Map<String, Object> output = new HashMap<>();
         if (this.authors != null)
             output.put("authors", this.authors);
-        if (this.canonical_url != null)
-            output.put("canonical_url", this.canonical_url);
+        if (this.canonicalUrl != null)
+            output.put("canonical_url", this.canonicalUrl);
         if (this.section != null)
             output.put("section", this.section);
         if (this.tags != null)
             output.put("tags", this.tags);
         if (this.thumbUrl != null)
-            output.put("thumbUrl", this.thumbUrl);
+            output.put("thumb_url", this.thumbUrl);
         if (this.title != null)
             output.put("title", this.title);
         if (this.pubDate != null)
-            output.put("pub_date_tmsp", this.pubDate.getTimeInMillis());
+            output.put("pub_date_tmsp", this.pubDate.getTimeInMillis()/1000);
         return output;
     }
 }

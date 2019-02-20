@@ -60,11 +60,9 @@ public class ParselyTracker {
     private static int DEFAULT_FLUSH_INTERVAL = 60;
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     private static String DEFAULT_URLREF = "parsely_mobile_sdk";
-    // Here for backwards compat
-    public int flushInterval;
     protected ArrayList<Map<String, Object>> eventQueue;
-    private String apikey, rootUrl, storageKey, uuidkey, urlref, adKey;
-    private boolean isDebug, flushTimerRunning;
+    private String apikey, rootUrl, storageKey, uuidKey, urlref, adKey;
+    private boolean isDebug;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
     private Map<String, String> deviceInfo;
@@ -73,12 +71,15 @@ public class ParselyTracker {
     private FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
 
+    /*! \brief Create a new ParselyTracker instance.
+     *
+     */
     protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c) {
         this.context = c.getApplicationContext();
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
         this.apikey = apikey;
-        this.uuidkey = "parsely-uuid";
+        this.uuidKey = "parsely-uuid";
         this.adKey = null;
         // get the adkey straight away on instantiation
         new GetAdKey(c).execute();
@@ -90,7 +91,6 @@ public class ParselyTracker {
         this.deviceInfo = this.collectDeviceInfo();
         this.timer = new Timer();
         this.isDebug = false;
-        this.flushInterval = flushInterval;
 
         this.eventQueue = new ArrayList<>();
 
@@ -152,6 +152,9 @@ public class ParselyTracker {
         return instance;
     }
 
+    /*! \brief Log a message to the console.
+     *
+     */
     protected static void PLog(String logstring, Object... objects) {
         if (logstring.equals("")) {
             return;
@@ -159,48 +162,82 @@ public class ParselyTracker {
         System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
     }
 
+    /*! \brief Get the base engagement tracking interval.
+     *
+     * Please note that this is the _base_ engagement interval. Longer engagements
+     * will enqueue events less frequently over time to save data.
+     *
+     * @return The base engagement tracking interval.
+     */
     public double getEngagementInterval() {
         return DEFAULT_ENGAGEMENT_INTERVAL_MILLIS;
     }
 
+    /*! \brief Returns whether the engagement tracker is running.
+     *
+     * @return Whether the engagement tracker is running.
+     */
     public boolean engagementIsActive() {
         return this.engagementManager != null;
     }
 
+    /*! \brief Returns whether video tracking is active.
+     *
+     * @return Whether video tracking is active.
+     */
     public boolean videoIsActive() {
         return this.videoEngagementManager != null;
     }
 
+    /*! \brief Returns the interval at which the event queue is flushed to Parse.ly.
+     *
+     * @return The interval at which the event queue is flushed to Parse.ly.
+     */
+    public long getFlushInterval() {
+        return this.flushManager.getIntervalMillis() / 1000;
+    }
+
     /*! \brief Getter for this.isDebug
+     *
+     * @return Whether debug mode is active.
      */
     public boolean getDebug() {
         return isDebug;
     }
 
     /*! \brief Set a debug flag which will prevent data from being sent to Parse.ly
-
-        Use this flag when developing to prevent the SDK from actually sending requests
-        to Parse.ly servers.
-
-        @param debug Value to use for debug flag.
+     *
+     *  Use this flag when developing to prevent the SDK from actually sending requests
+     *  to Parse.ly servers. The value it would otherwise send is logged to the console.
+     *
+     *  @param debug Value to use for debug flag.
      */
     public void setDebug(boolean debug) {
         isDebug = debug;
         PLog("Debugging is now set to " + isDebug);
     }
 
-    /*! \brief Register a pageview event using a canonical URL
+    /*! \brief Register a pageview event using a URL and optional metadata.
      *
-     *  @param url The canonical URL of the article being tracked
-     *  (eg: "http://samplesite.com/some-old/article.html")
+     *  @param url         The canonical URL of the article being tracked
+     *                     (eg: "http://samplesite.com/some-old/article.html")
+     *  @param urlMetadata Optional metadata for the URL -- not used in most cases. Only needed
+     *                     when `url` isn't accessible over the Internet (i.e. app-only
+     *                     content). Do not use for URLs that Parse.ly would normally crawl.
      */
     public void trackURL(String url, ParselyMetadata urlMetadata) {
         this.enqueueEvent(this.buildEvent(url, "pageview", urlMetadata));
     }
 
+    /*! \brief Start engaged time tracking for the given URL.
+     *
+     * This starts a timer which will send events to Parse.ly on a regular basis
+     * to capture engaged time for this URL. The value of `url` should be a URL for
+     * which `trackURL` has been called.
+     *
+     * @param url The URL to track engaged time for.
+     */
     public void startEngagement(String url) {
-        PLog("startEngagement called");
-
         // Cancel anything running
         this.stopEngagement();
 
@@ -210,26 +247,39 @@ public class ParselyTracker {
         this.engagementManager.start();
     }
 
-    /*! \brief Add an event Map to the queue.
+    /*! \brief Stop engaged time tracking.
      *
-     *  Place a data structure representing the event into the in-memory queue for later use
-     *
-     *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
-     *  store exceeds `storageSizeLimit`.
+     * Stops the engaged time tracker, sending any accumulated engaged time to Parse.ly.
+     * NOTE: This *must* be called during various Android lifecycle events like onPause or
+     * onStop. Otherwise, engaged time tracking will keep running and Parse.ly values
+     * may be inaccurate.
      */
-
     public void stopEngagement() {
         if (this.engagementManager == null) {
-            PLog("No ongoing engagement to stop.");
             return;
         }
-        PLog("stopEngagement called");
         this.engagementManager.stop();
         this.engagementManager = null;
     }
 
+    /*! \brief Start video tracking.
+     *
+     * Starts engaged time tracking for a video. Will send a video start event unless the
+     * same video had previously been paused. Video metadata must be provided, specifically
+     * the video ID and video duration.
+     *
+     * The `url` value is used for videos embedded in a post. It is not a url or if for the video
+     * itself. That information is contained in the videoMetadata. Instead, this is used to track
+     * which post videos are embedded on. If the video is not embedded, a valid-looking URL should
+     * be still used (e.g. http://<CUSTOMERDOMAIN>/app-videos).
+     *
+     * @param url           URL of post the video is embedded in. If videos is not embedded, a
+     *                      valid URL for the customer should still be provided.
+     *                      (e.g. http://<CUSTOMERDOMAIN>/app-videos)
+     * @param videoMetadata Metadata about the video being tracked. Must include video
+     *                      ID and duration.
+     */
     public void trackPlay(String url, @NonNull ParselyVideoMetadata videoMetadata) {
-        PLog("trackPlay called");
         if (videoMetadata == null) {
             throw new NullPointerException("videoMetadata cannot be null.");
         }
@@ -258,18 +308,27 @@ public class ParselyTracker {
         this.videoEngagementManager.start();
     }
 
+    /*! \brief Pause video tracking.
+     *
+     * Pauses video tracking for an ongoing video. If `trackPlay` is immediately called again for
+     * the same video, a new video start event will not be sent. This models a user pausing a
+     * playing video.
+     */
     public void trackPause() {
         if (this.videoEngagementManager == null) {
-            PLog("No ongoing video to stop.");
             return;
         }
-        PLog("trackPause called");
         this.videoEngagementManager.stop();
     }
 
+    /*! \brief Reset tracking on a video.
+     *
+     * Stops video tracking and resets internal state for the video. This means that if
+     * `trackPlay` is immediately called for the same video, a new video start event is set.
+     * This models a user stopping a video and (on trackPlay being called again) starting it over.
+     */
     public void resetVideo() {
         if (this.videoEngagementManager == null) {
-            PLog("No ongoing video to reset.");
             return;
         }
         this.videoEngagementManager.stop();
@@ -278,11 +337,13 @@ public class ParselyTracker {
 
     /*! \brief Create an event Map
      *
-     *  @param url The canonical URL identifying the pageview/heartbeat
-     *  @param action Action kind to use (e.g. pageview, heartbeat)
+     *  @param url      The canonical URL identifying the pageview/heartbeat
+     *  @param action   Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
+     *  @param metadata Metadata to attach to the event.
+     *  @return         A Map object representing the event to be sent to Parse.ly.
      */
     private Map<String, Object> buildEvent(String url, String action, ParselyMetadata metadata) {
-        PLog("buildEvent called for %s", url);
+        PLog("buildEvent called for %s/%s", action, url);
 
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
@@ -310,9 +371,17 @@ public class ParselyTracker {
         return event;
     }
 
+    /*! \brief Add an event Map to the queue.
+     *
+     *  Place a data structure representing the event into the in-memory queue for later use.
+     *
+     *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
+     *  store exceeds `storageSizeLimit`.
+     *
+     *  @param event The event Map to enqueue.
+     */
     private void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
-        PLog("%s", event);
         this.eventQueue.add(event);
         new QueueManager().execute();
         if (this.flushManager.isRunning() == false) {
@@ -321,9 +390,9 @@ public class ParselyTracker {
         }
     }
 
-    /*!  \brief Generate pixel requests from the queue
+    /*!  \brief Flush events to Parsely.
      *
-     *  Empties the entire queue and sends the appropriate pixel requests.
+     *  Empties the event queue and sends the appropriate pixel requests to Parsely.
      *  Called automatically after a number of seconds determined by `flushInterval`.
      */
     public void flush() {
@@ -331,24 +400,23 @@ public class ParselyTracker {
         new FlushQueue().execute();
     }
 
-    /*!  \brief Send the entire queue as a single request
+    /*!  \brief Send the batched event request to Parsely.
      *
-     *   Creates a large POST request containing the JSON encoding of the entire queue.
+     *   Creates a POST request containing the JSON encoding of the event queue.
      *   Sends this request to the proxy server, which forwards requests to the pixel server.
      *
      *   @param queue The list of event dictionaries to serialize
      */
     private void sendBatchRequest(ArrayList<Map<String, Object>> events) {
-        PLog("Sending batched request of %d events", events.size());
         if (events == null || events.size() == 0) {
             return;
         }
+        PLog("Sending request with %d events", events.size());
 
         // Put in a Map for the proxy server
         Map<String, Object> batchMap = new HashMap<>();
         batchMap.put("events", events);
 
-        PLog("Setting API connection");
         if (this.isDebug == true) {
             PLog("Debug mode on. Not sending to Parse.ly");
             this.eventQueue.clear();
@@ -360,6 +428,10 @@ public class ParselyTracker {
         PLog("POST Data %s", this.JsonEncode(batchMap));
     }
 
+    /*! \brief Returns whether the network is accessible and Parsely is reachable.
+     *
+     * @return Whether the network is accessible and Parsely is reachable.
+     */
     private boolean isReachable() {
         ConnectivityManager cm = (ConnectivityManager) this.context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
@@ -367,6 +439,9 @@ public class ParselyTracker {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
+    /*! \brief Save the event queue to persistent storage.
+
+     */
     private void persistQueue() {
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
@@ -381,6 +456,10 @@ public class ParselyTracker {
         this.persistObject(storedQueue);
     }
 
+    /*! \brief Get the stored event queue from persistent storage.
+     *
+     * @return The stored queue of events.
+     */
     private ArrayList<Map<String, Object>> getStoredQueue() {
         ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
         try {
@@ -391,7 +470,7 @@ public class ParselyTracker {
             storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
             ois.close();
         } catch (EOFException ex) {
-            PLog("");
+            // Nothing to do here.
         } catch (FileNotFoundException ex) {
             // Nothing to do here. Means there was no saved queue.
         } catch (Exception ex) {
@@ -402,15 +481,25 @@ public class ParselyTracker {
         return storedQueue;
     }
 
+    /*! \brief Delete the stored queue from persistent storage.
+     *
+     */
     protected void purgeStoredQueue() {
         this.persistObject(null);
     }
 
+    /*! \brief Delete an event from the stored queue.
+     *
+     */
     private void expelStoredEvent() {
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         storedQueue.remove(0);
     }
 
+    /*! \brief Persist an object to storage.
+     *
+     * @param o Object to store.
+     */
     @TargetApi(Build.VERSION_CODES.CUPCAKE)
     private void persistObject(Object o) {
         try {
@@ -426,6 +515,11 @@ public class ParselyTracker {
         }
     }
 
+    /*! \brief Encode an event Map as JSON.
+     *
+     * @param map The Map object to encode as JSON.
+     * @return    The JSON-encoded value of `map`.
+     */
     private String JsonEncode(Map<String, Object> map) {
         ObjectMapper mapper = new ObjectMapper();
         String ret = null;
@@ -439,7 +533,7 @@ public class ParselyTracker {
         return ret;
     }
 
-    /*! \brief Allow Parsely to send pageview events
+    /*! \brief Start the timer to flush events to Parsely.
      *
      *  Instantiates the callback flushTimer responsible for flushing the events queue.
      *  Can be called before of after `stop`, but has no effect if used before instantiating the
@@ -449,24 +543,25 @@ public class ParselyTracker {
         this.flushManager.start();
     }
 
-    /*! \brief Is the callback flushTimer running
+    /*! \brief Returns whether the event queue flush timer is running.
      *
-     *  @return `true` if the callback flushTimer is currently running, `false` otherwise
+     *  @return Whether the event queue flush timer is running.
      */
     public boolean flushTimerIsActive() {
         return this.flushManager.isRunning();
     }
 
-    /*! \brief Disallow Parsely from sending pageview events
+    /*! \brief Stop the event queue flush timer.
      *
-     *  Invalidates the callback flushTimer responsible for flushing the events queue.
-     *  Can be called before or after `start`, but has no effect if used before instantiating the
-     *  singleton
      */
     public void stopFlushTimer() {
         this.flushManager.stop();
     }
 
+    /*! \brief Read the Parsely UUID from application context or make a new one.
+     *
+     * @return The UUID to use for this user.
+     */
     private String generateSiteUuid() {
         String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
                 Secure.ANDROID_ID);
@@ -474,10 +569,14 @@ public class ParselyTracker {
         return uuid;
     }
 
+    /*! \brief Get the UUID for this user.
+     *
+     * TODO: docs about where we get this UUID from and how.
+     */
     private String getSiteUuid() {
         String uuid = "";
         try {
-            uuid = this.settings.getString(this.uuidkey, "");
+            uuid = this.settings.getString(this.uuidKey, "");
             if (uuid.equals("")) {
                 uuid = this.generateSiteUuid();
             }
@@ -487,6 +586,10 @@ public class ParselyTracker {
         return uuid;
     }
 
+    /*! \brief Collect device-specific info.
+     *
+     * Collects info about the device and user to use in Parsely events.
+     */
     private Map<String, String> collectDeviceInfo() {
         Map<String, String> dInfo = new HashMap<>();
 
@@ -505,10 +608,18 @@ public class ParselyTracker {
         return dInfo;
     }
 
+    /*! \brief Get the number of events waiting to be flushed to Parsely.
+     *
+     * @return The number of events waiting to be flushed to Parsely.
+     */
     public int queueSize() {
         return this.eventQueue.size();
     }
 
+    /*! \brief Get the number of events stored in persistent storage.
+     *
+     * @return The number of events stored in persistent storage.
+     */
     public int storedEventsCount() {
         ArrayList<Map<String, Object>> ar = this.getStoredQueue();
         if (ar != null) {
@@ -567,6 +678,8 @@ public class ParselyTracker {
         }
     }
 
+    /*! \brief Async task to get adKey for this device.
+     */
     public class GetAdKey extends AsyncTask<Void, Void, String> {
         private Context mContext;
 
@@ -600,8 +713,6 @@ public class ParselyTracker {
         }
 
     }
-
-    ;
 
 
     /*! \brief Manager for the event flush timer.
@@ -694,7 +805,7 @@ public class ParselyTracker {
         public boolean isSameVideo(String url, ParselyVideoMetadata metadata) {
             Map<String, Object> baseMetadata = (Map<String, Object>) baseEvent.get("metadata");
             return (baseEvent.get("url") == url &&
-                    baseMetadata.get("canonical_url") == metadata.canonical_url &&
+                    baseMetadata.get("canonical_url") == metadata.canonicalUrl &&
                     (int) (baseMetadata.get("duration")) == metadata.durationSeconds);
         }
 
@@ -711,7 +822,6 @@ public class ParselyTracker {
                     return super.cancel();
                 }
             };
-            PLog(String.format("latestDelayMillis: %d", delay));
             this.latestDelayMillis = delay;
             this.parentTimer.schedule(task, delay);
             this.waitingTimerTask = task;
