@@ -116,8 +116,8 @@ public class MainActivity extends Activity {
         // NOTE: urlMetadata is only used when "url" has no version accessible outside the app. If
         //       the post has an internet-accessible URL, we will crawl it. urlMetadata is only used
         //       in the case of app-only content that we can't crawl.
-        ParselyTracker.sharedInstance().trackURL(
-                "http://example.com/article1.html", "http://example.com/", null
+        ParselyTracker.sharedInstance().trackPageview(
+                "http://example.com/article1.html", "http://example.com/", null, null
         );
     }
 
@@ -143,7 +143,7 @@ public class MainActivity extends Activity {
                 90
         );
         // NOTE: For videos embedded in an article, "url" should be the URL for that article.
-        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", null, metadata);
+        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", null, metadata, null);
 
     }
 

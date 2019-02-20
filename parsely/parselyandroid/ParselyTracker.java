@@ -139,11 +139,11 @@ public class ParselyTracker {
     /*! \brief Log a message to the console.
      *
      */
-    protected static void PLog(String logstring, Object... objects) {
-        if (logstring.equals("")) {
+    protected static void PLog(String logString, Object... objects) {
+        if (logString.equals("")) {
             return;
         }
-        System.out.println(new Formatter().format("[Parsely] " + logstring, objects).toString());
+        System.out.println(new Formatter().format("[Parsely] " + logString, objects).toString());
     }
 
     /*! \brief Get the base engagement tracking interval.
@@ -208,19 +208,24 @@ public class ParselyTracker {
      *  @param urlMetadata Optional metadata for the URL -- not used in most cases. Only needed
      *                     when `url` isn't accessible over the Internet (i.e. app-only
      *                     content). Do not use for URLs that Parse.ly would normally crawl.
+     *  @param extraData   A Map of additional information to send with the event.
      */
-    public void trackURL(@NonNull String url, @Nullable String urlRef, @Nullable ParselyMetadata urlMetadata) {
+    public void trackPageview(
+            @NonNull String url,
+            @Nullable String urlRef,
+            @Nullable ParselyMetadata urlMetadata,
+            @Nullable Map<String, Object> extraData) {
         if (url == null || url.equals("")) {
             throw new NullPointerException("url cannot be null or empty.");
         }
-        this.enqueueEvent(this.buildEvent(url, urlRef, "pageview", urlMetadata));
+        this.enqueueEvent(this.buildEvent(url, urlRef, "pageview", urlMetadata, extraData));
     }
 
     /*! \brief Start engaged time tracking for the given URL.
      *
      * This starts a timer which will send events to Parse.ly on a regular basis
      * to capture engaged time for this URL. The value of `url` should be a URL for
-     * which `trackURL` has been called.
+     * which `trackPageview` has been called.
      *
      * @param url The URL to track engaged time for.
      */
@@ -232,7 +237,7 @@ public class ParselyTracker {
         this.stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = this.buildEvent(url, urlRef, "heartbeat", null);
+        Map<String, Object> event = this.buildEvent(url, urlRef, "heartbeat", null, null);
         this.engagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         this.engagementManager.start();
     }
@@ -267,10 +272,15 @@ public class ParselyTracker {
      *                      valid URL for the customer should still be provided.
      *                      (e.g. http://<CUSTOMERDOMAIN>/app-videos)
      * @param urlRef        Referrer URL associated with this video view. Can be null.
+     * @param extraData     A Map of additional information to send with the event.
      * @param videoMetadata Metadata about the video being tracked. Must include video
      *                      ID and duration.
      */
-    public void trackPlay(@NonNull String url, @Nullable String urlRef, @NonNull ParselyVideoMetadata videoMetadata) {
+    public void trackPlay(
+            @NonNull String url,
+            @Nullable String urlRef,
+            @NonNull ParselyVideoMetadata videoMetadata,
+            @Nullable Map<String, Object> extraData) {
         if (videoMetadata == null) {
             throw new NullPointerException("videoMetadata cannot be null.");
         }
@@ -293,10 +303,10 @@ public class ParselyTracker {
         }
 
         // Enqueue the videostart
-        this.enqueueEvent(this.buildEvent(url, urlRef, "videostart", videoMetadata));
+        this.enqueueEvent(this.buildEvent(url, urlRef, "videostart", videoMetadata, extraData));
 
         // Start a new engagement manager for the video.
-        Map<String, Object> hbEvent = this.buildEvent(url, urlRef, "vheartbeat", videoMetadata);
+        Map<String, Object> hbEvent = this.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData);
         // TODO: Can we remove some metadata fields from this request?
         this.videoEngagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
         this.videoEngagementManager.start();
@@ -331,12 +341,18 @@ public class ParselyTracker {
 
     /*! \brief Create an event Map
      *
-     *  @param url      The canonical URL identifying the pageview/heartbeat
-     *  @param action   Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
-     *  @param metadata Metadata to attach to the event.
-     *  @return         A Map object representing the event to be sent to Parse.ly.
+     *  @param url       The canonical URL identifying the pageview/heartbeat
+     *  @param action    Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
+     *  @param metadata  Metadata to attach to the event.
+     *  @param extraData A Map of additional information to send with the event.
+     *  @return          A Map object representing the event to be sent to Parse.ly.
      */
-    private Map<String, Object> buildEvent(String url, String urlRef, String action, ParselyMetadata metadata) {
+    private Map<String, Object> buildEvent(
+            String url,
+            String urlRef,
+            String action,
+            ParselyMetadata metadata,
+            Map<String, Object> extraData) {
         PLog("buildEvent called for %s/%s", action, url);
 
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -351,8 +367,8 @@ public class ParselyTracker {
         event.put("parsely_site_uuid", this.deviceInfo.get("parsely_site_uuid"));
 
 
-        // Extra data Map
-        Map<String, Object> data = new HashMap<>();
+        // Make a copy of extraData and add some things.
+        Map<String, Object> data = new HashMap<>(extraData);
         data.put("manufacturer", this.deviceInfo.get("manufacturer"));
         data.put("os", this.deviceInfo.get("os"));
         data.put("os_version", this.deviceInfo.get("os_version"));
