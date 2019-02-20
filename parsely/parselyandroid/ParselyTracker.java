@@ -363,15 +363,14 @@ public class ParselyTracker {
         event.put("urlref", urlRef);
         event.put("idsite", this.apikey);
         event.put("action", action);
-        event.put("ts", now.getTimeInMillis() / 1000);
-        event.put("parsely_site_uuid", this.deviceInfo.get("parsely_site_uuid"));
-
 
         // Make a copy of extraData and add some things.
         Map<String, Object> data = new HashMap<>(extraData);
         data.put("manufacturer", this.deviceInfo.get("manufacturer"));
         data.put("os", this.deviceInfo.get("os"));
         data.put("os_version", this.deviceInfo.get("os_version"));
+        data.put("ts", now.getTimeInMillis() / 1000);
+        data.put("parsely_site_uuid", this.deviceInfo.get("parsely_site_uuid"));
         event.put("data", data);
 
         if (metadata != null) {
