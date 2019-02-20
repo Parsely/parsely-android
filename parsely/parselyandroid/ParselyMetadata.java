@@ -1,5 +1,8 @@
 package com.parsely.parselyandroid;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -28,13 +31,13 @@ public class ParselyMetadata {
      * @param pubDate         Publish date of the post.
      */
     public ParselyMetadata(
-            ArrayList<String> authors,
-            String canonicalUrl,
-            String section,
-            ArrayList<String> tags,
-            String thumbUrl,
-            String title,
-            Calendar pubDate
+            @Nullable ArrayList<String> authors,
+            @Nullable String canonicalUrl,
+            @Nullable String section,
+            @Nullable ArrayList<String> tags,
+            @Nullable String thumbUrl,
+            @Nullable String title,
+            @Nullable Calendar pubDate
     ) {
         this.authors = authors;
         this.canonicalUrl = canonicalUrl;

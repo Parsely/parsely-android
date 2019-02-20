@@ -25,6 +25,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -59,9 +60,8 @@ public class ParselyTracker {
     private static ParselyTracker instance = null;
     private static int DEFAULT_FLUSH_INTERVAL = 60;
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
-    private static String DEFAULT_URLREF = "parsely_mobile_sdk";
     protected ArrayList<Map<String, Object>> eventQueue;
-    private String apikey, rootUrl, storageKey, uuidKey, urlref, adKey;
+    private String apikey, rootUrl, storageKey, uuidKey, adKey;
     private boolean isDebug;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
@@ -74,7 +74,7 @@ public class ParselyTracker {
     /*! \brief Create a new ParselyTracker instance.
      *
      */
-    protected ParselyTracker(String apikey, int flushInterval, String urlref, Context c) {
+    protected ParselyTracker(String apikey, int flushInterval, Context c) {
         this.context = c.getApplicationContext();
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
@@ -85,7 +85,6 @@ public class ParselyTracker {
         new GetAdKey(c).execute();
         this.storageKey = "parsely-events.ser";
         this.rootUrl = "https://srv.pixel.parsely.com/";
-        this.urlref = urlref;
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
@@ -115,39 +114,24 @@ public class ParselyTracker {
 
     /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
      *
-     *  @param apikey The Parsely public API key (eg "samplesite.com")
+     *  @param apikey The Parsely public API key (eg "example.com")
      *  @param c The current Android application context
      *  @return The singleton instance
      */
     public static ParselyTracker sharedInstance(String apikey, Context c) {
-        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, DEFAULT_URLREF, c);
+        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL, c);
     }
 
     /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
      *
-     *  @param apikey The Parsely public API key (eg "samplesite.com")
+     *  @param apikey The Parsely public API key (eg "example.com")
      *  @param flushInterval The interval at which the events queue should flush, in seconds
      *  @param c The current Android application context
      *  @return The singleton instance
      */
     public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c) {
         if (instance == null) {
-            instance = new ParselyTracker(apikey, flushInterval, DEFAULT_URLREF, c);
-        }
-        return instance;
-    }
-
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
-     *
-     *  @param apikey The Parsely public API key (eg "samplesite.com")
-     *  @param flushInterval The interval at which the events queue should flush, in seconds
-     *  @param urlref The referrer string to send with pixel requests
-     *  @param c The current Android application context
-     *  @return The singleton instance
-     */
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval, String urlref, Context c) {
-        if (instance == null) {
-            instance = new ParselyTracker(apikey, flushInterval, urlref, c);
+            instance = new ParselyTracker(apikey, flushInterval, c);
         }
         return instance;
     }
@@ -220,13 +204,16 @@ public class ParselyTracker {
     /*! \brief Register a pageview event using a URL and optional metadata.
      *
      *  @param url         The canonical URL of the article being tracked
-     *                     (eg: "http://samplesite.com/some-old/article.html")
+     *                     (eg: "http://example.com/some-old/article.html")
      *  @param urlMetadata Optional metadata for the URL -- not used in most cases. Only needed
      *                     when `url` isn't accessible over the Internet (i.e. app-only
      *                     content). Do not use for URLs that Parse.ly would normally crawl.
      */
-    public void trackURL(String url, ParselyMetadata urlMetadata) {
-        this.enqueueEvent(this.buildEvent(url, "pageview", urlMetadata));
+    public void trackURL(@NonNull String url, @Nullable String urlRef, @Nullable ParselyMetadata urlMetadata) {
+        if (url == null || url.equals("")) {
+            throw new NullPointerException("url cannot be null or empty.");
+        }
+        this.enqueueEvent(this.buildEvent(url, urlRef, "pageview", urlMetadata));
     }
 
     /*! \brief Start engaged time tracking for the given URL.
@@ -237,12 +224,15 @@ public class ParselyTracker {
      *
      * @param url The URL to track engaged time for.
      */
-    public void startEngagement(String url) {
+    public void startEngagement(@NonNull String url, @Nullable String urlRef) {
+        if (url == null || url.equals("")) {
+            throw new NullPointerException("url cannot be null or empty.");
+        }
         // Cancel anything running
         this.stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = this.buildEvent(url, "heartbeat", null);
+        Map<String, Object> event = this.buildEvent(url, urlRef, "heartbeat", null);
         this.engagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         this.engagementManager.start();
     }
@@ -276,17 +266,21 @@ public class ParselyTracker {
      * @param url           URL of post the video is embedded in. If videos is not embedded, a
      *                      valid URL for the customer should still be provided.
      *                      (e.g. http://<CUSTOMERDOMAIN>/app-videos)
+     * @param urlRef        Referrer URL associated with this video view. Can be null.
      * @param videoMetadata Metadata about the video being tracked. Must include video
      *                      ID and duration.
      */
-    public void trackPlay(String url, @NonNull ParselyVideoMetadata videoMetadata) {
+    public void trackPlay(@NonNull String url, @Nullable String urlRef, @NonNull ParselyVideoMetadata videoMetadata) {
         if (videoMetadata == null) {
             throw new NullPointerException("videoMetadata cannot be null.");
+        }
+        if (url == null || url.equals("")) {
+            throw new NullPointerException("url cannot be null or empty.");
         }
 
         // If there is already an engagement manager for this video make sure it is started.
         if (this.videoEngagementManager != null) {
-            if (this.videoEngagementManager.isSameVideo(url, videoMetadata)) {
+            if (this.videoEngagementManager.isSameVideo(url, urlRef, videoMetadata)) {
                 if (!this.videoEngagementManager.isRunning()) {
                     this.videoEngagementManager.start();
                 }
@@ -299,10 +293,10 @@ public class ParselyTracker {
         }
 
         // Enqueue the videostart
-        this.enqueueEvent(this.buildEvent(url, "videostart", videoMetadata));
+        this.enqueueEvent(this.buildEvent(url, urlRef, "videostart", videoMetadata));
 
         // Start a new engagement manager for the video.
-        Map<String, Object> hbEvent = this.buildEvent(url, "vheartbeat", videoMetadata);
+        Map<String, Object> hbEvent = this.buildEvent(url, urlRef, "vheartbeat", videoMetadata);
         // TODO: Can we remove some metadata fields from this request?
         this.videoEngagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
         this.videoEngagementManager.start();
@@ -342,7 +336,7 @@ public class ParselyTracker {
      *  @param metadata Metadata to attach to the event.
      *  @return         A Map object representing the event to be sent to Parse.ly.
      */
-    private Map<String, Object> buildEvent(String url, String action, ParselyMetadata metadata) {
+    private Map<String, Object> buildEvent(String url, String urlRef, String action, ParselyMetadata metadata) {
         PLog("buildEvent called for %s/%s", action, url);
 
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -350,7 +344,7 @@ public class ParselyTracker {
         // Main event info
         Map<String, Object> event = new HashMap<>();
         event.put("url", url);
-        event.put("urlref", this.urlref);
+        event.put("urlref", urlRef);
         event.put("idsite", this.apikey);
         event.put("action", action);
         event.put("ts", now.getTimeInMillis() / 1000);
@@ -802,9 +796,10 @@ public class ParselyTracker {
 
         }
 
-        public boolean isSameVideo(String url, ParselyVideoMetadata metadata) {
-            Map<String, Object> baseMetadata = (Map<String, Object>) baseEvent.get("metadata");
-            return (baseEvent.get("url") == url &&
+        public boolean isSameVideo(String url, String urlRef, ParselyVideoMetadata metadata) {
+            Map<String, Object> baseMetadata = (Map<String, Object>) this.baseEvent.get("metadata");
+            return (this.baseEvent.get("url").equals(url) &&
+                    this.baseEvent.get("urlref").equals(urlRef) &&
                     baseMetadata.get("canonical_url") == metadata.canonicalUrl &&
                     (int) (baseMetadata.get("duration")) == metadata.durationSeconds);
         }

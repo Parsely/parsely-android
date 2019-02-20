@@ -1,6 +1,7 @@
 package com.parsely.parselyandroid;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -25,13 +26,13 @@ public class ParselyVideoMetadata extends ParselyMetadata {
      * @param durationSeconds Duration of the video in seconds. Required.
      */
     public ParselyVideoMetadata(
-            ArrayList<String> authors,
+            @Nullable ArrayList<String> authors,
             @NonNull String videoId,
-            String section,
-            ArrayList<String> tags,
-            String thumbUrl,
-            String title,
-            Calendar pubDate,
+            @Nullable String section,
+            @Nullable ArrayList<String> tags,
+            @Nullable String thumbUrl,
+            @Nullable String title,
+            @Nullable Calendar pubDate,
             @NonNull int durationSeconds
     ) {
         super(authors, videoId, section, tags, thumbUrl, title, pubDate);
