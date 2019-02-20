@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-/*! \brief Represents article metadata to be passed to Parsely tracking.
+/*! \brief Represents post metadata to be passed to Parsely tracking.
  *
  *  This class is used to attach a metadata block to a Parse.ly pageview
  *  request. Pageview metadata is only required for URLs not accessible over the
@@ -19,13 +19,13 @@ public class ParselyMetadata {
 
     /* \brief Create a new ParselyMetadata object.
      *
-     * @param authors         List of authors for the article.
-     * @param canonicalUrl    Canonical URL of the article.
-     * @param section         Section of the article.
-     * @param tags            List of tags for the article.
-     * @param thumbUrl        URL of a thumbnail for the article.
-     * @param title           Title of the article.
-     * @param pubDate         Publish date of the article.
+     * @param authors         List of authors for the post.
+     * @param canonicalUrl    Canonical URL of the post.
+     * @param section         Section of the post.
+     * @param tags            List of tags for the post.
+     * @param thumbUrl        URL of a thumbnail for the post.
+     * @param title           Title of the post.
+     * @param pubDate         Publish date of the post.
      */
     public ParselyMetadata(
             ArrayList<String> authors,
@@ -45,7 +45,7 @@ public class ParselyMetadata {
         this.pubDate = pubDate;
     }
 
-    /* \brief Turn the ParselyVideoMetadata into a Map
+    /* \brief Turn this object into a Map
      *
      * @return a Map object representing the metadata.
      */

@@ -232,8 +232,8 @@ public class ParselyTracker {
     /*! \brief Start engaged time tracking for the given URL.
      *
      * This starts a timer which will send events to Parse.ly on a regular basis
-     * to capture engaged time for this URL. This URL should match the value passed
-     * into trackURL.
+     * to capture engaged time for this URL. The value of `url` should be a URL for
+     * which `trackURL` has been called.
      *
      * @param url The URL to track engaged time for.
      */
@@ -268,13 +268,14 @@ public class ParselyTracker {
      * same video had previously been paused. Video metadata must be provided, specifically
      * the video ID and video duration.
      *
-     * The URL value is used for videos embedded in other posts. This is because a single
-     * video can be embedded in multiple articles, but that is more common on full webpages.
-     * Most apps do not embed videos in articles, but instead play them full screen. In that
-     * case, the value of URL should be the same as the video ID.
+     * The `url` value is used for videos embedded in a post. It is not a url or if for the video
+     * itself. That information is contained in the videoMetadata. Instead, this is used to track
+     * which post videos are embedded on. If the video is not embedded, a valid-looking URL should
+     * be still used (e.g. http://<CUSTOMERDOMAIN>/app-videos).
      *
-     * @param url           If the video is embedded in a post, the URL of that post. If the video
-     *                      if the only playing activity, then this should be the video ID.
+     * @param url           URL of post the video is embedded in. If videos is not embedded, a
+     *                      valid URL for the customer should still be provided.
+     *                      (e.g. http://<CUSTOMERDOMAIN>/app-videos)
      * @param videoMetadata Metadata about the video being tracked. Must include video
      *                      ID and duration.
      */
@@ -309,7 +310,7 @@ public class ParselyTracker {
 
     /*! \brief Pause video tracking.
      *
-     * Stops engagement tracking an ongoing video. If `trackPlay` is immediately called again for
+     * Pauses video tracking for an ongoing video. If `trackPlay` is immediately called again for
      * the same video, a new video start event will not be sent. This models a user pausing a
      * playing video.
      */
@@ -322,7 +323,7 @@ public class ParselyTracker {
 
     /*! \brief Reset tracking on a video.
      *
-     * Stops engaged time tracking and resets state for video tracking. This means that if
+     * Stops video tracking and resets internal state for the video. This means that if
      * `trackPlay` is immediately called for the same video, a new video start event is set.
      * This models a user stopping a video and (on trackPlay being called again) starting it over.
      */
@@ -337,7 +338,7 @@ public class ParselyTracker {
     /*! \brief Create an event Map
      *
      *  @param url      The canonical URL identifying the pageview/heartbeat
-     *  @param action   Action kind to use (e.g. pageview, heartbeat)
+     *  @param action   Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
      *  @param metadata Metadata to attach to the event.
      *  @return         A Map object representing the event to be sent to Parse.ly.
      */
@@ -381,7 +382,6 @@ public class ParselyTracker {
      */
     private void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
-        // PLog("%s", event);
         this.eventQueue.add(event);
         new QueueManager().execute();
         if (this.flushManager.isRunning() == false) {
@@ -439,7 +439,7 @@ public class ParselyTracker {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    /*! \brief Save the event queue to permanent storage.
+    /*! \brief Save the event queue to persistent storage.
 
      */
     private void persistQueue() {

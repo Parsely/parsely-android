@@ -41,7 +41,7 @@ public class ParselyVideoMetadata extends ParselyMetadata {
         this.durationSeconds = durationSeconds;
     }
 
-    /* \brief Turn the ParselyVideoMetadata into a Map
+    /* \brief Turn this object into a Map
      *
      * @return a Map object representing the metadata.
      */
