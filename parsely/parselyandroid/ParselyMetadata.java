@@ -1,6 +1,5 @@
 package com.parsely.parselyandroid;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -17,13 +16,13 @@ import java.util.Map;
  */
 public class ParselyMetadata {
     public ArrayList<String> authors, tags;
-    public String canonicalUrl, section, thumbUrl, title;
+    public String link, section, thumbUrl, title;
     public Calendar pubDate;
 
     /* \brief Create a new ParselyMetadata object.
      *
      * @param authors         List of authors for the post.
-     * @param canonicalUrl    Canonical URL of the post.
+     * @param link            Canonical URL of the post.
      * @param section         Section of the post.
      * @param tags            List of tags for the post.
      * @param thumbUrl        URL of a thumbnail for the post.
@@ -32,7 +31,7 @@ public class ParselyMetadata {
      */
     public ParselyMetadata(
             @Nullable ArrayList<String> authors,
-            @Nullable String canonicalUrl,
+            @Nullable String link,
             @Nullable String section,
             @Nullable ArrayList<String> tags,
             @Nullable String thumbUrl,
@@ -40,7 +39,7 @@ public class ParselyMetadata {
             @Nullable Calendar pubDate
     ) {
         this.authors = authors;
-        this.canonicalUrl = canonicalUrl;
+        this.link = link;
         this.section = section;
         this.tags = tags;
         this.thumbUrl = thumbUrl;
@@ -57,8 +56,8 @@ public class ParselyMetadata {
         if (this.authors != null) {
             output.put("authors", this.authors);
         }
-        if (this.canonicalUrl != null) {
-            output.put("canonical_url", this.canonicalUrl);
+        if (this.link != null) {
+            output.put("link", this.link);
         }
         if (this.section != null) {
             output.put("section", this.section);

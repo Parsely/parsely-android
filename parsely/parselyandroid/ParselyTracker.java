@@ -204,7 +204,7 @@ public class ParselyTracker {
 
     /*! \brief Register a pageview event using a URL and optional metadata.
      *
-     *  @param url         The canonical URL of the article being tracked
+     *  @param url         The URL of the article being tracked
      *                     (eg: "http://example.com/some-old/article.html")
      *  @param urlMetadata Optional metadata for the URL -- not used in most cases. Only needed
      *                     when `url` isn't accessible over the Internet (i.e. app-only
@@ -274,10 +274,11 @@ public class ParselyTracker {
      * same video had previously been paused. Video metadata must be provided, specifically
      * the video ID and video duration.
      *
-     * The `url` value is used for videos embedded in a post. It is not a url or if for the video
-     * itself. That information is contained in the videoMetadata. Instead, this is used to track
-     * which post videos are embedded on. If the video is not embedded, a valid-looking URL should
-     * be still used (e.g. http://<CUSTOMERDOMAIN>/app-videos).
+     * The `url` value is *not* the URL of a video, but the post which contains the video. If the video
+     * is not embedded in a post, then this should contain a well-formatted URL on the customer's
+     * domain (e.g. http://<CUSTOMERDOMAIN>/app-videos). This URL doesn't need to return a 200-status
+     * when crawled, but must but well-formatted so Parse.ly systems recognize it as belonging to
+     * the customer.
      *
      * @param url           URL of post the video is embedded in. If videos is not embedded, a
      *                      valid URL for the customer should still be provided.
@@ -357,7 +358,7 @@ public class ParselyTracker {
 
     /*! \brief Create an event Map
      *
-     *  @param url       The canonical URL identifying the pageview/heartbeat
+     *  @param url       The URL identifying the pageview/heartbeat
      *  @param action    Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
      *  @param metadata  Metadata to attach to the event.
      *  @param extraData A Map of additional information to send with the event.
@@ -834,7 +835,7 @@ public class ParselyTracker {
             Map<String, Object> baseMetadata = (Map<String, Object>) this.baseEvent.get("metadata");
             return (this.baseEvent.get("url").equals(url) &&
                     this.baseEvent.get("urlref").equals(urlRef) &&
-                    baseMetadata.get("canonical_url") == metadata.canonicalUrl &&
+                    baseMetadata.get("link").equals(metadata.link) &&
                     (int) (baseMetadata.get("duration")) == metadata.durationSeconds);
         }
 
