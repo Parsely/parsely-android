@@ -84,6 +84,7 @@ public class ParselyTracker {
         // get the adkey straight away on instantiation
         new GetAdKey(c).execute();
         this.storageKey = "parsely-events.ser";
+        //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
         this.rootUrl = "https://srv.pixel.parsely.com/";
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
@@ -218,6 +219,11 @@ public class ParselyTracker {
         if (url == null || url.equals("")) {
             throw new NullPointerException("url cannot be null or empty.");
         }
+
+        // Blank urlref is better than null
+        if (urlRef == null) {
+            urlRef = "";
+        }
         this.enqueueEvent(this.buildEvent(url, urlRef, "pageview", urlMetadata, extraData));
     }
 
@@ -232,6 +238,11 @@ public class ParselyTracker {
     public void startEngagement(@NonNull String url, @Nullable String urlRef) {
         if (url == null || url.equals("")) {
             throw new NullPointerException("url cannot be null or empty.");
+        }
+
+        // Blank urlref is better than null
+        if (urlRef == null) {
+            urlRef = "";
         }
         // Cancel anything running
         this.stopEngagement();
@@ -286,6 +297,11 @@ public class ParselyTracker {
         }
         if (url == null || url.equals("")) {
             throw new NullPointerException("url cannot be null or empty.");
+        }
+
+        // Blank urlref is better than null
+        if (urlRef == null) {
+            urlRef = "";
         }
 
         // If there is already an engagement manager for this video make sure it is started.
@@ -365,7 +381,10 @@ public class ParselyTracker {
         event.put("action", action);
 
         // Make a copy of extraData and add some things.
-        Map<String, Object> data = new HashMap<>(extraData);
+        Map<String, Object> data = new HashMap<>();
+        if (extraData != null) {
+            data.putAll(extraData);
+        }
         data.put("manufacturer", this.deviceInfo.get("manufacturer"));
         data.put("os", this.deviceInfo.get("os"));
         data.put("os_version", this.deviceInfo.get("os_version"));
@@ -404,7 +423,7 @@ public class ParselyTracker {
      *  Empties the event queue and sends the appropriate pixel requests to Parsely.
      *  Called automatically after a number of seconds determined by `flushInterval`.
      */
-    public void flush() {
+    public void flushEventQueue() {
         // needed for call from MainActivity
         new FlushQueue().execute();
     }
@@ -747,7 +766,7 @@ public class ParselyTracker {
 
             this.runningTask = new TimerTask() {
                 public void run() {
-                    flush();
+                    flushEventQueue();
                 }
             };
             this.parentTimer.scheduleAtFixedRate(this.runningTask, intervalMillis, intervalMillis);

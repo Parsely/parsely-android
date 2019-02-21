@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        ParselyTracker.sharedInstance().flush();
+        ParselyTracker.sharedInstance().flushEventQueue();
         super.onDestroy();
     }
 
@@ -150,4 +150,8 @@ public class MainActivity extends Activity {
     public void trackPause(View view) {
         ParselyTracker.sharedInstance().trackPause();
     }
+
+    public void trackReset(View view) {ParselyTracker.sharedInstance().resetVideo(); }
+
+    public void flushEventQueue(View view) {ParselyTracker.sharedInstance().flushEventQueue(); }
 }

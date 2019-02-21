@@ -59,11 +59,29 @@
         android:onClick="trackPause"
         android:text="@string/button_pause_video" />
 
+    <Button
+        android:id="@+id/reset_video_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pause_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackReset"
+        android:text="@string/button_reset_video" />
+
+    <Button
+        android:id="@+id/flush_events_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/reset_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="flushEventQueue"
+        android:text="@string/button_flush_event_queue" />
+
     <TextView
         android:id="@+id/queue_size"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/pause_video_button"
+        android:layout_below="@+id/flush_events_button"
         android:layout_centerHorizontal="true"
         android:text="Queued events: 0" />
 

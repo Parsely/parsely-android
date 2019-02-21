@@ -19,37 +19,27 @@ package com.parsely.parselyandroid;
 import android.os.AsyncTask;
 
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.net.HttpURLConnection;
 
-import javax.net.ssl.HttpsURLConnection;
-
-public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLConnection> {
+public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnection> {
 
     public Exception exception;
 
     @Override
-    protected HttpsURLConnection doInBackground(String... data) {
-        HttpsURLConnection connection = null;
+    protected HttpURLConnection doInBackground(String... data) {
+        HttpURLConnection connection = null;
         try {
             if (data.length == 1) {  // non-batched (since no post data is included)
-                connection = (HttpsURLConnection) new URL(data[0]).openConnection();
+                connection = (HttpURLConnection) new URL(data[0]).openConnection();
                 connection.getInputStream();
             } else if (data.length == 2) {  // batched (post data included)
-                connection = (HttpsURLConnection) new URL(data[0]).openConnection();
+                connection = (HttpURLConnection) new URL(data[0]).openConnection();
                 connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
-                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setRequestProperty("Content-Type", "application/json");
 
                 OutputStream output = connection.getOutputStream();
-
-                String query = "";
-                try {
-                    query = String.format("rqs=%s", URLEncoder.encode(data[1], "UTF-8"));
-                } catch (UnsupportedEncodingException ex) {
-                    ParselyTracker.PLog("");
-                }
-                output.write(query.getBytes());
+                output.write(data[1].getBytes());
                 output.close();
                 connection.getInputStream();
             }
@@ -61,7 +51,7 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLC
         return connection;
     }
 
-    protected void onPostExecute(HttpsURLConnection conn) {
+    protected void onPostExecute(HttpURLConnection conn) {
         if (this.exception != null) {
             ParselyTracker.PLog("Pixel request exception");
             ParselyTracker.PLog(this.exception.toString());

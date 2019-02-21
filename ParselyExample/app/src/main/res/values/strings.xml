@@ -10,6 +10,8 @@
     <string name="button_stop_engagement">Stop Engagement</string>
     <string name="button_track_video">Track Video</string>
     <string name="button_pause_video">Pause Video</string>
+    <string name="button_reset_video">Reset Video</string>
+    <string name="button_flush_event_queue">Flush Event Queue</string>
     <string name="button_toggle_connection">Lose Connection</string>
 
 </resources>
