@@ -658,7 +658,7 @@ public class ParselyTracker {
     }
 
     @TargetApi(Build.VERSION_CODES.CUPCAKE)
-    public class QueueManager extends AsyncTask<Void, Void, Void> {
+    private class QueueManager extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
@@ -678,7 +678,7 @@ public class ParselyTracker {
         }
     }
 
-    public class FlushQueue extends AsyncTask<Void, Void, Void> {
+    private class FlushQueue extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
@@ -709,7 +709,7 @@ public class ParselyTracker {
 
     /*! \brief Async task to get adKey for this device.
      */
-    public class GetAdKey extends AsyncTask<Void, Void, String> {
+    private class GetAdKey extends AsyncTask<Void, Void, String> {
         private Context mContext;
 
         public GetAdKey(Context context) {
