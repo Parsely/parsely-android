@@ -61,7 +61,7 @@ public class ParselyTracker {
     private static int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     protected ArrayList<Map<String, Object>> eventQueue;
-    private String apikey, rootUrl, storageKey, uuidKey, adKey;
+    private String siteId, rootUrl, storageKey, uuidKey, adKey;
     private boolean isDebug;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
@@ -74,11 +74,11 @@ public class ParselyTracker {
     /*! \brief Create a new ParselyTracker instance.
      *
      */
-    protected ParselyTracker(String apikey, int flushInterval, Context c) {
+    protected ParselyTracker(String siteId, int flushInterval, Context c) {
         this.context = c.getApplicationContext();
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
-        this.apikey = apikey;
+        this.siteId = siteId;
         this.uuidKey = "parsely-uuid";
         this.adKey = null;
         // get the adkey straight away on instantiation
@@ -115,24 +115,24 @@ public class ParselyTracker {
 
     /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
      *
-     *  @param apikey The Parsely public API key (eg "example.com")
+     *  @param siteId The Parsely public site id (eg "example.com")
      *  @param c      The current Android application context
      *  @return       The singleton instance
      */
-    public static ParselyTracker sharedInstance(String apikey, Context c) {
-        return ParselyTracker.sharedInstance(apikey, DEFAULT_FLUSH_INTERVAL_SECS, c);
+    public static ParselyTracker sharedInstance(String siteId, Context c) {
+        return ParselyTracker.sharedInstance(siteId, DEFAULT_FLUSH_INTERVAL_SECS, c);
     }
 
     /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
      *
-     *  @param apikey        The Parsely public API key (eg "example.com")
+     *  @param siteId        The Parsely public site id (eg "example.com")
      *  @param flushInterval The interval at which the events queue should flush, in seconds
      *  @param c             The current Android application context
      *  @return              The singleton instance
      */
-    public static ParselyTracker sharedInstance(String apikey, int flushInterval, Context c) {
+    public static ParselyTracker sharedInstance(String siteId, int flushInterval, Context c) {
         if (instance == null) {
-            instance = new ParselyTracker(apikey, flushInterval, c);
+            instance = new ParselyTracker(siteId, flushInterval, c);
         }
         return instance;
     }
@@ -388,7 +388,7 @@ public class ParselyTracker {
         Map<String, Object> event = new HashMap<>();
         event.put("url", url);
         event.put("urlref", urlRef);
-        event.put("idsite", this.apikey);
+        event.put("idsite", this.siteId);
         event.put("action", action);
 
         // Make a copy of extraData and add some things.

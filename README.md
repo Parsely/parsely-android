@@ -59,7 +59,7 @@ In any file that uses the Parsely SDK, be sure to add the line
 at the top of the file.
 
 Before using the toolkit, you must initialize the Parsely object with your public
-api key. This is usually best to do in the `MainActivity`'s `onCreate` method.
+site id. This is usually best to do in the `MainActivity`'s `onCreate` method.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

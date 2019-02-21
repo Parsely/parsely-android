@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // initialize the Parsely tracker with your API key and the current Context
+        // initialize the Parsely tracker with your site id and the current Context
         ParselyTracker.sharedInstance("example.com", 30, this);
 
         // Set debugging to true so we don't actually send things to Parse.ly
