@@ -204,12 +204,13 @@ public class ParselyTracker {
 
     /*! \brief Register a pageview event using a URL and optional metadata.
      *
-     *  @param url         The URL of the article being tracked
-     *                     (eg: "http://example.com/some-old/article.html")
-     *  @param urlMetadata Optional metadata for the URL -- not used in most cases. Only needed
-     *                     when `url` isn't accessible over the Internet (i.e. app-only
-     *                     content). Do not use for URLs that Parse.ly would normally crawl.
-     *  @param extraData   A Map of additional information to send with the event.
+     * @param url         The URL of the article being tracked
+     *                    (eg: "http://example.com/some-old/article.html")
+     * @param urlRef      Referrer URL associated with this video view. Can be null.
+     * @param urlMetadata Optional metadata for the URL -- not used in most cases. Only needed
+     *                    when `url` isn't accessible over the Internet (i.e. app-only
+     *                    content). Do not use for URLs that Parse.ly would normally crawl.
+     * @param extraData   A Map of additional information to send with the event.
      */
     public void trackPageview(
             @NonNull String url,
@@ -233,7 +234,8 @@ public class ParselyTracker {
      * to capture engaged time for this URL. The value of `url` should be a URL for
      * which `trackPageview` has been called.
      *
-     * @param url The URL to track engaged time for.
+     * @param url    The URL to track engaged time for.
+     * @param urlRef Referrer URL associated with this video view. Can be null.
      */
     public void startEngagement(@NonNull String url, @Nullable String urlRef) {
         if (url == null || url.equals("")) {
@@ -256,9 +258,9 @@ public class ParselyTracker {
     /*! \brief Stop engaged time tracking.
      *
      * Stops the engaged time tracker, sending any accumulated engaged time to Parse.ly.
-     * NOTE: This *must* be called during various Android lifecycle events like onPause or
-     * onStop. Otherwise, engaged time tracking will keep running and Parse.ly values
-     * may be inaccurate.
+     * NOTE: This **must** be called in your `MainActivity` during various Android lifecycle events
+     * like `onPause` or `onStop`. Otherwise, engaged time tracking will keep running
+     * and Parse.ly values may be inaccurate.
      */
     public void stopEngagement() {
         if (this.engagementManager == null) {
@@ -270,9 +272,9 @@ public class ParselyTracker {
 
     /*! \brief Start video tracking.
      *
-     * Starts engaged time tracking for a video. Will send a video start event unless the
-     * same video had previously been paused. Video metadata must be provided, specifically
-     * the video ID and video duration.
+     * Starts tracking view time for a video being viewed at a given url. Will send a `videostart`
+     * event unless the same ur/videoId had previously been paused.
+     * Video metadata must be provided, specifically the video ID and video duration.
      *
      * The `url` value is *not* the URL of a video, but the post which contains the video. If the video
      * is not embedded in a post, then this should contain a well-formatted URL on the customer's
@@ -284,9 +286,9 @@ public class ParselyTracker {
      *                      valid URL for the customer should still be provided.
      *                      (e.g. http://<CUSTOMERDOMAIN>/app-videos)
      * @param urlRef        Referrer URL associated with this video view. Can be null.
-     * @param extraData     A Map of additional information to send with the event.
      * @param videoMetadata Metadata about the video being tracked. Must include video
      *                      ID and duration.
+     * @param extraData     A Map of additional information to send with the event.
      */
     public void trackPlay(
             @NonNull String url,
@@ -334,6 +336,10 @@ public class ParselyTracker {
      * Pauses video tracking for an ongoing video. If `trackPlay` is immediately called again for
      * the same video, a new video start event will not be sent. This models a user pausing a
      * playing video.
+     *
+     * NOTE: This or `resetVideo` **must** be called in your `MainActivity` during various Android lifecycle events
+     * like `onPause` or `onStop`. Otherwise, engaged time tracking will keep running
+     * and Parse.ly values may be inaccurate.
      */
     public void trackPause() {
         if (this.videoEngagementManager == null) {
@@ -347,6 +353,10 @@ public class ParselyTracker {
      * Stops video tracking and resets internal state for the video. This means that if
      * `trackPlay` is immediately called for the same video, a new video start event is set.
      * This models a user stopping a video and (on trackPlay being called again) starting it over.
+     *
+     * NOTE: This or `trackPause` **must** be called in your `MainActivity` during various Android lifecycle events
+     * like `onPause` or `onStop`. Otherwise, engaged time tracking will keep running
+     * and Parse.ly values may be inaccurate.
      */
     public void resetVideo() {
         if (this.videoEngagementManager == null) {
@@ -421,8 +431,11 @@ public class ParselyTracker {
 
     /*!  \brief Flush events to Parsely.
      *
-     *  Empties the event queue and sends the appropriate pixel requests to Parsely.
+     *  Empties the event queue and sends the appropriate requests to Parsely.
      *  Called automatically after a number of seconds determined by `flushInterval`.
+     *
+     *  To make sure all of the queued events are flushed to Parse.ly's servers,
+     * include a call to `flushEventQueue` in your main activity's `onDestroy()` method.
      */
     public void flushEventQueue() {
         // needed for call from MainActivity
@@ -432,7 +445,7 @@ public class ParselyTracker {
     /*!  \brief Send the batched event request to Parsely.
      *
      *   Creates a POST request containing the JSON encoding of the event queue.
-     *   Sends this request to the proxy server, which forwards requests to the pixel server.
+     *   Sends this request to Parse.ly servers.
      *
      *   @param queue The list of event dictionaries to serialize
      */
