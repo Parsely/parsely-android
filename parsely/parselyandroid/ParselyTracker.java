@@ -163,7 +163,7 @@ public class ParselyTracker {
      * @return Whether the engagement tracker is running.
      */
     public boolean engagementIsActive() {
-        return this.engagementManager != null;
+        return this.engagementManager != null && this.engagementManager.started;
     }
 
     /*! \brief Returns whether video tracking is active.
@@ -171,7 +171,7 @@ public class ParselyTracker {
      * @return Whether video tracking is active.
      */
     public boolean videoIsActive() {
-        return this.videoEngagementManager != null;
+        return this.videoEngagementManager != null && this.videoEngagementManager.started;
     }
 
     /*! \brief Returns the interval at which the event queue is flushed to Parse.ly.
@@ -861,8 +861,13 @@ public class ParselyTracker {
                 }
 
                 public boolean cancel() {
-                    doEnqueue(this.scheduledExecutionTime());
-                    return super.cancel();
+                    boolean output = super.cancel();
+                    // Only enqueue when we actually canceled something. If output is false then
+                    // this has already been canceled.
+                    if (output == true) {
+                        doEnqueue(this.scheduledExecutionTime());
+                    }
+                    return output;
                 }
             };
             this.latestDelayMillis = delay;
