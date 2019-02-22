@@ -841,7 +841,6 @@ public class ParselyTracker {
         public void stop() {
             this.waitingTimerTask.cancel();
             this.started = false;
-
         }
 
         public boolean isSameVideo(String url, String urlRef, ParselyVideoMetadata metadata) {

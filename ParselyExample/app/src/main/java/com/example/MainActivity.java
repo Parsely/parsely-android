@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
         vView.setText(vMsg.toString());
     }
 
-    public void trackURL(View view) {
+    public void trackPageview(View view) {
         // NOTE: urlMetadata is only used when "url" has no version accessible outside the app. If
         //       the post has an internet-accessible URL, we will crawl it. urlMetadata is only used
         //       in the case of app-only content that we can't crawl.
