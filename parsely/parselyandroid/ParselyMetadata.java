@@ -21,13 +21,13 @@ public class ParselyMetadata {
 
     /* \brief Create a new ParselyMetadata object.
      *
-     * @param authors         List of authors for the post.
-     * @param link            Canonical URL of the post.
-     * @param section         Section of the post.
-     * @param tags            List of tags for the post.
-     * @param thumbUrl        URL of a thumbnail for the post.
-     * @param title           Title of the post.
-     * @param pubDate         Publish date of the post.
+     * @param authors         The names of the authors of the content. Up to 10 authors are accepted.
+     * @param link            A post's canonical url.
+     * @param section         The category or vertical to which this content belongs.
+     * @param tags            User-defined tags for the content. Up to 20 are allowed.
+     * @param thumbUrl        URL at which the main image for this content is located.
+     * @param title           The title of the content.
+     * @param pubDate         The date this piece of content was published.
      */
     public ParselyMetadata(
             @Nullable ArrayList<String> authors,

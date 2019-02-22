@@ -16,13 +16,13 @@ public class ParselyVideoMetadata extends ParselyMetadata {
 
     /* \brief Create a new ParselyVideoMetadata object.
      *
-     * @param authors         List of authors for the video.
+     * @param authors         The names of the authors of the video. Up to 10 authors are accepted.
      * @param videoId         Unique identifier for the video. Required.
-     * @param section         Section of the video.
-     * @param tags            List of tags for the video.
-     * @param thumbUrl        URL of a thumbnail for the video.
-     * @param title           Title of the video.
-     * @param pubDate         Publish date of the video.
+     * @param section         The category or vertical to which this video belongs.
+     * @param tags            User-defined tags for the video. Up to 20 are allowed.
+     * @param thumbUrl        URL at which the main image for this video is located.
+     * @param title           The title of the video.
+     * @param pubDate         The date this video was published.
      * @param durationSeconds Duration of the video in seconds. Required.
      */
     public ParselyVideoMetadata(
