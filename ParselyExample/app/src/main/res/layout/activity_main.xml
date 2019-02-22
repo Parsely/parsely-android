@@ -21,36 +21,99 @@
         android:layout_centerHorizontal="true"
         android:layout_below="@id/imageView1"
         android:text="@string/button_track_url"
-        android:onClick="trackURL" />
-        
-    <Button android:id="@+id/pid_button"
+        android:onClick="trackPageview" />
+
+    <Button
+        android:id="@+id/start_engagement_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/url_button"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/url_button"
-        android:text="@string/button_track_pid"
-        android:onClick="trackPID" />
-        
-    <TextView android:id="@+id/queue_size"
+        android:onClick="startEngagement"
+        android:text="@string/button_start_engagement" />
+
+    <Button
+        android:id="@+id/stop_engagement_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/start_engagement_button"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/pid_button" 
-        android:text=""/>
+        android:onClick="stopEngagement"
+        android:text="@string/button_stop_engagement" />
+
+    <Button
+        android:id="@+id/track_video_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/stop_engagement_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackPlay"
+        android:text="@string/button_track_video" />
+
+    <Button
+        android:id="@+id/pause_video_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/track_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackPause"
+        android:text="@string/button_pause_video" />
+
+    <Button
+        android:id="@+id/reset_video_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pause_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackReset"
+        android:text="@string/button_reset_video" />
+
+    <Button
+        android:id="@+id/flush_events_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/reset_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="flushEventQueue"
+        android:text="@string/button_flush_event_queue" />
+
+    <TextView
+        android:id="@+id/queue_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/flush_events_button"
+        android:layout_centerHorizontal="true"
+        android:text="Queued events: 0" />
 
     <TextView android:id="@+id/stored_size"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/queue_size" 
-        android:text=""/>
+        android:text="Stored events: 0"/>
         
     <TextView android:id="@+id/interval"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/stored_size" 
-        android:text=""/>
-    
+        android:text="Flush timer inactive"/>
+
+    <TextView
+        android:id="@+id/et_interval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/interval"
+        android:layout_centerHorizontal="true"
+        android:text="Engagement is inactive." />
+
+    <TextView
+        android:id="@+id/video_interval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_interval"
+        android:layout_centerHorizontal="true"
+        android:text="Video is inactive." />
+
 
 </RelativeLayout>

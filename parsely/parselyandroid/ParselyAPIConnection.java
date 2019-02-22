@@ -16,52 +16,43 @@
 
 package com.parsely.parselyandroid;
 
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLEncoder;
-import javax.net.ssl.HttpsURLConnection;
-
 import android.os.AsyncTask;
 
-public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLConnection> {
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.HttpURLConnection;
+
+public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnection> {
 
     public Exception exception;
 
     @Override
-    protected HttpsURLConnection doInBackground(String... data) {
-        HttpsURLConnection connection = null;
-        try{
-            if(data.length == 1){  // non-batched (since no post data is included)
-                connection = (HttpsURLConnection)new URL(data[0]).openConnection();
+    protected HttpURLConnection doInBackground(String... data) {
+        HttpURLConnection connection = null;
+        try {
+            if (data.length == 1) {  // non-batched (since no post data is included)
+                connection = (HttpURLConnection) new URL(data[0]).openConnection();
                 connection.getInputStream();
-            } else if(data.length == 2){  // batched (post data included)
-                connection = (HttpsURLConnection)new URL(data[0]).openConnection();
+            } else if (data.length == 2) {  // batched (post data included)
+                connection = (HttpURLConnection) new URL(data[0]).openConnection();
                 connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
-                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setRequestProperty("Content-Type", "application/json");
 
                 OutputStream output = connection.getOutputStream();
-
-                String query = "";
-                try {
-                    query = String.format("rqs=%s", URLEncoder.encode(data[1], "UTF-8"));
-                } catch (UnsupportedEncodingException ex) {
-                    ParselyTracker.PLog("");
-                }
-                output.write(query.getBytes());
+                output.write(data[1].getBytes());
                 output.close();
                 connection.getInputStream();
             }
 
-        } catch (Exception ex){
+        } catch (Exception ex) {
             this.exception = ex;
             return null;
         }
         return connection;
     }
 
-    protected void onPostExecute(HttpsURLConnection conn){
-        if(this.exception != null){
+    protected void onPostExecute(HttpURLConnection conn) {
+        if (this.exception != null) {
             ParselyTracker.PLog("Pixel request exception");
             ParselyTracker.PLog(this.exception.toString());
         } else {
@@ -79,7 +70,7 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpsURLC
                 instance.eventQueue.clear();
                 instance.purgeStoredQueue();
 
-                if(instance.queueSize() == 0 && instance.storedEventsCount() == 0){
+                if (instance.queueSize() == 0 && instance.storedEventsCount() == 0) {
                     ParselyTracker.PLog("Event queue empty, flush timer cleared.");
                     instance.stopFlushTimer();
                 }
