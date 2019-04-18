@@ -21,6 +21,8 @@ the `/ParselyExample/app/src/main/java/com` directory as an example of
 how to integrate the SDK in a typical Android Studio project. You can open
 `ParselyExample` as an Android Studio project and explore a typical SDK integration.
 
+NOTE: When you open the folder as a project, you may need to run `File -> Sync Project with Gradle files`.
+
 To integrate Parse.ly mobile tracking with your Android Studio app:
 
 1. Copy the `parselyandroid` directory to your project's top-level package directory
