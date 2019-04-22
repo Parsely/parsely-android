@@ -95,7 +95,7 @@ public class MainActivity extends Activity {
         } else {
             eMsg.append("inactive.");
         }
-        eMsg.append(String.format(" (interval: %.01fs)", ParselyTracker.sharedInstance().getEngagementInterval()));
+        eMsg.append(String.format(" (interval: %.01fms)", ParselyTracker.sharedInstance().getEngagementInterval()));
 
         TextView eView = findViewById(R.id.et_interval);
         eView.setText(eMsg.toString());
@@ -106,7 +106,7 @@ public class MainActivity extends Activity {
         } else {
             vMsg.append("inactive.");
         }
-        vMsg.append(String.format(" (interval: %.01fs)", ParselyTracker.sharedInstance().getEngagementInterval()));
+        vMsg.append(String.format(" (interval: %.01fms)", ParselyTracker.sharedInstance().getVideoEngagementInterval()));
 
         TextView vView = findViewById(R.id.video_interval);
         vView.setText(vMsg.toString());

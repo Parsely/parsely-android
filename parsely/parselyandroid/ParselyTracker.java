@@ -147,15 +147,22 @@ public class ParselyTracker {
         System.out.println(new Formatter().format("[Parsely] " + logString, objects).toString());
     }
 
-    /*! \brief Get the base engagement tracking interval.
-     *
-     * Please note that this is the _base_ engagement interval. Longer engagements
-     * will enqueue events less frequently over time to save data.
+    /*! \brief Get the heartbeat interval
      *
      * @return The base engagement tracking interval.
      */
     public double getEngagementInterval() {
-        return DEFAULT_ENGAGEMENT_INTERVAL_MILLIS / 1000;
+        if (this.engagementManager == null) {
+            return -1;
+        }
+        return this.engagementManager.getIntervalMillis();
+    }
+
+    public double getVideoEngagementInterval() {
+        if (this.videoEngagementManager == null) {
+            return -1;
+        }
+        return this.videoEngagementManager.getIntervalMillis();
     }
 
     /*! \brief Returns whether the engagement tracker is running.
@@ -899,6 +906,10 @@ public class ParselyTracker {
             // increases by 25% for each successive call, up to a max of 90s, to cut down on
             // data use for very long engagements (e.g. streaming video).
             this.latestDelayMillis = (int) Math.min(90000, this.latestDelayMillis * 1.25);
+        }
+
+        public double getIntervalMillis() {
+            return this.latestDelayMillis;
         }
     }
 }
