@@ -827,6 +827,11 @@ public class ParselyTracker {
         private Timer parentTimer;
         private TimerTask waitingTimerTask;
         private long latestDelayMillis, totalTime;
+        private Calendar startTime;
+
+        private static final long MAX_TIME_BETWEEN_HEARTBEATS = 60 * 60;
+        private static final long OFFSET_MATCHING_BASE_INTERVAL = 35;
+        private static final double BACKOFF_PROPORTION = 0.3;
 
 
         public EngagementManager(Timer parentTimer, long intervalMillis, Map<String, Object> baseEvent) {
@@ -834,6 +839,7 @@ public class ParselyTracker {
             this.parentTimer = parentTimer;
             this.latestDelayMillis = intervalMillis;
             this.totalTime = 0;
+            this.startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         }
 
         public boolean isRunning() {
@@ -843,6 +849,7 @@ public class ParselyTracker {
         public void start() {
             this.scheduleNextExecution(this.latestDelayMillis);
             this.started = true;
+            this.startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         }
 
         public void stop() {
@@ -902,10 +909,12 @@ public class ParselyTracker {
         }
 
         private void updateLatestInterval() {
-            // Update latestDelayMillis to be used for next execution. The interval
-            // increases by 25% for each successive call, up to a max of 90s, to cut down on
-            // data use for very long engagements (e.g. streaming video).
-            this.latestDelayMillis = (int) Math.min(90000, this.latestDelayMillis * 1.25);
+            Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            long totalTrackedTime = (now.getTime().getTime() - this.startTime.getTime().getTime()) / 1000;
+            double totalWithOffset = totalTrackedTime + this.OFFSET_MATCHING_BASE_INTERVAL;
+            double newInterval = totalWithOffset * this.BACKOFF_PROPORTION;
+            long clampedNewInterval = (long)Math.min(this.MAX_TIME_BETWEEN_HEARTBEATS, newInterval);
+            this.latestDelayMillis = clampedNewInterval * 1000;
         }
 
         public double getIntervalMillis() {
