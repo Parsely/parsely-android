@@ -491,7 +491,7 @@ public class ParselyTracker {
     /*! \brief Save the event queue to persistent storage.
 
      */
-    private void persistQueue() {
+    private synchronized void persistQueue() {
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
         if (storedQueue == null) {
@@ -700,7 +700,7 @@ public class ParselyTracker {
 
     private class FlushQueue extends AsyncTask<Void, Void, Void> {
         @Override
-        protected Void doInBackground(Void... params) {
+        protected synchronized Void doInBackground(Void... params) {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
