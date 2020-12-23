@@ -534,7 +534,7 @@ public class ParselyTracker {
      *
      */
     protected void purgeStoredQueue() {
-        this.persistObject(null);
+        this.persistObject(new ArrayList<Map<String, Object>>());
     }
 
     /*! \brief Delete an event from the stored queue.
