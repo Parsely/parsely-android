@@ -1,0 +1,158 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Parsely Android Quickstart Guide &#8212; Parsely Android  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">Parsely Android  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <a class="reference internal image-reference" href="https://www.parse.ly/static/img/brand/logo-parsely-green-horizontal.png"><img alt="https://www.parse.ly/static/img/brand/logo-parsely-green-horizontal.png" src="https://www.parse.ly/static/img/brand/logo-parsely-green-horizontal.png" style="width: 155px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="section" id="parsely-android-quickstart-guide">
+<h1>Parsely Android Quickstart Guide<a class="headerlink" href="#parsely-android-quickstart-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="integrating-with-android-studio">
+<h2>Integrating with Android Studio<a class="headerlink" href="#integrating-with-android-studio" title="Permalink to this headline">¶</a></h2>
+<p>To integrate Parse.ly mobile tracking with your Android Studio app:</p>
+<ol class="arabic simple">
+<li>Copy the parselyandroid directory to your project’s top-level package directory (in a default Android Studio project, this is <code class="docutils literal notranslate"><span class="pre">/app/src/main/java/com</span></code>.) The directory tree should look like <code class="docutils literal notranslate"><span class="pre">/app/src/main/java/com/parsely/parselyandroid</span></code>.</li>
+<li>In <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">-&gt;</span> <span class="pre">Edit</span> <span class="pre">Libraries</span> <span class="pre">and</span> <span class="pre">Dependencies</span></code> under the <code class="docutils literal notranslate"><span class="pre">Dependencies</span></code> tab, use the green + to add two Library Dependencies: <code class="docutils literal notranslate"><span class="pre">org.codehaus.jackson:jackson-core-lgpl:1.9.13</span></code> and <code class="docutils literal notranslate"><span class="pre">org.codehaus.jackson:jackson-mapper-lgpl:1.9.13</span></code></li>
+<li>Add the following lines to your <code class="docutils literal notranslate"><span class="pre">AndroidManifest.xml</span></code> file:</li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">uses</span><span class="o">-</span><span class="n">permission</span> <span class="n">android</span><span class="p">:</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;android.permission.INTERNET&quot;</span><span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="n">uses</span><span class="o">-</span><span class="n">permission</span> <span class="n">android</span><span class="p">:</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;android.permission.ACCESS_NETWORK_STATE&quot;</span><span class="o">/&gt;</span>
+</pre></div>
+</div>
+<ol class="arabic simple">
+<li>Add the following lines to <code class="docutils literal notranslate"><span class="pre">app/build.gradle:</span></code></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">packagingOptions</span> <span class="p">{</span>
+  <span class="n">exclude</span> <span class="s1">&#39;META-INF/LGPL2.1&#39;</span>
+  <span class="n">exclude</span> <span class="s1">&#39;META-INF/LICENSE&#39;</span>
+  <span class="n">exclude</span> <span class="s1">&#39;META-INF/NOTICE&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-the-sdk">
+<h2>Using the SDK<a class="headerlink" href="#using-the-sdk" title="Permalink to this headline">¶</a></h2>
+<p>In any file that uses the Parsely SDK, be sure to add the line</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">com.parsely.parselyandroid.</span><span class="o">*</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>at the top of the file.</p>
+<p>Before using the toolkit, you must initialize the Parsely object with your public api key. This is usually best to do in the MainActivity’s <code class="docutils literal notranslate"><span class="pre">onCreate</span></code> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@Override</span>
+<span class="n">protected</span> <span class="n">void</span> <span class="n">onCreate</span><span class="p">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nb">super</span><span class="o">.</span><span class="n">onCreate</span><span class="p">(</span><span class="n">savedInstanceState</span><span class="p">);</span>
+    <span class="n">ParselyTracker</span><span class="o">.</span><span class="n">sharedInstance</span><span class="p">(</span><span class="s2">&quot;examplesite.com&quot;</span><span class="p">,</span> <span class="n">this</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The this parameter is necessary to give Parsely access to the app’s context.</p>
+<p>The Parsely toolkit maintains a queue of pageview events and periodically flushes it to the servers. This helps extend the battery life of your users’ Android devices. As a result of this design, there may be some pageview events remaining in the queue at the time the user exits your app. To make sure all of the queued events are flushed to the server at this time, make sure to include a call to <code class="docutils literal notranslate"><span class="pre">flush()</span></code> in your main activity’s <code class="docutils literal notranslate"><span class="pre">onDestroy()</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@Override</span>
+<span class="n">protected</span> <span class="n">void</span> <span class="n">onDestroy</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">ParselyTracker</span><span class="o">.</span><span class="n">sharedInstance</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">();</span>
+    <span class="nb">super</span><span class="o">.</span><span class="n">onDestroy</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To register a pageview event with Parsely, simply use the track call.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ParselyTracker</span><span class="o">.</span><span class="n">sharedInstance</span><span class="p">()</span><span class="o">.</span><span class="n">trackURL</span><span class="p">(</span><span class="s2">&quot;http://examplesite.com/something-whatever.html&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This call requires the canonical URL of the page corresponding to the post currently being viewed.</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Parsely Android Quickstart Guide</a><ul>
+<li><a class="reference internal" href="#integrating-with-android-studio">Integrating with Android Studio</a></li>
+<li><a class="reference internal" href="#using-the-sdk">Using the SDK</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">Parsely Android  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Parsely.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>
