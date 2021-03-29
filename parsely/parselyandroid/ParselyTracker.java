@@ -85,7 +85,7 @@ public class ParselyTracker {
         new GetAdKey(c).execute();
         this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
-        this.rootUrl = "https://srv.pixel.parsely.com/";
+        this.rootUrl = "https://p1.parsely.com/";
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
         this.deviceInfo = this.collectDeviceInfo();
