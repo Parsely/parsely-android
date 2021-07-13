@@ -510,7 +510,7 @@ public class ParselyTracker {
      * @return The stored queue of events.
      */
     private ArrayList<Map<String, Object>> getStoredQueue() {
-        ArrayList<Map<String, Object>> storedQueue = new ArrayList<>();
+        ArrayList<Map<String, Object>> storedQueue = null;
         try {
             FileInputStream fis = this.context.getApplicationContext().openFileInput(
                     this.storageKey);
@@ -526,7 +526,9 @@ public class ParselyTracker {
             PLog("Exception thrown during queue deserialization: %s", ex.toString());
         }
 
-        assert storedQueue != null;
+        if (storedQueue == null) {
+            storedQueue = new ArrayList<>();
+        }
         return storedQueue;
     }
 
