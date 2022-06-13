@@ -1,0 +1,22 @@
+name: Assemble project
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+    - name: Build library
+      run: ./gradlew :parsely:assembleDebug
+    - name: Build example app
+      run: ./gradlew :example:assembleDebug
+
