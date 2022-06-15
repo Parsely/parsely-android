@@ -5,21 +5,11 @@ group = PUBLISH_GROUP_ID
 version = PUBLISH_VERSION
 
 def prepareEnvironment() {
-    if (System.getenv("CI")) {
-        ext["ossrhUsername"] = System.getenv('OSSRH_USERNAME')
-        ext["ossrhPassword"] = System.getenv('OSSRH_PASSWORD')
-        ext["signing.keyId"] = System.getenv('SIGNING_KEY_ID')
-        ext["signing.password"] = System.getenv('SIGNING_PASSWORD')
-        ext["signing.key"] = System.getenv('SIGNING_KEY')
-    } else {
-        // Read local.properties
-        File secretPropsFile = project.rootProject.file('local.properties')
-        Properties p = new Properties()
-        new FileInputStream(secretPropsFile).withCloseable { is -> p.load(is) }
-        p.each { name, value ->
-            rootProject.ext[name] = value
-        }
-    }
+    ext["ossrhUsername"] = System.getenv('OSSRH_USERNAME')
+    ext["ossrhPassword"] = System.getenv('OSSRH_PASSWORD')
+    ext["signing.keyId"] = System.getenv('SIGNING_KEY_ID')
+    ext["signing.password"] = System.getenv('SIGNING_PASSWORD')
+    ext["signing.key"] = System.getenv('SIGNING_KEY')
 }
 
 publishing {
@@ -29,8 +19,8 @@ publishing {
             name = 'mavenCentral'
             url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
             credentials {
-                username = ossrhUsername
-                password = ossrhPassword
+                username = findProperty("ossrhUsername") ?: ""
+                password = findProperty("ossrhPassword") ?: ""
             }
         }
     }
@@ -63,9 +53,9 @@ publishing {
 
 signing {
     useInMemoryPgpKeys(
-            rootProject.ext["signing.keyId"],
-            rootProject.ext["signing.key"],
-            rootProject.ext["signing.password"],
+            findProperty("signing.keyId") ?: "",
+            findProperty("signing.key") ?: "",
+            findProperty("signing.password") ?: "",
     )
     sign publishing.publications
 }
