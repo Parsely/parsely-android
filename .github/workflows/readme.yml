@@ -18,3 +18,5 @@ jobs:
         run: ./gradlew :parsely:assembleDebug
       - name: Build example app
         run: ./gradlew :example:assembleDebug
+      - name: Validate Maven publication
+        run: ./gradlew :parsely:publishReleasePublicationToMavenLocal
