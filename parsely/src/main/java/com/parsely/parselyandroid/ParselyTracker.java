@@ -24,8 +24,8 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings.Secure;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -551,7 +551,6 @@ public class ParselyTracker {
      *
      * @param o Object to store.
      */
-    @TargetApi(Build.VERSION_CODES.CUPCAKE)
     private void persistObject(Object o) {
         try {
             FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
@@ -679,7 +678,6 @@ public class ParselyTracker {
         return 0;
     }
 
-    @TargetApi(Build.VERSION_CODES.CUPCAKE)
     private class QueueManager extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
