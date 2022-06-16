@@ -1,4 +1,4 @@
-name: Assemble project
+name: Publish SDK to MavenCentral
 
 on:
   release:
