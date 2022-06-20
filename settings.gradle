@@ -1,4 +1,11 @@
 pluginManagement {
+    gradle.ext.agpVersion = '7.2.1'
+
+    plugins {
+        id 'com.android.application' version gradle.ext.agpVersion
+        id 'com.android.library' version gradle.ext.agpVersion
+    }
+
     repositories {
         gradlePluginPortal()
         google()
