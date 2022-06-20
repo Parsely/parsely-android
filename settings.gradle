@@ -21,4 +21,5 @@ dependencyResolutionManagement {
     }
 }
 
-include ':parsely', ':example'
+include ':parsely',
+        ':example'
