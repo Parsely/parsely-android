@@ -1,9 +1,6 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
-group = PUBLISH_GROUP_ID
-version = PUBLISH_VERSION
-
 def prepareEnvironment() {
     ext["ossrhUsername"] = System.getenv('OSSRH_USERNAME')
     ext["ossrhPassword"] = System.getenv('OSSRH_PASSWORD')
@@ -30,7 +27,10 @@ publishing {
                 from components.release
 
                 pom {
-                    name = PUBLISH_ARTIFACT_ID
+                    group = 'com.parsely'
+                    name = 'parsely'
+                    version = VERSION
+
                     description = 'The official Parse.ly Android toolkit'
                     url = 'https://github.com/Parsely/parsely-android'
                     licenses {

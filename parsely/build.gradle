@@ -2,6 +2,8 @@ plugins {
     id 'com.android.library'
 }
 
+ext.VERSION = '3.0.2'
+
 android {
     compileSdkVersion 28
 
@@ -26,12 +28,6 @@ android {
             withSourcesJar()
         }
     }
-}
-
-ext {
-    PUBLISH_GROUP_ID = 'com.parsely'
-    PUBLISH_VERSION = '3.0.2'
-    PUBLISH_ARTIFACT_ID = 'parsely'
 }
 
 dependencies {
