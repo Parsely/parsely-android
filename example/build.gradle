@@ -8,6 +8,7 @@ android {
     defaultConfig {
         applicationId "com.parsely.example.parselyexample"
         minSdkVersion 21
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
     }
