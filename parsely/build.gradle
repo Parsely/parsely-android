@@ -5,10 +5,11 @@ plugins {
 ext.VERSION = '3.0.2'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 32
 
     defaultConfig {
         minSdkVersion 21
+        targetSdkVersion 32
     }
     buildTypes {
         release {
