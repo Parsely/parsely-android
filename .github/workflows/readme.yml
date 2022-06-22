@@ -19,7 +19,7 @@ jobs:
       - name: Build example app
         run: ./gradlew :example:assembleDebug
       - name: Android Lint
-        run: ./gradlew lint
+        run: ./gradlew lintDebug
       - name: Validate Maven publication
         run: ./gradlew :parsely:publishReleasePublicationToMavenLocal
         env:
