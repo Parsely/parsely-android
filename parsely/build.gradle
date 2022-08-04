@@ -2,7 +2,7 @@ plugins {
     id 'com.android.library'
 }
 
-ext.VERSION = '3.0.3'
+ext.VERSION = '3.0.4'
 
 android {
     compileSdkVersion 33
