@@ -2,14 +2,14 @@ plugins {
     id 'com.android.library'
 }
 
-ext.VERSION = '3.0.3'
+ext.VERSION = '3.0.4'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
-        minSdkVersion 23
-        targetSdkVersion 32
+        minSdkVersion 21
+        targetSdkVersion 33
     }
     buildTypes {
         release {
