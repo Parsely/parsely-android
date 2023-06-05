@@ -87,7 +87,6 @@ public class ParselyTracker {
         this.rootUrl = "https://p1.parsely.com/";
         this.queueSizeLimit = 50;
         this.storageSizeLimit = 100;
-        this.deviceInfo = this.collectDeviceInfo();
         this.timer = new Timer();
         this.isDebug = false;
 
@@ -757,6 +756,7 @@ public class ParselyTracker {
         @Override
         protected void onPostExecute(String advertId) {
             adKey = advertId;
+            deviceInfo = collectDeviceInfo();
             deviceInfo.put("parsely_site_uuid", adKey);
         }
 
