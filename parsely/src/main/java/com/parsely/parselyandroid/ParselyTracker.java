@@ -80,6 +80,7 @@ public class ParselyTracker {
         this.siteId = siteId;
         this.uuidKey = "parsely-uuid";
         // get the adkey straight away on instantiation
+        this.deviceInfo = collectDeviceInfo(null);
         new GetAdKey(c).execute();
         this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
