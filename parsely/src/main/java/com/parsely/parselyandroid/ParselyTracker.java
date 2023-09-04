@@ -60,7 +60,7 @@ public class ParselyTracker {
     private static int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     protected ArrayList<Map<String, Object>> eventQueue;
-    private String siteId, rootUrl, storageKey, uuidKey, adKey;
+    private String siteId, rootUrl, storageKey, uuidKey;
     private boolean isDebug;
     private SharedPreferences settings;
     private int queueSizeLimit, storageSizeLimit;
@@ -79,7 +79,6 @@ public class ParselyTracker {
 
         this.siteId = siteId;
         this.uuidKey = "parsely-uuid";
-        this.adKey = null;
         // get the adkey straight away on instantiation
         new GetAdKey(c).execute();
         this.storageKey = "parsely-events.ser";
@@ -638,12 +637,12 @@ public class ParselyTracker {
      *
      * Collects info about the device and user to use in Parsely events.
      */
-    private Map<String, String> collectDeviceInfo() {
+    private Map<String, String> collectDeviceInfo(@Nullable final String adKey) {
         Map<String, String> dInfo = new HashMap<>();
 
         // TODO: screen dimensions (maybe?)
-        PLog("adkey is: %s, uuid is %s", this.adKey, this.getSiteUuid());
-        String uuid = (this.adKey != null) ? this.adKey : this.getSiteUuid();
+        PLog("adkey is: %s, uuid is %s", adKey, this.getSiteUuid());
+        final String uuid = (adKey != null) ? adKey : this.getSiteUuid();
         dInfo.put("parsely_site_uuid", uuid);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
@@ -755,9 +754,7 @@ public class ParselyTracker {
 
         @Override
         protected void onPostExecute(String advertId) {
-            adKey = advertId;
-            deviceInfo = collectDeviceInfo();
-            deviceInfo.put("parsely_site_uuid", adKey);
+            deviceInfo = collectDeviceInfo(advertId);
         }
 
     }
