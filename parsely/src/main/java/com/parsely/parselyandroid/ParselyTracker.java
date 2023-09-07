@@ -404,7 +404,7 @@ public class ParselyTracker {
         data.put("manufacturer", this.deviceInfo.get("manufacturer"));
         data.put("os", this.deviceInfo.get("os"));
         data.put("os_version", this.deviceInfo.get("os_version"));
-        data.put("ts", now.getTimeInMillis() / 1000);
+        data.put("ts", now.getTimeInMillis());
         data.put("parsely_site_uuid", this.deviceInfo.get("parsely_site_uuid"));
         event.put("data", data);
 
@@ -893,7 +893,7 @@ public class ParselyTracker {
             // Update `ts` for the event since it's happening right now.
             Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             Map<String, Object> data = (Map<String, Object>) event.get("data");
-            data.put("ts", now.getTimeInMillis() / 1000);
+            data.put("ts", now.getTimeInMillis());
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
