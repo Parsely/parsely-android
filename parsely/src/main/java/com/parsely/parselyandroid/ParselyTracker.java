@@ -897,9 +897,9 @@ public class ParselyTracker {
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
-            long inc = (this.latestDelayMillis + executionDiff) / 1000;
+            long inc = (this.latestDelayMillis + executionDiff);
             this.totalTime += inc;
-            event.put("inc", inc);
+            event.put("inc", inc / 1000);
             event.put("tt", this.totalTime);
 
             enqueueEvent(event);
