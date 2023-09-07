@@ -892,8 +892,9 @@ public class ParselyTracker {
 
             // Update `ts` for the event since it's happening right now.
             Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            Map<String, Object> data = (Map<String, Object>) event.get("data");
+            Map<String, Object> data = new HashMap<>((Map<String, Object>) event.get("data"));
             data.put("ts", now.getTimeInMillis() / 1000);
+            event.put("data", data);
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
