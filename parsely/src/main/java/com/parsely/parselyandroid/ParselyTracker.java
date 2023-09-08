@@ -887,7 +887,7 @@ public class ParselyTracker {
 
         private void doEnqueue(long scheduledExecutionTime) {
             // Create a copy of the base event to enqueue
-            Map<String, Object> event = new HashMap(this.baseEvent);
+            Map<String, Object> event = new HashMap<>(this.baseEvent);
             PLog(String.format("Enqueuing %s event.", event.get("action")));
 
             // Update `ts` for the event since it's happening right now.
