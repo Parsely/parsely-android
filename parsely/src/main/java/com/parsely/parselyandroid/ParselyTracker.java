@@ -894,11 +894,10 @@ public class ParselyTracker {
             Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             @SuppressWarnings("unchecked")
             Map<String, Object> baseEventData = (Map<String, Object>) event.get("data");
-            if (baseEventData != null) {
-                Map<String, Object> data = new HashMap<>((Map<String, Object>) baseEventData);
-                data.put("ts", now.getTimeInMillis() / 1000);
-                event.put("data", data);
-            }
+            assert baseEventData != null;
+            Map<String, Object> data = new HashMap<>((Map<String, Object>) baseEventData);
+            data.put("ts", now.getTimeInMillis() / 1000);
+            event.put("data", data);
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
