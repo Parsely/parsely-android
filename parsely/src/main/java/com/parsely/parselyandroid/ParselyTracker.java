@@ -404,7 +404,7 @@ public class ParselyTracker {
         data.put("manufacturer", this.deviceInfo.get("manufacturer"));
         data.put("os", this.deviceInfo.get("os"));
         data.put("os_version", this.deviceInfo.get("os_version"));
-        data.put("ts", now.getTimeInMillis() / 1000);
+        data.put("ts", now.getTimeInMillis());
         data.put("parsely_site_uuid", this.deviceInfo.get("parsely_site_uuid"));
         event.put("data", data);
 
@@ -896,14 +896,14 @@ public class ParselyTracker {
             Map<String, Object> baseEventData = (Map<String, Object>) event.get("data");
             assert baseEventData != null;
             Map<String, Object> data = new HashMap<>((Map<String, Object>) baseEventData);
-            data.put("ts", now.getTimeInMillis() / 1000);
+            data.put("ts", now.getTimeInMillis());
             event.put("data", data);
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
-            long inc = (this.latestDelayMillis + executionDiff) / 1000;
+            long inc = (this.latestDelayMillis + executionDiff);
             this.totalTime += inc;
-            event.put("inc", inc);
+            event.put("inc", inc / 1000);
             event.put("tt", this.totalTime);
 
             enqueueEvent(event);
