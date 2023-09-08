@@ -887,13 +887,17 @@ public class ParselyTracker {
 
         private void doEnqueue(long scheduledExecutionTime) {
             // Create a copy of the base event to enqueue
-            Map<String, Object> event = new HashMap(this.baseEvent);
+            Map<String, Object> event = new HashMap<>(this.baseEvent);
             PLog(String.format("Enqueuing %s event.", event.get("action")));
 
             // Update `ts` for the event since it's happening right now.
             Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            Map<String, Object> data = (Map<String, Object>) event.get("data");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> baseEventData = (Map<String, Object>) event.get("data");
+            assert baseEventData != null;
+            Map<String, Object> data = new HashMap<>((Map<String, Object>) baseEventData);
             data.put("ts", now.getTimeInMillis());
+            event.put("data", data);
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
