@@ -69,6 +69,7 @@ public class ParselyTracker {
     private Timer timer;
     private FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
+    private boolean flushInProgress = false;
 
     /*! \brief Create a new ParselyTracker instance.
      *
@@ -443,8 +444,9 @@ public class ParselyTracker {
      * include a call to `flushEventQueue` in your main activity's `onDestroy()` method.
      */
     public void flushEventQueue() {
-        // needed for call from MainActivity
-        new FlushQueue().execute();
+        if (!flushInProgress) {
+            new FlushQueue().execute();
+        }
     }
 
     /*!  \brief Send the batched event request to Parsely.
@@ -699,6 +701,7 @@ public class ParselyTracker {
     private class FlushQueue extends AsyncTask<Void, Void, Void> {
         @Override
         protected synchronized Void doInBackground(Void... params) {
+            flushInProgress = true;
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
@@ -721,6 +724,7 @@ public class ParselyTracker {
             newQueue.addAll(hs);
             PLog("Flushing queue");
             sendBatchRequest(newQueue);
+            flushInProgress = false;
             return null;
         }
     }
