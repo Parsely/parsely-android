@@ -59,10 +59,10 @@ public class ParselyTracker {
     private static final int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     private static final int QUEUE_SIZE_LIMIT = 50;
     private static final int STORAGE_SIZE_LIMIT = 100;
+    private static final String STORAGE_KEY = "parsely-events.ser";
     protected ArrayList<Map<String, Object>> eventQueue;
     private final String siteId;
     private final String rootUrl;
-    private final String storageKey;
     private final String uuidKey;
     private boolean isDebug;
     private final SharedPreferences settings;
@@ -84,7 +84,6 @@ public class ParselyTracker {
         // get the adkey straight away on instantiation
         this.deviceInfo = collectDeviceInfo(null);
         new GetAdKey(c).execute();
-        this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
         this.rootUrl = "https://p1.parsely.com/";
         this.timer = new Timer();
@@ -508,8 +507,7 @@ public class ParselyTracker {
     private ArrayList<Map<String, Object>> getStoredQueue() {
         ArrayList<Map<String, Object>> storedQueue = null;
         try {
-            FileInputStream fis = this.context.getApplicationContext().openFileInput(
-                    this.storageKey);
+            FileInputStream fis = this.context.getApplicationContext().openFileInput(STORAGE_KEY);
             ObjectInputStream ois = new ObjectInputStream(fis);
             //noinspection unchecked
             storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
@@ -550,7 +548,7 @@ public class ParselyTracker {
     private void persistObject(Object o) {
         try {
             FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
-                    this.storageKey,
+                    STORAGE_KEY,
                     android.content.Context.MODE_PRIVATE
             );
             ObjectOutputStream oos = new ObjectOutputStream(fos);
