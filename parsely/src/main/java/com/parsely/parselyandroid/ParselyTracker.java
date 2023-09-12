@@ -60,9 +60,11 @@ public class ParselyTracker {
     private static final int QUEUE_SIZE_LIMIT = 50;
     private static final int STORAGE_SIZE_LIMIT = 100;
     private static final String STORAGE_KEY = "parsely-events.ser";
+// emulator localhost
+//    private static final String ROOT_URL = "http://10.0.2.2:5001/";
+    private static final String ROOT_URL = "https://p1.parsely.com/";
     protected ArrayList<Map<String, Object>> eventQueue;
     private final String siteId;
-    private final String rootUrl;
     private final String uuidKey;
     private boolean isDebug;
     private final SharedPreferences settings;
@@ -84,8 +86,6 @@ public class ParselyTracker {
         // get the adkey straight away on instantiation
         this.deviceInfo = collectDeviceInfo(null);
         new GetAdKey(c).execute();
-        //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
-        this.rootUrl = "https://p1.parsely.com/";
         this.timer = new Timer();
         this.isDebug = false;
 
@@ -468,8 +468,8 @@ public class ParselyTracker {
             this.eventQueue.clear();
             this.purgeStoredQueue();
         } else {
-            new ParselyAPIConnection().execute(this.rootUrl + "mobileproxy", this.JsonEncode(batchMap));
-            PLog("Requested %s", this.rootUrl);
+            new ParselyAPIConnection().execute(ROOT_URL + "mobileproxy", this.JsonEncode(batchMap));
+            PLog("Requested %s", ROOT_URL);
         }
         PLog("POST Data %s", this.JsonEncode(batchMap));
     }
