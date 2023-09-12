@@ -57,17 +57,21 @@ import java.util.TimerTask;
  */
 public class ParselyTracker {
     private static ParselyTracker instance = null;
-    private static int DEFAULT_FLUSH_INTERVAL_SECS = 60;
-    private static int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
+    private static final int DEFAULT_FLUSH_INTERVAL_SECS = 60;
+    private static final int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     protected ArrayList<Map<String, Object>> eventQueue;
-    private String siteId, rootUrl, storageKey, uuidKey;
+    private final String siteId;
+    private final String rootUrl;
+    private final String storageKey;
+    private final String uuidKey;
     private boolean isDebug;
-    private SharedPreferences settings;
-    private int queueSizeLimit, storageSizeLimit;
+    private final SharedPreferences settings;
+    private final int queueSizeLimit;
+    private final int storageSizeLimit;
     private Map<String, String> deviceInfo;
-    private Context context;
-    private Timer timer;
-    private FlushManager flushManager;
+    private final Context context;
+    private final Timer timer;
+    private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
 
     /*! \brief Create a new ParselyTracker instance.
@@ -92,7 +96,7 @@ public class ParselyTracker {
 
         this.eventQueue = new ArrayList<>();
 
-        this.flushManager = new FlushManager(this.timer, flushInterval * 1000);
+        this.flushManager = new FlushManager(this.timer, flushInterval * 1000L);
 
         if (this.getStoredQueue() != null && this.getStoredQueue().size() > 0) {
             this.startFlushTimer();
@@ -428,7 +432,7 @@ public class ParselyTracker {
         // Push it onto the queue
         this.eventQueue.add(event);
         new QueueManager().execute();
-        if (this.flushTimerIsActive() == false) {
+        if (!this.flushTimerIsActive()) {
             this.startFlushTimer();
             PLog("Flush flushTimer set to %ds", (this.flushManager.getIntervalMillis() / 1000));
         }
@@ -464,7 +468,7 @@ public class ParselyTracker {
         Map<String, Object> batchMap = new HashMap<>();
         batchMap.put("events", events);
 
-        if (this.isDebug == true) {
+        if (this.isDebug) {
             PLog("Debug mode on. Not sending to Parse.ly");
             this.eventQueue.clear();
             this.purgeStoredQueue();
@@ -728,7 +732,7 @@ public class ParselyTracker {
     /*! \brief Async task to get adKey for this device.
      */
     private class GetAdKey extends AsyncTask<Void, Void, String> {
-        private Context mContext;
+        private final Context mContext;
 
         public GetAdKey(Context context) {
             mContext = context;
@@ -768,8 +772,8 @@ public class ParselyTracker {
      */
     private class FlushManager {
 
-        private Timer parentTimer;
-        private long intervalMillis;
+        private final Timer parentTimer;
+        private final long intervalMillis;
         private TimerTask runningTask;
 
         public FlushManager(Timer parentTimer, long intervalMillis) {
@@ -821,7 +825,7 @@ public class ParselyTracker {
 
         public Map<String, Object> baseEvent;
         private boolean started;
-        private Timer parentTimer;
+        private final Timer parentTimer;
         private TimerTask waitingTimerTask;
         private long latestDelayMillis, totalTime;
         private Calendar startTime;
@@ -874,7 +878,7 @@ public class ParselyTracker {
                     boolean output = super.cancel();
                     // Only enqueue when we actually canceled something. If output is false then
                     // this has already been canceled.
-                    if (output == true) {
+                    if (output) {
                         doEnqueue(this.scheduledExecutionTime());
                     }
                     return output;
@@ -912,9 +916,9 @@ public class ParselyTracker {
         private void updateLatestInterval() {
             Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             long totalTrackedTime = (now.getTime().getTime() - this.startTime.getTime().getTime()) / 1000;
-            double totalWithOffset = totalTrackedTime + this.OFFSET_MATCHING_BASE_INTERVAL;
-            double newInterval = totalWithOffset * this.BACKOFF_PROPORTION;
-            long clampedNewInterval = (long)Math.min(this.MAX_TIME_BETWEEN_HEARTBEATS, newInterval);
+            double totalWithOffset = totalTrackedTime + OFFSET_MATCHING_BASE_INTERVAL;
+            double newInterval = totalWithOffset * BACKOFF_PROPORTION;
+            long clampedNewInterval = (long)Math.min(MAX_TIME_BETWEEN_HEARTBEATS, newInterval);
             this.latestDelayMillis = clampedNewInterval * 1000;
         }
 
