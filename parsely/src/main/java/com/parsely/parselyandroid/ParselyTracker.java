@@ -16,13 +16,11 @@
 
 package com.parsely.parselyandroid;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.provider.Settings.Secure;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -59,6 +57,8 @@ public class ParselyTracker {
     private static ParselyTracker instance = null;
     private static final int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static final int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
+    private static final int QUEUE_SIZE_LIMIT = 50;
+    private static final int STORAGE_SIZE_LIMIT = 100;
     protected ArrayList<Map<String, Object>> eventQueue;
     private final String siteId;
     private final String rootUrl;
@@ -66,8 +66,6 @@ public class ParselyTracker {
     private final String uuidKey;
     private boolean isDebug;
     private final SharedPreferences settings;
-    private final int queueSizeLimit;
-    private final int storageSizeLimit;
     private Map<String, String> deviceInfo;
     private final Context context;
     private final Timer timer;
@@ -89,8 +87,6 @@ public class ParselyTracker {
         this.storageKey = "parsely-events.ser";
         //this.rootUrl = "http://10.0.2.2:5001/";  // emulator localhost
         this.rootUrl = "https://p1.parsely.com/";
-        this.queueSizeLimit = 50;
-        this.storageSizeLimit = 100;
         this.timer = new Timer();
         this.isDebug = false;
 
