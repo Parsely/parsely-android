@@ -94,7 +94,7 @@ public class ParselyTracker {
 
         this.flushManager = new FlushManager(this.timer, flushInterval * 1000L);
 
-        if (this.getStoredQueue() != null && this.getStoredQueue().size() > 0) {
+        if (this.getStoredQueue().size() > 0) {
             this.startFlushTimer();
         }
     }
@@ -492,9 +492,6 @@ public class ParselyTracker {
     private synchronized void persistQueue() {
         PLog("Persisting event queue");
         ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
-        if (storedQueue == null) {
-            storedQueue = new ArrayList<>();
-        }
         HashSet<Map<String, Object>> hs = new HashSet<>();
         hs.addAll(storedQueue);
         hs.addAll(this.eventQueue);
@@ -507,6 +504,7 @@ public class ParselyTracker {
      *
      * @return The stored queue of events.
      */
+    @NonNull
     private ArrayList<Map<String, Object>> getStoredQueue() {
         ArrayList<Map<String, Object>> storedQueue = null;
         try {
@@ -670,10 +668,7 @@ public class ParselyTracker {
      */
     public int storedEventsCount() {
         ArrayList<Map<String, Object>> ar = this.getStoredQueue();
-        if (ar != null) {
-            return ar.size();
-        }
-        return 0;
+        return ar.size();
     }
 
     private class QueueManager extends AsyncTask<Void, Void, Void> {
@@ -681,15 +676,13 @@ public class ParselyTracker {
         protected Void doInBackground(Void... params) {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             // if event queue is too big, push to persisted storage
-            if (eventQueue.size() >= queueSizeLimit + 1) {
+            if (eventQueue.size() >= QUEUE_SIZE_LIMIT + 1) {
                 PLog("Queue size exceeded, expelling oldest event to persistent memory");
                 persistQueue();
                 eventQueue.remove(0);
                 // if persisted storage is too big, expel one
-                if (storedQueue != null) {
-                    if (storedEventsCount() > storageSizeLimit) {
-                        expelStoredEvent();
-                    }
+                if (storedEventsCount() > STORAGE_SIZE_LIMIT) {
+                    expelStoredEvent();
                 }
             }
             return null;
@@ -702,8 +695,7 @@ public class ParselyTracker {
             ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
-            if ((eventQueue == null || eventQueue.size() == 0) &&
-                    (storedQueue == null || storedQueue.size() == 0)) {
+            if ((eventQueue == null || eventQueue.size() == 0) && storedQueue.size() == 0) {
                 stopFlushTimer();
                 return null;
             }
@@ -715,9 +707,7 @@ public class ParselyTracker {
             ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
 
             hs.addAll(eventQueue);
-            if (storedQueue != null) {
-                hs.addAll(storedQueue);
-            }
+            hs.addAll(storedQueue);
             newQueue.addAll(hs);
             PLog("Flushing queue");
             sendBatchRequest(newQueue);
