@@ -63,9 +63,10 @@ public class ParselyTracker {
 // emulator localhost
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/";
     private static final String ROOT_URL = "https://p1.parsely.com/";
+    private static final String UUID_KEY = "parsely-uuid";
+
     protected ArrayList<Map<String, Object>> eventQueue;
     private final String siteId;
-    private final String uuidKey;
     private boolean isDebug;
     private final SharedPreferences settings;
     private Map<String, String> deviceInfo;
@@ -82,7 +83,6 @@ public class ParselyTracker {
         this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
 
         this.siteId = siteId;
-        this.uuidKey = "parsely-uuid";
         // get the adkey straight away on instantiation
         this.deviceInfo = collectDeviceInfo(null);
         new GetAdKey(c).execute();
@@ -620,7 +620,7 @@ public class ParselyTracker {
     private String getSiteUuid() {
         String uuid = "";
         try {
-            uuid = this.settings.getString(this.uuidKey, "");
+            uuid = this.settings.getString(UUID_KEY, "");
             if (uuid.equals("")) {
                 uuid = this.generateSiteUuid();
             }
