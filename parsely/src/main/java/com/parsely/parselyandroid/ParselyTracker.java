@@ -222,8 +222,8 @@ public class ParselyTracker {
             @Nullable String urlRef,
             @Nullable ParselyMetadata urlMetadata,
             @Nullable Map<String, Object> extraData) {
-        if (url == null || url.equals("")) {
-            throw new NullPointerException("url cannot be null or empty.");
+        if (url.equals("")) {
+            throw new IllegalArgumentException("url cannot be null or empty.");
         }
 
         // Blank urlref is better than null
@@ -243,8 +243,8 @@ public class ParselyTracker {
      * @param urlRef Referrer URL associated with this video view.
      */
     public void startEngagement(@NonNull String url, @Nullable String urlRef) {
-        if (url == null || url.equals("")) {
-            throw new NullPointerException("url cannot be null or empty.");
+        if (url.equals("")) {
+            throw new IllegalArgumentException("url cannot be null or empty.");
         }
 
         // Blank urlref is better than null
@@ -299,11 +299,8 @@ public class ParselyTracker {
             @Nullable String urlRef,
             @NonNull ParselyVideoMetadata videoMetadata,
             @Nullable Map<String, Object> extraData) {
-        if (videoMetadata == null) {
-            throw new NullPointerException("videoMetadata cannot be null.");
-        }
-        if (url == null || url.equals("")) {
-            throw new NullPointerException("url cannot be null or empty.");
+        if (url.equals("")) {
+            throw new IllegalArgumentException("url cannot be null or empty.");
         }
 
         // Blank urlref is better than null
