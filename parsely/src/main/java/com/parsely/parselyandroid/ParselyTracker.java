@@ -673,7 +673,7 @@ public class ParselyTracker {
         @Override
         protected Void doInBackground(Void... params) {
             // if event queue is too big, push to persisted storage
-            if (eventQueue.size() >= QUEUE_SIZE_LIMIT + 1) {
+            if (eventQueue.size() > QUEUE_SIZE_LIMIT) {
                 PLog("Queue size exceeded, expelling oldest event to persistent memory");
                 persistQueue();
                 eventQueue.remove(0);
