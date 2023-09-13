@@ -79,22 +79,22 @@ public class ParselyTracker {
      *
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
-        this.context = c.getApplicationContext();
-        this.settings = this.context.getSharedPreferences("parsely-prefs", 0);
+        context = c.getApplicationContext();
+        settings = context.getSharedPreferences("parsely-prefs", 0);
 
         this.siteId = siteId;
         // get the adkey straight away on instantiation
-        this.deviceInfo = collectDeviceInfo(null);
+        deviceInfo = collectDeviceInfo(null);
         new GetAdKey(c).execute();
-        this.timer = new Timer();
-        this.isDebug = false;
+        timer = new Timer();
+        isDebug = false;
 
-        this.eventQueue = new ArrayList<>();
+        eventQueue = new ArrayList<>();
 
-        this.flushManager = new FlushManager(this.timer, flushInterval * 1000L);
+        flushManager = new FlushManager(timer, flushInterval * 1000L);
 
-        if (this.getStoredQueue().size() > 0) {
-            this.startFlushTimer();
+        if (getStoredQueue().size() > 0) {
+            startFlushTimer();
         }
     }
 
@@ -149,17 +149,17 @@ public class ParselyTracker {
      * @return The base engagement tracking interval.
      */
     public double getEngagementInterval() {
-        if (this.engagementManager == null) {
+        if (engagementManager == null) {
             return -1;
         }
-        return this.engagementManager.getIntervalMillis();
+        return engagementManager.getIntervalMillis();
     }
 
     public double getVideoEngagementInterval() {
-        if (this.videoEngagementManager == null) {
+        if (videoEngagementManager == null) {
             return -1;
         }
-        return this.videoEngagementManager.getIntervalMillis();
+        return videoEngagementManager.getIntervalMillis();
     }
 
     /*! \brief Returns whether the engagement tracker is running.
@@ -167,7 +167,7 @@ public class ParselyTracker {
      * @return Whether the engagement tracker is running.
      */
     public boolean engagementIsActive() {
-        return this.engagementManager != null && this.engagementManager.started;
+        return engagementManager != null && engagementManager.started;
     }
 
     /*! \brief Returns whether video tracking is active.
@@ -175,7 +175,7 @@ public class ParselyTracker {
      * @return Whether video tracking is active.
      */
     public boolean videoIsActive() {
-        return this.videoEngagementManager != null && this.videoEngagementManager.started;
+        return videoEngagementManager != null && videoEngagementManager.started;
     }
 
     /*! \brief Returns the interval at which the event queue is flushed to Parse.ly.
@@ -183,10 +183,10 @@ public class ParselyTracker {
      * @return The interval at which the event queue is flushed to Parse.ly.
      */
     public long getFlushInterval() {
-        return this.flushManager.getIntervalMillis() / 1000;
+        return flushManager.getIntervalMillis() / 1000;
     }
 
-    /*! \brief Getter for this.isDebug
+    /*! \brief Getter for isDebug
      *
      * @return Whether debug mode is active.
      */
@@ -230,7 +230,7 @@ public class ParselyTracker {
         if (urlRef == null) {
             urlRef = "";
         }
-        this.enqueueEvent(this.buildEvent(url, urlRef, "pageview", urlMetadata, extraData));
+        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData));
     }
 
     /*! \brief Start engaged time tracking for the given URL.
@@ -252,12 +252,12 @@ public class ParselyTracker {
             urlRef = "";
         }
         // Cancel anything running
-        this.stopEngagement();
+        stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = this.buildEvent(url, urlRef, "heartbeat", null, null);
-        this.engagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
-        this.engagementManager.start();
+        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, null);
+        engagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
+        engagementManager.start();
     }
 
     /*! \brief Stop engaged time tracking.
@@ -268,11 +268,11 @@ public class ParselyTracker {
      * and Parse.ly values may be inaccurate.
      */
     public void stopEngagement() {
-        if (this.engagementManager == null) {
+        if (engagementManager == null) {
             return;
         }
-        this.engagementManager.stop();
-        this.engagementManager = null;
+        engagementManager.stop();
+        engagementManager = null;
     }
 
     /*! \brief Start video tracking.
@@ -312,27 +312,27 @@ public class ParselyTracker {
         }
 
         // If there is already an engagement manager for this video make sure it is started.
-        if (this.videoEngagementManager != null) {
-            if (this.videoEngagementManager.isSameVideo(url, urlRef, videoMetadata)) {
-                if (!this.videoEngagementManager.isRunning()) {
-                    this.videoEngagementManager.start();
+        if (videoEngagementManager != null) {
+            if (videoEngagementManager.isSameVideo(url, urlRef, videoMetadata)) {
+                if (!videoEngagementManager.isRunning()) {
+                    videoEngagementManager.start();
                 }
                 return; // all done here. early exit.
             } else {
                 // Different video. Stop and remove it so we can start fresh.
-                this.videoEngagementManager.stop();
-                this.videoEngagementManager = null;
+                videoEngagementManager.stop();
+                videoEngagementManager = null;
             }
         }
 
         // Enqueue the videostart
-        this.enqueueEvent(this.buildEvent(url, urlRef, "videostart", videoMetadata, extraData));
+        enqueueEvent(buildEvent(url, urlRef, "videostart", videoMetadata, extraData));
 
         // Start a new engagement manager for the video.
-        Map<String, Object> hbEvent = this.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData);
+        Map<String, Object> hbEvent = buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData);
         // TODO: Can we remove some metadata fields from this request?
-        this.videoEngagementManager = new EngagementManager(this.timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
-        this.videoEngagementManager.start();
+        videoEngagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
+        videoEngagementManager.start();
     }
 
     /*! \brief Pause video tracking.
@@ -346,10 +346,10 @@ public class ParselyTracker {
      * and Parse.ly values may be inaccurate.
      */
     public void trackPause() {
-        if (this.videoEngagementManager == null) {
+        if (videoEngagementManager == null) {
             return;
         }
-        this.videoEngagementManager.stop();
+        videoEngagementManager.stop();
     }
 
     /*! \brief Reset tracking on a video.
@@ -363,11 +363,11 @@ public class ParselyTracker {
      * and Parse.ly values may be inaccurate.
      */
     public void resetVideo() {
-        if (this.videoEngagementManager == null) {
+        if (videoEngagementManager == null) {
             return;
         }
-        this.videoEngagementManager.stop();
-        this.videoEngagementManager = null;
+        videoEngagementManager.stop();
+        videoEngagementManager = null;
     }
 
     /*! \brief Create an event Map
@@ -392,7 +392,7 @@ public class ParselyTracker {
         Map<String, Object> event = new HashMap<>();
         event.put("url", url);
         event.put("urlref", urlRef);
-        event.put("idsite", this.siteId);
+        event.put("idsite", siteId);
         event.put("action", action);
 
         // Make a copy of extraData and add some things.
@@ -400,11 +400,11 @@ public class ParselyTracker {
         if (extraData != null) {
             data.putAll(extraData);
         }
-        data.put("manufacturer", this.deviceInfo.get("manufacturer"));
-        data.put("os", this.deviceInfo.get("os"));
-        data.put("os_version", this.deviceInfo.get("os_version"));
+        data.put("manufacturer", deviceInfo.get("manufacturer"));
+        data.put("os", deviceInfo.get("os"));
+        data.put("os_version", deviceInfo.get("os_version"));
         data.put("ts", now.getTimeInMillis());
-        data.put("parsely_site_uuid", this.deviceInfo.get("parsely_site_uuid"));
+        data.put("parsely_site_uuid", deviceInfo.get("parsely_site_uuid"));
         event.put("data", data);
 
         if (metadata != null) {
@@ -425,11 +425,11 @@ public class ParselyTracker {
      */
     private void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
-        this.eventQueue.add(event);
+        eventQueue.add(event);
         new QueueManager().execute();
-        if (!this.flushTimerIsActive()) {
-            this.startFlushTimer();
-            PLog("Flush flushTimer set to %ds", (this.flushManager.getIntervalMillis() / 1000));
+        if (!flushTimerIsActive()) {
+            startFlushTimer();
+            PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
         }
     }
 
@@ -463,15 +463,15 @@ public class ParselyTracker {
         Map<String, Object> batchMap = new HashMap<>();
         batchMap.put("events", events);
 
-        if (this.isDebug) {
+        if (isDebug) {
             PLog("Debug mode on. Not sending to Parse.ly");
-            this.eventQueue.clear();
-            this.purgeStoredQueue();
+            eventQueue.clear();
+            purgeStoredQueue();
         } else {
-            new ParselyAPIConnection().execute(ROOT_URL + "mobileproxy", this.JsonEncode(batchMap));
+            new ParselyAPIConnection().execute(ROOT_URL + "mobileproxy", JsonEncode(batchMap));
             PLog("Requested %s", ROOT_URL);
         }
-        PLog("POST Data %s", this.JsonEncode(batchMap));
+        PLog("POST Data %s", JsonEncode(batchMap));
     }
 
     /*! \brief Returns whether the network is accessible and Parsely is reachable.
@@ -479,7 +479,7 @@ public class ParselyTracker {
      * @return Whether the network is accessible and Parsely is reachable.
      */
     private boolean isReachable() {
-        ConnectivityManager cm = (ConnectivityManager) this.context.getSystemService(
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
@@ -490,13 +490,13 @@ public class ParselyTracker {
      */
     private synchronized void persistQueue() {
         PLog("Persisting event queue");
-        ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
+        ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
         HashSet<Map<String, Object>> hs = new HashSet<>();
         hs.addAll(storedQueue);
-        hs.addAll(this.eventQueue);
+        hs.addAll(eventQueue);
         storedQueue.clear();
         storedQueue.addAll(hs);
-        this.persistObject(storedQueue);
+        persistObject(storedQueue);
     }
 
     /*! \brief Get the stored event queue from persistent storage.
@@ -507,7 +507,7 @@ public class ParselyTracker {
     private ArrayList<Map<String, Object>> getStoredQueue() {
         ArrayList<Map<String, Object>> storedQueue = null;
         try {
-            FileInputStream fis = this.context.getApplicationContext().openFileInput(STORAGE_KEY);
+            FileInputStream fis = context.getApplicationContext().openFileInput(STORAGE_KEY);
             ObjectInputStream ois = new ObjectInputStream(fis);
             //noinspection unchecked
             storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
@@ -530,14 +530,14 @@ public class ParselyTracker {
      *
      */
     protected void purgeStoredQueue() {
-        this.persistObject(new ArrayList<Map<String, Object>>());
+        persistObject(new ArrayList<Map<String, Object>>());
     }
 
     /*! \brief Delete an event from the stored queue.
      *
      */
     private void expelStoredEvent() {
-        ArrayList<Map<String, Object>> storedQueue = this.getStoredQueue();
+        ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
         storedQueue.remove(0);
     }
 
@@ -547,7 +547,7 @@ public class ParselyTracker {
      */
     private void persistObject(Object o) {
         try {
-            FileOutputStream fos = this.context.getApplicationContext().openFileOutput(
+            FileOutputStream fos = context.getApplicationContext().openFileOutput(
                     STORAGE_KEY,
                     android.content.Context.MODE_PRIVATE
             );
@@ -584,7 +584,7 @@ public class ParselyTracker {
      *  singleton
      */
     public void startFlushTimer() {
-        this.flushManager.start();
+        flushManager.start();
     }
 
     /*! \brief Returns whether the event queue flush timer is running.
@@ -592,14 +592,14 @@ public class ParselyTracker {
      *  @return Whether the event queue flush timer is running.
      */
     public boolean flushTimerIsActive() {
-        return this.flushManager.isRunning();
+        return flushManager.isRunning();
     }
 
     /*! \brief Stop the event queue flush timer.
      *
      */
     public void stopFlushTimer() {
-        this.flushManager.stop();
+        flushManager.stop();
     }
 
     /*! \brief Read the Parsely UUID from application context or make a new one.
@@ -607,7 +607,7 @@ public class ParselyTracker {
      * @return The UUID to use for this user.
      */
     private String generateSiteUuid() {
-        String uuid = Secure.getString(this.context.getApplicationContext().getContentResolver(),
+        String uuid = Secure.getString(context.getApplicationContext().getContentResolver(),
                 Secure.ANDROID_ID);
         PLog(String.format("Generated UUID: %s", uuid));
         return uuid;
@@ -620,9 +620,9 @@ public class ParselyTracker {
     private String getSiteUuid() {
         String uuid = "";
         try {
-            uuid = this.settings.getString(UUID_KEY, "");
+            uuid = settings.getString(UUID_KEY, "");
             if (uuid.equals("")) {
-                uuid = this.generateSiteUuid();
+                uuid = generateSiteUuid();
             }
         } catch (Exception ex) {
             PLog("Exception caught during site uuid generation: %s", ex.toString());
@@ -638,15 +638,15 @@ public class ParselyTracker {
         Map<String, String> dInfo = new HashMap<>();
 
         // TODO: screen dimensions (maybe?)
-        PLog("adkey is: %s, uuid is %s", adKey, this.getSiteUuid());
-        final String uuid = (adKey != null) ? adKey : this.getSiteUuid();
+        PLog("adkey is: %s, uuid is %s", adKey, getSiteUuid());
+        final String uuid = (adKey != null) ? adKey : getSiteUuid();
         dInfo.put("parsely_site_uuid", uuid);
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
         dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
 
         // FIXME: Not passed in event or used anywhere else.
-        CharSequence txt = this.context.getPackageManager().getApplicationLabel(context.getApplicationInfo());
+        CharSequence txt = context.getPackageManager().getApplicationLabel(context.getApplicationInfo());
         dInfo.put("appname", txt.toString());
 
         return dInfo;
@@ -657,7 +657,7 @@ public class ParselyTracker {
      * @return The number of events waiting to be flushed to Parsely.
      */
     public int queueSize() {
-        return this.eventQueue.size();
+        return eventQueue.size();
     }
 
     /*! \brief Get the number of events stored in persistent storage.
@@ -665,7 +665,7 @@ public class ParselyTracker {
      * @return The number of events stored in persistent storage.
      */
     public int storedEventsCount() {
-        ArrayList<Map<String, Object>> ar = this.getStoredQueue();
+        ArrayList<Map<String, Object>> ar = getStoredQueue();
         return ar.size();
     }
 
@@ -766,34 +766,34 @@ public class ParselyTracker {
         }
 
         public void start() {
-            if (this.runningTask != null) {
+            if (runningTask != null) {
                 return;
             }
 
-            this.runningTask = new TimerTask() {
+            runningTask = new TimerTask() {
                 public void run() {
                     flushEventQueue();
                 }
             };
-            this.parentTimer.scheduleAtFixedRate(this.runningTask, intervalMillis, intervalMillis);
+            parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis);
         }
 
         public boolean stop() {
-            if (this.runningTask == null) {
+            if (runningTask == null) {
                 return false;
             } else {
-                boolean output = this.runningTask.cancel();
-                this.runningTask = null;
+                boolean output = runningTask.cancel();
+                runningTask = null;
                 return output;
             }
         }
 
         public boolean isRunning() {
-            return this.runningTask != null;
+            return runningTask != null;
         }
 
         public long getIntervalMillis() {
-            return this.intervalMillis;
+            return intervalMillis;
         }
     }
 
@@ -822,30 +822,30 @@ public class ParselyTracker {
         public EngagementManager(Timer parentTimer, long intervalMillis, Map<String, Object> baseEvent) {
             this.baseEvent = baseEvent;
             this.parentTimer = parentTimer;
-            this.latestDelayMillis = intervalMillis;
-            this.totalTime = 0;
-            this.startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            latestDelayMillis = intervalMillis;
+            totalTime = 0;
+            startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         }
 
         public boolean isRunning() {
-            return this.started;
+            return started;
         }
 
         public void start() {
-            this.scheduleNextExecution(this.latestDelayMillis);
-            this.started = true;
-            this.startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            scheduleNextExecution(latestDelayMillis);
+            started = true;
+            startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         }
 
         public void stop() {
-            this.waitingTimerTask.cancel();
-            this.started = false;
+            waitingTimerTask.cancel();
+            started = false;
         }
 
         public boolean isSameVideo(String url, String urlRef, ParselyVideoMetadata metadata) {
-            Map<String, Object> baseMetadata = (Map<String, Object>) this.baseEvent.get("metadata");
-            return (this.baseEvent.get("url").equals(url) &&
-                    this.baseEvent.get("urlref").equals(urlRef) &&
+            Map<String, Object> baseMetadata = (Map<String, Object>) baseEvent.get("metadata");
+            return (baseEvent.get("url").equals(url) &&
+                    baseEvent.get("urlref").equals(urlRef) &&
                     baseMetadata.get("link").equals(metadata.link) &&
                     (int) (baseMetadata.get("duration")) == metadata.durationSeconds);
         }
@@ -853,7 +853,7 @@ public class ParselyTracker {
         private void scheduleNextExecution(long delay) {
             TimerTask task = new TimerTask() {
                 public void run() {
-                    doEnqueue(this.scheduledExecutionTime());
+                    doEnqueue(scheduledExecutionTime());
                     updateLatestInterval();
                     scheduleNextExecution(latestDelayMillis);
                 }
@@ -863,19 +863,19 @@ public class ParselyTracker {
                     // Only enqueue when we actually canceled something. If output is false then
                     // this has already been canceled.
                     if (output) {
-                        doEnqueue(this.scheduledExecutionTime());
+                        doEnqueue(scheduledExecutionTime());
                     }
                     return output;
                 }
             };
-            this.latestDelayMillis = delay;
-            this.parentTimer.schedule(task, delay);
-            this.waitingTimerTask = task;
+            latestDelayMillis = delay;
+            parentTimer.schedule(task, delay);
+            waitingTimerTask = task;
         }
 
         private void doEnqueue(long scheduledExecutionTime) {
             // Create a copy of the base event to enqueue
-            Map<String, Object> event = new HashMap<>(this.baseEvent);
+            Map<String, Object> event = new HashMap<>(baseEvent);
             PLog(String.format("Enqueuing %s event.", event.get("action")));
 
             // Update `ts` for the event since it's happening right now.
@@ -889,25 +889,25 @@ public class ParselyTracker {
 
             // Adjust inc by execution time in case we're late or early.
             long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
-            long inc = (this.latestDelayMillis + executionDiff);
-            this.totalTime += inc;
+            long inc = (latestDelayMillis + executionDiff);
+            totalTime += inc;
             event.put("inc", inc / 1000);
-            event.put("tt", this.totalTime);
+            event.put("tt", totalTime);
 
             enqueueEvent(event);
         }
 
         private void updateLatestInterval() {
             Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            long totalTrackedTime = (now.getTime().getTime() - this.startTime.getTime().getTime()) / 1000;
+            long totalTrackedTime = (now.getTime().getTime() - startTime.getTime().getTime()) / 1000;
             double totalWithOffset = totalTrackedTime + OFFSET_MATCHING_BASE_INTERVAL;
             double newInterval = totalWithOffset * BACKOFF_PROPORTION;
             long clampedNewInterval = (long)Math.min(MAX_TIME_BETWEEN_HEARTBEATS, newInterval);
-            this.latestDelayMillis = clampedNewInterval * 1000;
+            latestDelayMillis = clampedNewInterval * 1000;
         }
 
         public double getIntervalMillis() {
-            return this.latestDelayMillis;
+            return latestDelayMillis;
         }
     }
 }
