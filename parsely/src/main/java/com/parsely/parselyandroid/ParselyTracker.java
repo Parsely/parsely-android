@@ -672,7 +672,6 @@ public class ParselyTracker {
     private class QueueManager extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
             // if event queue is too big, push to persisted storage
             if (eventQueue.size() >= QUEUE_SIZE_LIMIT + 1) {
                 PLog("Queue size exceeded, expelling oldest event to persistent memory");
