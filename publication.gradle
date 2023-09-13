@@ -45,13 +45,10 @@ publishing {
                         developerConnection = 'scm:git:ssh://github.com/Parsely/parsely-android.git'
                         url = 'https://github.com/Parsely/parsely-android/tree/main'
                     }
-
-                    developers {
-                        developer {
-                            id = 'emmettbutler'
-                            name = 'Emmett Butler'
-                            email = 'emmett.butler@automattic.com'
-                        }
+                
+                    organization {
+                        name = 'Parse.ly'
+                        url = 'https://www.parse.ly/'
                     }
                 }
             }
