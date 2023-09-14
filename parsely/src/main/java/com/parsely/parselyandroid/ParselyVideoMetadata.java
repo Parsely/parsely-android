@@ -7,14 +7,15 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
 
-/* \brief ParselyMetadata for video content.
- *
+/**
+ * ParselyMetadata for video content.
  */
 public class ParselyVideoMetadata extends ParselyMetadata {
 
     public int durationSeconds;
 
-    /* \brief Create a new ParselyVideoMetadata object.
+    /**
+     * Create a new ParselyVideoMetadata object.
      *
      * @param authors         The names of the authors of the video. Up to 10 authors are accepted.
      * @param videoId         Unique identifier for the video. Required.
@@ -42,7 +43,8 @@ public class ParselyVideoMetadata extends ParselyMetadata {
         this.durationSeconds = durationSeconds;
     }
 
-    /* \brief Turn this object into a Map
+    /**
+     * Turn this object into a Map
      *
      * @return a Map object representing the metadata.
      */
