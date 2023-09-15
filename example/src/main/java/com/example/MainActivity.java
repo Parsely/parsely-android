@@ -2,6 +2,8 @@ package com.example;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -116,7 +118,9 @@ public class MainActivity extends Activity {
     }
 
     public void startEngagement(View view) {
-        ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html", "http://example.com/");
+        final Map<String, Object> extraData = new HashMap<>();
+        extraData.put("product-id", "12345");
+        ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html", "http://example.com/", extraData);
         updateEngagementStrings();
     }
 

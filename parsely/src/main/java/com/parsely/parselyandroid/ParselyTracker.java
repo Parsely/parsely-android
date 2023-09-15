@@ -243,6 +243,21 @@ public class ParselyTracker {
      * @param urlRef Referrer URL associated with this video view.
      */
     public void startEngagement(@NonNull String url, @Nullable String urlRef) {
+        startEngagement(url, urlRef, null);
+    }
+
+    /**
+     * Same as {@link #startEngagement(String, String)} but with extra data.
+     *
+     * @param url       The URL to track engaged time for.
+     * @param urlRef    Referrer URL associated with this video view.
+     * @param extraData A Map of additional information to send with the event.
+     */
+    public void startEngagement(
+            final @NonNull String url,
+            @Nullable String urlRef,
+            final @Nullable Map<String, Object> extraData
+    ) {
         if (url.equals("")) {
             throw new IllegalArgumentException("url cannot be null or empty.");
         }
@@ -255,7 +270,7 @@ public class ParselyTracker {
         stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, null);
+        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData);
         engagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         engagementManager.start();
     }
