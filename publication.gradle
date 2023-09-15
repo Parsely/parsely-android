@@ -61,10 +61,10 @@ publishing {
 }
 
 signing {
-    useInMemoryPgpKeys(
-            findProperty("signing.keyId") ?: "",
-            findProperty("signing.key") ?: "",
-            findProperty("signing.password") ?: "",
-    )
-    sign publishing.publications
+//    useInMemoryPgpKeys(
+//            findProperty("signing.keyId") ?: "",
+//            findProperty("signing.key") ?: "",
+//            findProperty("signing.password") ?: "",
+//    )
+//    sign publishing.publications
 }
