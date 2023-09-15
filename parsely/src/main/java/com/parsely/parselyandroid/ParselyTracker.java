@@ -48,10 +48,11 @@ import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/*! \brief Tracks Parse.ly app views in Android apps
- *
- *  Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
- *  flushes the queue to the Parse.ly pixel proxy server.
+/**
+ * Tracks Parse.ly app views in Android apps
+ * <p>
+ * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
+ * flushes the queue to the Parse.ly pixel proxy server.
  */
 public class ParselyTracker {
     private static ParselyTracker instance = null;
@@ -75,8 +76,8 @@ public class ParselyTracker {
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
 
-    /*! \brief Create a new ParselyTracker instance.
-     *
+    /**
+     * Create a new ParselyTracker instance.
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
         context = c.getApplicationContext();
@@ -98,11 +99,11 @@ public class ParselyTracker {
         }
     }
 
-    /*! \brief Singleton instance accessor. Note: This must be called after
-    sharedInstance(String, Context)
-    *
-    *  @return The singleton instance
-    */
+    /**
+     * Singleton instance accessor. Note: This must be called after {@link #sharedInstance(String, Context)}
+     *
+     * @return The singleton instance
+     */
     public static ParselyTracker sharedInstance() {
         if (instance == null) {
             return null;
@@ -110,22 +111,24 @@ public class ParselyTracker {
         return instance;
     }
 
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+    /**
+     * Singleton instance factory Note: this must be called before {@link #sharedInstance()}
      *
-     *  @param siteId The Parsely public site id (eg "example.com")
-     *  @param c      The current Android application context
-     *  @return       The singleton instance
+     * @param siteId The Parsely public site id (eg "example.com")
+     * @param c      The current Android application context
+     * @return The singleton instance
      */
     public static ParselyTracker sharedInstance(String siteId, Context c) {
         return ParselyTracker.sharedInstance(siteId, DEFAULT_FLUSH_INTERVAL_SECS, c);
     }
 
-    /*! \brief Singleton instance factory Note: this must be called before `sharedInstance()`
+    /**
+     * Singleton instance factory Note: this must be called before {@link #sharedInstance()}
      *
-     *  @param siteId        The Parsely public site id (eg "example.com")
-     *  @param flushInterval The interval at which the events queue should flush, in seconds
-     *  @param c             The current Android application context
-     *  @return              The singleton instance
+     * @param siteId        The Parsely public site id (eg "example.com")
+     * @param flushInterval The interval at which the events queue should flush, in seconds
+     * @param c             The current Android application context
+     * @return The singleton instance
      */
     public static ParselyTracker sharedInstance(String siteId, int flushInterval, Context c) {
         if (instance == null) {
@@ -134,8 +137,8 @@ public class ParselyTracker {
         return instance;
     }
 
-    /*! \brief Log a message to the console.
-     *
+    /**
+     * Log a message to the console.
      */
     protected static void PLog(String logString, Object... objects) {
         if (logString.equals("")) {
@@ -144,7 +147,8 @@ public class ParselyTracker {
         System.out.println(new Formatter().format("[Parsely] " + logString, objects).toString());
     }
 
-    /*! \brief Get the heartbeat interval
+    /**
+     * Get the heartbeat interval
      *
      * @return The base engagement tracking interval.
      */
@@ -162,7 +166,8 @@ public class ParselyTracker {
         return videoEngagementManager.getIntervalMillis();
     }
 
-    /*! \brief Returns whether the engagement tracker is running.
+    /**
+     * Returns whether the engagement tracker is running.
      *
      * @return Whether the engagement tracker is running.
      */
@@ -170,7 +175,8 @@ public class ParselyTracker {
         return engagementManager != null && engagementManager.started;
     }
 
-    /*! \brief Returns whether video tracking is active.
+    /**
+     * Returns whether video tracking is active.
      *
      * @return Whether video tracking is active.
      */
@@ -178,7 +184,8 @@ public class ParselyTracker {
         return videoEngagementManager != null && videoEngagementManager.started;
     }
 
-    /*! \brief Returns the interval at which the event queue is flushed to Parse.ly.
+    /**
+     * Returns the interval at which the event queue is flushed to Parse.ly.
      *
      * @return The interval at which the event queue is flushed to Parse.ly.
      */
@@ -186,7 +193,8 @@ public class ParselyTracker {
         return flushManager.getIntervalMillis() / 1000;
     }
 
-    /*! \brief Getter for isDebug
+    /**
+     * Getter for isDebug
      *
      * @return Whether debug mode is active.
      */
@@ -194,19 +202,21 @@ public class ParselyTracker {
         return isDebug;
     }
 
-    /*! \brief Set a debug flag which will prevent data from being sent to Parse.ly
+    /**
+     * Set a debug flag which will prevent data from being sent to Parse.ly
+     * <p>
+     * Use this flag when developing to prevent the SDK from actually sending requests
+     * to Parse.ly servers. The value it would otherwise send is logged to the console.
      *
-     *  Use this flag when developing to prevent the SDK from actually sending requests
-     *  to Parse.ly servers. The value it would otherwise send is logged to the console.
-     *
-     *  @param debug Value to use for debug flag.
+     * @param debug Value to use for debug flag.
      */
     public void setDebug(boolean debug) {
         isDebug = debug;
         PLog("Debugging is now set to " + isDebug);
     }
 
-    /*! \brief Register a pageview event using a URL and optional metadata.
+    /**
+     * Register a pageview event using a URL and optional metadata.
      *
      * @param url         The URL of the article being tracked
      *                    (eg: "http://example.com/some-old/article.html")
@@ -233,8 +243,9 @@ public class ParselyTracker {
         enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData));
     }
 
-    /*! \brief Start engaged time tracking for the given URL.
-     *
+    /**
+     * Start engaged time tracking for the given URL.
+     * <p>
      * This starts a timer which will send events to Parse.ly on a regular basis
      * to capture engaged time for this URL. The value of `url` should be a URL for
      * which `trackPageview` has been called.
@@ -275,8 +286,9 @@ public class ParselyTracker {
         engagementManager.start();
     }
 
-    /*! \brief Stop engaged time tracking.
-     *
+    /**
+     * Stop engaged time tracking.
+     * <p>
      * Stops the engaged time tracker, sending any accumulated engaged time to Parse.ly.
      * NOTE: This **must** be called in your `MainActivity` during various Android lifecycle events
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
@@ -290,12 +302,13 @@ public class ParselyTracker {
         engagementManager = null;
     }
 
-    /*! \brief Start video tracking.
-     *
+    /**
+     * Start video tracking.
+     * <p>
      * Starts tracking view time for a video being viewed at a given url. Will send a `videostart`
      * event unless the same url/videoId had previously been paused.
      * Video metadata must be provided, specifically the video ID and video duration.
-     *
+     * <p>
      * The `url` value is *not* the URL of a video, but the post which contains the video. If the video
      * is not embedded in a post, then this should contain a well-formatted URL on the customer's
      * domain (e.g. http://<CUSTOMERDOMAIN>/app-videos). This URL doesn't need to return a 200 status
@@ -347,13 +360,14 @@ public class ParselyTracker {
         videoEngagementManager.start();
     }
 
-    /*! \brief Pause video tracking.
-     *
-     * Pauses video tracking for an ongoing video. If `trackPlay` is immediately called again for
+    /**
+     * Pause video tracking.
+     * <p>
+     * Pauses video tracking for an ongoing video. If {@link #trackPlay} is immediately called again for
      * the same video, a new video start event will not be sent. This models a user pausing a
      * playing video.
-     *
-     * NOTE: This or `resetVideo` **must** be called in your `MainActivity` during various Android lifecycle events
+     * <p>
+     * NOTE: This or {@link #resetVideo} **must** be called in your `MainActivity` during various Android lifecycle events
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
@@ -364,13 +378,14 @@ public class ParselyTracker {
         videoEngagementManager.stop();
     }
 
-    /*! \brief Reset tracking on a video.
-     *
-     * Stops video tracking and resets internal state for the video. If `trackPlay` is immediately
+    /**
+     * Reset tracking on a video.
+     * <p>
+     * Stops video tracking and resets internal state for the video. If {@link #trackPlay} is immediately
      * called for the same video, a new video start event is set. This models a user stopping a
-     * video and (on `trackPlay` being called again) starting it over.
-     *
-     * NOTE: This or `trackPause` **must** be called in your `MainActivity` during various Android lifecycle events
+     * video and (on {@link #trackPlay} being called again) starting it over.
+     * <p>
+     * NOTE: This or {@link #trackPause} **must** be called in your `MainActivity` during various Android lifecycle events
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
@@ -382,13 +397,14 @@ public class ParselyTracker {
         videoEngagementManager = null;
     }
 
-    /*! \brief Create an event Map
+    /**
+     * Create an event Map
      *
-     *  @param url       The URL identifying the pageview/heartbeat
-     *  @param action    Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
-     *  @param metadata  Metadata to attach to the event.
-     *  @param extraData A Map of additional information to send with the event.
-     *  @return          A Map object representing the event to be sent to Parse.ly.
+     * @param url       The URL identifying the pageview/heartbeat
+     * @param action    Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
+     * @param metadata  Metadata to attach to the event.
+     * @param extraData A Map of additional information to send with the event.
+     * @return A Map object representing the event to be sent to Parse.ly.
      */
     private Map<String, Object> buildEvent(
             String url,
@@ -426,14 +442,15 @@ public class ParselyTracker {
         return event;
     }
 
-    /*! \brief Add an event Map to the queue.
+    /**
+     * Add an event Map to the queue.
+     * <p>
+     * Place a data structure representing the event into the in-memory queue for later use.
+     * <p>
+     * **Note**: Events placed into this queue will be discarded if the size of the persistent queue
+     * store exceeds {@link #STORAGE_SIZE_LIMIT}.
      *
-     *  Place a data structure representing the event into the in-memory queue for later use.
-     *
-     *  **Note**: Events placed into this queue will be discarded if the size of the persistent queue
-     *  store exceeds `STORAGE_SIZE_LIMIT`.
-     *
-     *  @param event The event Map to enqueue.
+     * @param event The event Map to enqueue.
      */
     private void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
@@ -445,25 +462,27 @@ public class ParselyTracker {
         }
     }
 
-    /*!  \brief Flush events to Parsely.
-     *
-     *  Empties the event queue and sends the appropriate requests to Parsely.
-     *  Called automatically after a number of seconds determined by `flushInterval`.
-     *
-     *  To make sure all of the queued events are flushed to Parse.ly's servers,
-     * include a call to `flushEventQueue` in your main activity's `onDestroy()` method.
+    /**
+     * Flush events to Parsely.
+     * <p>
+     * Empties the event queue and sends the appropriate requests to Parsely.
+     * Called automatically after a number of seconds determined by {@link #getFlushInterval()}.
+     * <p>
+     * To make sure all of the queued events are flushed to Parse.ly's servers,
+     * call this method in your main activity's `onDestroy()` method.
      */
     public void flushEventQueue() {
         // needed for call from MainActivity
         new FlushQueue().execute();
     }
 
-    /*!  \brief Send the batched event request to Parsely.
+    /**
+     * Send the batched event request to Parsely.
+     * <p>
+     * Creates a POST request containing the JSON encoding of the event queue.
+     * Sends this request to Parse.ly servers.
      *
-     *   Creates a POST request containing the JSON encoding of the event queue.
-     *   Sends this request to Parse.ly servers.
-     *
-     *   @param queue The list of event dictionaries to serialize
+     * @param events The list of event dictionaries to serialize
      */
     private void sendBatchRequest(ArrayList<Map<String, Object>> events) {
         if (events == null || events.size() == 0) {
@@ -486,7 +505,8 @@ public class ParselyTracker {
         PLog("POST Data %s", JsonEncode(batchMap));
     }
 
-    /*! \brief Returns whether the network is accessible and Parsely is reachable.
+    /**
+     * Returns whether the network is accessible and Parsely is reachable.
      *
      * @return Whether the network is accessible and Parsely is reachable.
      */
@@ -497,8 +517,8 @@ public class ParselyTracker {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    /*! \brief Save the event queue to persistent storage.
-
+    /**
+     * Save the event queue to persistent storage.
      */
     private synchronized void persistQueue() {
         PLog("Persisting event queue");
@@ -511,7 +531,8 @@ public class ParselyTracker {
         persistObject(storedQueue);
     }
 
-    /*! \brief Get the stored event queue from persistent storage.
+    /**
+     * Get the stored event queue from persistent storage.
      *
      * @return The stored queue of events.
      */
@@ -538,22 +559,23 @@ public class ParselyTracker {
         return storedQueue;
     }
 
-    /*! \brief Delete the stored queue from persistent storage.
-     *
+    /**
+     * Delete the stored queue from persistent storage.
      */
     protected void purgeStoredQueue() {
         persistObject(new ArrayList<Map<String, Object>>());
     }
 
-    /*! \brief Delete an event from the stored queue.
-     *
+    /**
+     * Delete an event from the stored queue.
      */
     private void expelStoredEvent() {
         ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
         storedQueue.remove(0);
     }
 
-    /*! \brief Persist an object to storage.
+    /**
+     * Persist an object to storage.
      *
      * @param o Object to store.
      */
@@ -571,10 +593,11 @@ public class ParselyTracker {
         }
     }
 
-    /*! \brief Encode an event Map as JSON.
+    /**
+     * Encode an event Map as JSON.
      *
      * @param map The Map object to encode as JSON.
-     * @return    The JSON-encoded value of `map`.
+     * @return The JSON-encoded value of `map`.
      */
     private String JsonEncode(Map<String, Object> map) {
         ObjectMapper mapper = new ObjectMapper();
@@ -589,32 +612,35 @@ public class ParselyTracker {
         return ret;
     }
 
-    /*! \brief Start the timer to flush events to Parsely.
-     *
-     *  Instantiates the callback timer responsible for flushing the events queue.
-     *  Can be called before of after `stop`, but has no effect if used before instantiating the
-     *  singleton
+    /**
+     * Start the timer to flush events to Parsely.
+     * <p>
+     * Instantiates the callback timer responsible for flushing the events queue.
+     * Can be called before of after `stop`, but has no effect if used before instantiating the
+     * singleton
      */
     public void startFlushTimer() {
         flushManager.start();
     }
 
-    /*! \brief Returns whether the event queue flush timer is running.
+    /**
+     * Returns whether the event queue flush timer is running.
      *
-     *  @return Whether the event queue flush timer is running.
+     * @return Whether the event queue flush timer is running.
      */
     public boolean flushTimerIsActive() {
         return flushManager.isRunning();
     }
 
-    /*! \brief Stop the event queue flush timer.
-     *
+    /**
+     * Stop the event queue flush timer.
      */
     public void stopFlushTimer() {
         flushManager.stop();
     }
 
-    /*! \brief Read the Parsely UUID from application context or make a new one.
+    /**
+     * Read the Parsely UUID from application context or make a new one.
      *
      * @return The UUID to use for this user.
      */
@@ -625,10 +651,10 @@ public class ParselyTracker {
         return uuid;
     }
 
-    /*! \brief Get the UUID for this user.
-     *
-     * TODO: docs about where we get this UUID from and how.
+    /**
+     * Get the UUID for this user.
      */
+    //TODO: docs about where we get this UUID from and how.
     private String getSiteUuid() {
         String uuid = "";
         try {
@@ -642,8 +668,9 @@ public class ParselyTracker {
         return uuid;
     }
 
-    /*! \brief Collect device-specific info.
-     *
+    /**
+     * Collect device-specific info.
+     * <p>
      * Collects info about the device and user to use in Parsely events.
      */
     private Map<String, String> collectDeviceInfo(@Nullable final String adKey) {
@@ -664,7 +691,8 @@ public class ParselyTracker {
         return dInfo;
     }
 
-    /*! \brief Get the number of events waiting to be flushed to Parsely.
+    /**
+     * Get the number of events waiting to be flushed to Parsely.
      *
      * @return The number of events waiting to be flushed to Parsely.
      */
@@ -672,7 +700,8 @@ public class ParselyTracker {
         return eventQueue.size();
     }
 
-    /*! \brief Get the number of events stored in persistent storage.
+    /**
+     * Get the number of events stored in persistent storage.
      *
      * @return The number of events stored in persistent storage.
      */
@@ -724,7 +753,8 @@ public class ParselyTracker {
         }
     }
 
-    /*! \brief Async task to get adKey for this device.
+    /**
+     * Async task to get adKey for this device.
      */
     private class GetAdKey extends AsyncTask<Void, Void, String> {
         private final Context mContext;
@@ -760,8 +790,9 @@ public class ParselyTracker {
     }
 
 
-    /*! \brief Manager for the event flush timer.
-     *
+    /**
+     * Manager for the event flush timer.
+     * <p>
      * Handles stopping and starting the flush timer. The flush timer
      * controls how often we send events to Parse.ly servers.
      */
@@ -808,11 +839,12 @@ public class ParselyTracker {
         }
     }
 
-    /*! \brief Engagement manager for article and video engagement.
-     *
+    /**
+     * Engagement manager for article and video engagement.
+     * <p>
      * Implemented to handle its own queuing of future executions to accomplish
      * two things:
-     *
+     * <p>
      * 1. Flushing any engaged time before canceling.
      * 2. Progressive backoff for long engagements to save data.
      */
