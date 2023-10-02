@@ -9,6 +9,10 @@ def prepareEnvironment() {
     ext["signing.password"] = System.getenv('SIGNING_PASSWORD')
 }
 
+def static getVersionFromGitTag() {
+    return 'git describe --abbrev=0 --tags'.execute().text.trim()
+}
+
 publishing {
     prepareEnvironment()
     repositories {
@@ -29,7 +33,7 @@ publishing {
                 pom {
                     group = 'com.parsely'
                     name = 'parsely'
-                    version = VERSION
+                    version = getVersionFromGitTag()
 
                     description = 'The official Parse.ly Android toolkit'
                     url = 'https://github.com/Parsely/parsely-android'
