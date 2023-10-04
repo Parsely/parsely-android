@@ -66,6 +66,7 @@ public class ParselyTracker {
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/";
     private static final String ROOT_URL = "https://p1.parsely.com/";
     private static final String UUID_KEY = "parsely-uuid";
+    private static final String VIDEO_START_ID_KEY = "vsid";
 
     protected ArrayList<Map<String, Object>> eventQueue;
     private final String siteId;
@@ -350,12 +351,16 @@ public class ParselyTracker {
                 videoEngagementManager = null;
             }
         }
+        final @NonNull String uuid = generatePixelId();
 
         // Enqueue the videostart
-        enqueueEvent(buildEvent(url, urlRef, "videostart", videoMetadata, extraData));
+        Map<String, Object> videostartEvent = buildEvent(url, urlRef, "videostart", videoMetadata, extraData);
+        videostartEvent.put(VIDEO_START_ID_KEY, uuid);
+        enqueueEvent(videostartEvent);
 
         // Start a new engagement manager for the video.
         Map<String, Object> hbEvent = buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData);
+        hbEvent.put(VIDEO_START_ID_KEY, uuid);
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
         videoEngagementManager.start();
