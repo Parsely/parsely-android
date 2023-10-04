@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 /**
  * Tracks Parse.ly app views in Android apps
@@ -637,6 +638,11 @@ public class ParselyTracker {
      */
     public void stopFlushTimer() {
         flushManager.stop();
+    }
+
+    @NonNull
+    private String generatePixelId() {
+        return UUID.randomUUID().toString();
     }
 
     /**
