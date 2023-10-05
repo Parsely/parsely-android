@@ -246,11 +246,9 @@ public class ParselyTracker {
             urlRef = "";
         }
 
-        @NonNull final String uuid = generatePixelId();
-        lastPageviewUuid = uuid;
+        lastPageviewUuid = generatePixelId();
 
-        @NonNull final Map<String, Object> pageviewEvent = buildEvent(url, urlRef, "pageview", urlMetadata, extraData, null);
-        pageviewEvent.put(PAGE_VIEW_ID_KEY, lastPageviewUuid);
+        @NonNull final Map<String, Object> pageviewEvent = buildEvent(url, urlRef, "pageview", urlMetadata, extraData, lastPageviewUuid);
 
         enqueueEvent(pageviewEvent);
     }
@@ -293,8 +291,7 @@ public class ParselyTracker {
         stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData, null);
-        event.put(PAGE_VIEW_ID_KEY, lastPageviewUuid);
+        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
         engagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         engagementManager.start();
     }
@@ -460,6 +457,10 @@ public class ParselyTracker {
 
         if (action.equals("videostart") || action.equals("vheartbeat")) {
             event.put(VIDEO_START_ID_KEY, uuid);
+        }
+
+        if (action.equals("pageview") || action.equals("heartbeat")) {
+            event.put(PAGE_VIEW_ID_KEY, uuid);
         }
 
         return event;
