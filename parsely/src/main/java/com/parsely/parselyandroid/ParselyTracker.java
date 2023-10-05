@@ -242,7 +242,7 @@ public class ParselyTracker {
         if (urlRef == null) {
             urlRef = "";
         }
-        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData));
+        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData, null));
     }
 
     /**
@@ -283,7 +283,7 @@ public class ParselyTracker {
         stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData);
+        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData, null);
         engagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         engagementManager.start();
     }
@@ -354,12 +354,11 @@ public class ParselyTracker {
         @NonNull final String uuid = generatePixelId();
 
         // Enqueue the videostart
-        @NonNull final Map<String, Object> videostartEvent = buildEvent(url, urlRef, "videostart", videoMetadata, extraData);
-        videostartEvent.put(VIDEO_START_ID_KEY, uuid);
+        @NonNull final Map<String, Object> videostartEvent = buildEvent(url, urlRef, "videostart", videoMetadata, extraData, uuid);
         enqueueEvent(videostartEvent);
 
         // Start a new engagement manager for the video.
-        @NonNull final Map<String, Object> hbEvent = buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData);
+        @NonNull final Map<String, Object> hbEvent = buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
         hbEvent.put(VIDEO_START_ID_KEY, uuid);
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
@@ -418,7 +417,9 @@ public class ParselyTracker {
             String urlRef,
             String action,
             ParselyMetadata metadata,
-            Map<String, Object> extraData) {
+            Map<String, Object> extraData,
+            @Nullable String uuid
+    ) {
         PLog("buildEvent called for %s/%s", action, url);
 
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -444,6 +445,10 @@ public class ParselyTracker {
 
         if (metadata != null) {
             event.put("metadata", metadata.toMap());
+        }
+
+        if (action.equals("videostart") || action.equals("vheartbeat")) {
+            event.put(VIDEO_START_ID_KEY, uuid);
         }
 
         return event;
