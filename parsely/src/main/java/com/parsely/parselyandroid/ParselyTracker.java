@@ -67,6 +67,7 @@ public class ParselyTracker {
     private static final String ROOT_URL = "https://p1.parsely.com/";
     private static final String UUID_KEY = "parsely-uuid";
     private static final String VIDEO_START_ID_KEY = "vsid";
+    private static final String PAGE_VIEW_ID_KEY = "pvid";
 
     protected ArrayList<Map<String, Object>> eventQueue;
     private final String siteId;
@@ -77,6 +78,8 @@ public class ParselyTracker {
     private final Timer timer;
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
+    @Nullable
+    private String lastPageviewUuid = null;
 
     /**
      * Create a new ParselyTracker instance.
@@ -242,7 +245,14 @@ public class ParselyTracker {
         if (urlRef == null) {
             urlRef = "";
         }
-        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData, null));
+
+        @NonNull final String uuid = generatePixelId();
+        lastPageviewUuid = uuid;
+
+        @NonNull final Map<String, Object> pageviewEvent = buildEvent(url, urlRef, "pageview", urlMetadata, extraData, null);
+        pageviewEvent.put(PAGE_VIEW_ID_KEY, lastPageviewUuid);
+
+        enqueueEvent(pageviewEvent);
     }
 
     /**
@@ -284,6 +294,7 @@ public class ParselyTracker {
 
         // Start a new EngagementTask
         Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData, null);
+        event.put(PAGE_VIEW_ID_KEY, lastPageviewUuid);
         engagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         engagementManager.start();
     }
