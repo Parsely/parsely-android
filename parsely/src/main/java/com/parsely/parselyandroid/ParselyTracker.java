@@ -248,9 +248,7 @@ public class ParselyTracker {
 
         lastPageviewUuid = generatePixelId();
 
-        @NonNull final Map<String, Object> pageviewEvent = buildEvent(url, urlRef, "pageview", urlMetadata, extraData, lastPageviewUuid);
-
-        enqueueEvent(pageviewEvent);
+        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData, lastPageviewUuid));
     }
 
     /**
