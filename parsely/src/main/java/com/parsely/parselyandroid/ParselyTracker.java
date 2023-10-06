@@ -365,7 +365,6 @@ public class ParselyTracker {
 
         // Start a new engagement manager for the video.
         @NonNull final Map<String, Object> hbEvent = buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
-        hbEvent.put(VIDEO_START_ID_KEY, uuid);
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
         videoEngagementManager.start();
