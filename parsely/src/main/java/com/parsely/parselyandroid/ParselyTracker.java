@@ -67,6 +67,7 @@ public class ParselyTracker {
     private static final String ROOT_URL = "https://p1.parsely.com/";
     private static final String UUID_KEY = "parsely-uuid";
     private static final String VIDEO_START_ID_KEY = "vsid";
+    private static final String PAGE_VIEW_ID_KEY = "pvid";
 
     protected ArrayList<Map<String, Object>> eventQueue;
     private final String siteId;
@@ -77,6 +78,8 @@ public class ParselyTracker {
     private final Timer timer;
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
+    @Nullable
+    private String lastPageviewUuid = null;
 
     /**
      * Create a new ParselyTracker instance.
@@ -242,7 +245,10 @@ public class ParselyTracker {
         if (urlRef == null) {
             urlRef = "";
         }
-        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData, null));
+
+        lastPageviewUuid = generatePixelId();
+
+        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData, lastPageviewUuid));
     }
 
     /**
@@ -283,7 +289,7 @@ public class ParselyTracker {
         stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData, null);
+        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
         engagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         engagementManager.start();
     }
@@ -359,7 +365,6 @@ public class ParselyTracker {
 
         // Start a new engagement manager for the video.
         @NonNull final Map<String, Object> hbEvent = buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
-        hbEvent.put(VIDEO_START_ID_KEY, uuid);
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
         videoEngagementManager.start();
@@ -449,6 +454,10 @@ public class ParselyTracker {
 
         if (action.equals("videostart") || action.equals("vheartbeat")) {
             event.put(VIDEO_START_ID_KEY, uuid);
+        }
+
+        if (action.equals("pageview") || action.equals("heartbeat")) {
+            event.put(PAGE_VIEW_ID_KEY, uuid);
         }
 
         return event;
