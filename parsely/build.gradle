@@ -30,9 +30,24 @@ android {
 }
 
 dependencies {
+    def kotlinVersion = "1.8.10"
+
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+    implementation 'androidx.lifecycle:lifecycle-process:2.6.2'
+    constraints {
+        add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk7") {
+            version {
+                require(kotlinVersion)
+            }
+        }
+        add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8") {
+            version {
+                require(kotlinVersion)
+            }
+        }
+    }
 }
 
 apply from: "${rootProject.projectDir}/publication.gradle"
