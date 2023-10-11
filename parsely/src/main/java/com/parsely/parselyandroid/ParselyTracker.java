@@ -17,11 +17,10 @@
 package com.parsely.parselyandroid;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.provider.Settings.Secure;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
@@ -29,9 +28,6 @@ import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.android.gms.ads.identifier.AdvertisingIdClient;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
 import java.io.EOFException;
 import java.io.FileInputStream;
@@ -68,33 +64,25 @@ public class ParselyTracker {
 // emulator localhost
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/";
     private static final String ROOT_URL = "https://p1.parsely.com/";
-    private static final String UUID_KEY = "parsely-uuid";
-    private static final String VIDEO_START_ID_KEY = "vsid";
-    private static final String PAGE_VIEW_ID_KEY = "pvid";
-
     protected ArrayList<Map<String, Object>> eventQueue;
-    private final String siteId;
     private boolean isDebug;
-    private final SharedPreferences settings;
-    private Map<String, String> deviceInfo;
     private final Context context;
     private final Timer timer;
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
     @Nullable
     private String lastPageviewUuid = null;
+    @NonNull
+    private final EventsBuilder eventsBuilder;
 
     /**
      * Create a new ParselyTracker instance.
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
         context = c.getApplicationContext();
-        settings = context.getSharedPreferences("parsely-prefs", 0);
+        this.eventsBuilder = new EventsBuilder(context, siteId);
 
-        this.siteId = siteId;
         // get the adkey straight away on instantiation
-        deviceInfo = collectDeviceInfo(null);
-        new GetAdKey(c).execute();
         timer = new Timer();
         isDebug = false;
 
@@ -156,7 +144,7 @@ public class ParselyTracker {
     /**
      * Log a message to the console.
      */
-    protected static void PLog(String logString, Object... objects) {
+    static void PLog(String logString, Object... objects) {
         if (logString.equals("")) {
             return;
         }
@@ -259,7 +247,7 @@ public class ParselyTracker {
 
         lastPageviewUuid = generatePixelId();
 
-        enqueueEvent(buildEvent(url, urlRef, "pageview", urlMetadata, extraData, lastPageviewUuid));
+        enqueueEvent(eventsBuilder.buildEvent(url, urlRef, "pageview", urlMetadata, extraData, lastPageviewUuid));
     }
 
     /**
@@ -300,7 +288,7 @@ public class ParselyTracker {
         stopEngagement();
 
         // Start a new EngagementTask
-        Map<String, Object> event = buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
+        Map<String, Object> event = eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
         engagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
         engagementManager.start();
     }
@@ -371,11 +359,11 @@ public class ParselyTracker {
         @NonNull final String uuid = generatePixelId();
 
         // Enqueue the videostart
-        @NonNull final Map<String, Object> videostartEvent = buildEvent(url, urlRef, "videostart", videoMetadata, extraData, uuid);
+        @NonNull final Map<String, Object> videostartEvent = eventsBuilder.buildEvent(url, urlRef, "videostart", videoMetadata, extraData, uuid);
         enqueueEvent(videostartEvent);
 
         // Start a new engagement manager for the video.
-        @NonNull final Map<String, Object> hbEvent = buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
+        @NonNull final Map<String, Object> hbEvent = eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = new EngagementManager(timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
         videoEngagementManager.start();
@@ -416,62 +404,6 @@ public class ParselyTracker {
         }
         videoEngagementManager.stop();
         videoEngagementManager = null;
-    }
-
-    /**
-     * Create an event Map
-     *
-     * @param url       The URL identifying the pageview/heartbeat
-     * @param action    Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
-     * @param metadata  Metadata to attach to the event.
-     * @param extraData A Map of additional information to send with the event.
-     * @return A Map object representing the event to be sent to Parse.ly.
-     */
-    @NonNull
-    private Map<String, Object> buildEvent(
-            String url,
-            String urlRef,
-            String action,
-            ParselyMetadata metadata,
-            Map<String, Object> extraData,
-            @Nullable String uuid
-    ) {
-        PLog("buildEvent called for %s/%s", action, url);
-
-        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-
-        // Main event info
-        Map<String, Object> event = new HashMap<>();
-        event.put("url", url);
-        event.put("urlref", urlRef);
-        event.put("idsite", siteId);
-        event.put("action", action);
-
-        // Make a copy of extraData and add some things.
-        Map<String, Object> data = new HashMap<>();
-        if (extraData != null) {
-            data.putAll(extraData);
-        }
-        data.put("manufacturer", deviceInfo.get("manufacturer"));
-        data.put("os", deviceInfo.get("os"));
-        data.put("os_version", deviceInfo.get("os_version"));
-        data.put("ts", now.getTimeInMillis());
-        data.put("parsely_site_uuid", deviceInfo.get("parsely_site_uuid"));
-        event.put("data", data);
-
-        if (metadata != null) {
-            event.put("metadata", metadata.toMap());
-        }
-
-        if (action.equals("videostart") || action.equals("vheartbeat")) {
-            event.put(VIDEO_START_ID_KEY, uuid);
-        }
-
-        if (action.equals("pageview") || action.equals("heartbeat")) {
-            event.put(PAGE_VIEW_ID_KEY, uuid);
-        }
-
-        return event;
     }
 
     /**
@@ -672,58 +604,6 @@ public class ParselyTracker {
     }
 
     /**
-     * Read the Parsely UUID from application context or make a new one.
-     *
-     * @return The UUID to use for this user.
-     */
-    private String generateSiteUuid() {
-        String uuid = Secure.getString(context.getApplicationContext().getContentResolver(),
-                Secure.ANDROID_ID);
-        PLog(String.format("Generated UUID: %s", uuid));
-        return uuid;
-    }
-
-    /**
-     * Get the UUID for this user.
-     */
-    //TODO: docs about where we get this UUID from and how.
-    private String getSiteUuid() {
-        String uuid = "";
-        try {
-            uuid = settings.getString(UUID_KEY, "");
-            if (uuid.equals("")) {
-                uuid = generateSiteUuid();
-            }
-        } catch (Exception ex) {
-            PLog("Exception caught during site uuid generation: %s", ex.toString());
-        }
-        return uuid;
-    }
-
-    /**
-     * Collect device-specific info.
-     * <p>
-     * Collects info about the device and user to use in Parsely events.
-     */
-    private Map<String, String> collectDeviceInfo(@Nullable final String adKey) {
-        Map<String, String> dInfo = new HashMap<>();
-
-        // TODO: screen dimensions (maybe?)
-        PLog("adkey is: %s, uuid is %s", adKey, getSiteUuid());
-        final String uuid = (adKey != null) ? adKey : getSiteUuid();
-        dInfo.put("parsely_site_uuid", uuid);
-        dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
-        dInfo.put("os", "android");
-        dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
-
-        // FIXME: Not passed in event or used anywhere else.
-        CharSequence txt = context.getPackageManager().getApplicationLabel(context.getApplicationInfo());
-        dInfo.put("appname", txt.toString());
-
-        return dInfo;
-    }
-
-    /**
      * Get the number of events waiting to be flushed to Parsely.
      *
      * @return The number of events waiting to be flushed to Parsely.
@@ -784,43 +664,6 @@ public class ParselyTracker {
             return null;
         }
     }
-
-    /**
-     * Async task to get adKey for this device.
-     */
-    private class GetAdKey extends AsyncTask<Void, Void, String> {
-        private final Context mContext;
-
-        public GetAdKey(Context context) {
-            mContext = context;
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            AdvertisingIdClient.Info idInfo = null;
-            String advertId = null;
-            try {
-                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(mContext);
-            } catch (GooglePlayServicesRepairableException | IOException | GooglePlayServicesNotAvailableException | IllegalArgumentException e) {
-                PLog("No Google play services or error! falling back to device uuid");
-                // fall back to device uuid on google play errors
-                advertId = getSiteUuid();
-            }
-            try {
-                advertId = idInfo.getId();
-            } catch (NullPointerException e) {
-                advertId = getSiteUuid();
-            }
-            return advertId;
-        }
-
-        @Override
-        protected void onPostExecute(String advertId) {
-            deviceInfo = collectDeviceInfo(advertId);
-        }
-
-    }
-
 
     /**
      * Manager for the event flush timer.
