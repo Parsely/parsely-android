@@ -495,17 +495,12 @@ public class ParselyTracker {
     }
 
     /**
-     * Flush events to Parsely.
-     * <p>
-     * Empties the event queue and sends the appropriate requests to Parsely.
-     * Called automatically after a number of seconds determined by {@link #getFlushInterval()}.
-     * <p>
-     * To make sure all of the queued events are flushed to Parse.ly's servers,
-     * call this method in your main activity's `onDestroy()` method.
+     * Deprecated since 3.1.1. The SDK now automatically flushes the queue on app lifecycle events.
+     * Any usage of this method is safe to remove and will have no effect. Keeping for backwards compatibility.
      */
+    @Deprecated
     public void flushEventQueue() {
-        // needed for call from MainActivity
-        new FlushQueue().execute();
+        // no-op
     }
 
     /**
