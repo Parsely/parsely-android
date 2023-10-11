@@ -4,6 +4,7 @@ pluginManagement {
     plugins {
         id 'com.android.application' version gradle.ext.agpVersion
         id 'com.android.library' version gradle.ext.agpVersion
+        id 'org.jetbrains.kotlin.android' version '1.9.10'
     }
 
     repositories {
