@@ -24,6 +24,9 @@ import android.os.AsyncTask;
 import android.provider.Settings.Secure;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleEventObserver;
+import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
@@ -102,6 +105,14 @@ public class ParselyTracker {
         if (getStoredQueue().size() > 0) {
             startFlushTimer();
         }
+
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(
+                (LifecycleEventObserver) (lifecycleOwner, event) -> {
+                    if (event == Lifecycle.Event.ON_STOP) {
+                        new FlushQueue().execute();
+                    }
+                }
+        );
     }
 
     /**
