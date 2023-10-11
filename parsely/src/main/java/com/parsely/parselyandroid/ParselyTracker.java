@@ -851,7 +851,7 @@ public class ParselyTracker {
 
             runningTask = new TimerTask() {
                 public void run() {
-                    flushEventQueue();
+                    new FlushQueue().execute();
                 }
             };
             parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis);

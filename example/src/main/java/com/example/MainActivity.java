@@ -78,12 +78,6 @@ public class MainActivity extends Activity {
 
     }
 
-    @Override
-    protected void onDestroy() {
-        ParselyTracker.sharedInstance().flushEventQueue();
-        super.onDestroy();
-    }
-
     private void updateEngagementStrings() {
         StringBuilder eMsg = new StringBuilder("Engagement is ");
         if (ParselyTracker.sharedInstance().engagementIsActive() == true) {
@@ -150,6 +144,4 @@ public class MainActivity extends Activity {
     }
 
     public void trackReset(View view) {ParselyTracker.sharedInstance().resetVideo(); }
-
-    public void flushEventQueue(View view) {ParselyTracker.sharedInstance().flushEventQueue(); }
 }
