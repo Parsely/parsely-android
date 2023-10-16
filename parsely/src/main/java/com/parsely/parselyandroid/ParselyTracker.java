@@ -24,6 +24,9 @@ import android.os.AsyncTask;
 import android.provider.Settings.Secure;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleEventObserver;
+import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
@@ -102,6 +105,14 @@ public class ParselyTracker {
         if (getStoredQueue().size() > 0) {
             startFlushTimer();
         }
+
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(
+                (LifecycleEventObserver) (lifecycleOwner, event) -> {
+                    if (event == Lifecycle.Event.ON_STOP) {
+                        flushEvents();
+                    }
+                }
+        );
     }
 
     /**
@@ -484,17 +495,12 @@ public class ParselyTracker {
     }
 
     /**
-     * Flush events to Parsely.
-     * <p>
-     * Empties the event queue and sends the appropriate requests to Parsely.
-     * Called automatically after a number of seconds determined by {@link #getFlushInterval()}.
-     * <p>
-     * To make sure all of the queued events are flushed to Parse.ly's servers,
-     * call this method in your main activity's `onDestroy()` method.
+     * Deprecated since 3.1.1. The SDK now automatically flushes the queue on app lifecycle events.
+     * Any usage of this method is safe to remove and will have no effect. Keeping for backwards compatibility.
      */
+    @Deprecated
     public void flushEventQueue() {
-        // needed for call from MainActivity
-        new FlushQueue().execute();
+        // no-op
     }
 
     /**
@@ -840,7 +846,7 @@ public class ParselyTracker {
 
             runningTask = new TimerTask() {
                 public void run() {
-                    flushEventQueue();
+                    flushEvents();
                 }
             };
             parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis);
@@ -863,6 +869,10 @@ public class ParselyTracker {
         public long getIntervalMillis() {
             return intervalMillis;
         }
+    }
+
+    private void flushEvents() {
+        new FlushQueue().execute();
     }
 
     /**
