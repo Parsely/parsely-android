@@ -109,7 +109,7 @@ public class ParselyTracker {
         ProcessLifecycleOwner.get().getLifecycle().addObserver(
                 (LifecycleEventObserver) (lifecycleOwner, event) -> {
                     if (event == Lifecycle.Event.ON_STOP) {
-                        new FlushQueue().execute();
+                        flushEvents();
                     }
                 }
         );
@@ -846,7 +846,7 @@ public class ParselyTracker {
 
             runningTask = new TimerTask() {
                 public void run() {
-                    new FlushQueue().execute();
+                    flushEvents();
                 }
             };
             parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis);
@@ -869,6 +869,10 @@ public class ParselyTracker {
         public long getIntervalMillis() {
             return intervalMillis;
         }
+    }
+
+    private void flushEvents() {
+        new FlushQueue().execute();
     }
 
     /**
