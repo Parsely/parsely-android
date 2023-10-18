@@ -62,6 +62,41 @@ internal class EventsBuilderTest {
                     .containsEntry("parsely_site_uuid", null)
             }
     }
+    
+    @Test
+    fun `events builder prepares correct heartbeat pixel`() {
+        // when
+        val event: Map<String, Any> = sut.buildEvent(
+            TEST_URL,
+            "",
+            "heartbeat",
+            null,
+            null,
+            TEST_UUID,
+        )
+
+        // then
+        assertThat(event)
+            .hasSize(6)
+            .containsEntry("action", "heartbeat")
+            .containsEntry("url", TEST_URL)
+            .containsEntry("urlref", "")
+            .containsEntry("pvid", TEST_UUID)
+            .containsEntry("idsite", TEST_SITE_ID)
+            .hasEntrySatisfying("data") {
+                @Suppress("UNCHECKED_CAST")
+                it as Map<String, Any>
+                assertThat(it)
+                    .hasSize(5)
+                    .containsEntry("os", "android")
+                    .hasEntrySatisfying("ts") { timestamp ->
+                        assertThat(timestamp as Long).isBetween(1111111111111, 9999999999999)
+                    }
+                    .containsEntry("manufacturer", "robolectric")
+                    .containsEntry("os_version", "33")
+                    .containsEntry("parsely_site_uuid", null)
+            }
+    }
 
     companion object {
         const val TEST_SITE_ID = "Example"
