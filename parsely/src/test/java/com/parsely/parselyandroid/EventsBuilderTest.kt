@@ -105,6 +105,26 @@ internal class EventsBuilderTest {
             .sharedPixelAssertions()
     }
 
+    @Test
+    fun `given extraData is null, when creating a pixel, don't include extraData`() {
+        // given
+        val extraData: Map<String, Any>? = null
+
+        // when
+        val event: Map<String, Any> = sut.buildEvent(
+            TEST_URL,
+            "",
+            "pageview",
+            null,
+            extraData,
+            TEST_UUID,
+        )
+
+        // then
+        @Suppress("UNCHECKED_CAST")
+        assertThat(event["data"] as Map<String, Any>).hasSize(5)
+    }
+
     private fun MapAssert<String, Any>.sharedPixelAssertions() =
         hasSize(6)
             .containsEntry("url", TEST_URL)
