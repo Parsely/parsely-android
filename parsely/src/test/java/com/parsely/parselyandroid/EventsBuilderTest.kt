@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.Settings
 import androidx.test.core.app.ApplicationProvider
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.MapAssert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,25 +43,9 @@ internal class EventsBuilderTest {
 
         // then
         assertThat(event)
-            .hasSize(6)
             .containsEntry("action", "pageview")
-            .containsEntry("url", TEST_URL)
-            .containsEntry("urlref", "")
             .containsEntry("pvid", TEST_UUID)
-            .containsEntry("idsite", TEST_SITE_ID)
-            .hasEntrySatisfying("data") {
-                @Suppress("UNCHECKED_CAST")
-                it as Map<String, Any>
-                assertThat(it)
-                    .hasSize(5)
-                    .containsEntry("os", "android")
-                    .hasEntrySatisfying("ts") { timestamp ->
-                        assertThat(timestamp as Long).isBetween(1111111111111, 9999999999999)
-                    }
-                    .containsEntry("manufacturer", "robolectric")
-                    .containsEntry("os_version", "33")
-                    .containsEntry("parsely_site_uuid", null)
-            }
+            .sharedPixelAssertions()
     }
 
     @Test
@@ -77,25 +62,9 @@ internal class EventsBuilderTest {
 
         // then
         assertThat(event)
-            .hasSize(6)
             .containsEntry("action", "heartbeat")
-            .containsEntry("url", TEST_URL)
-            .containsEntry("urlref", "")
             .containsEntry("pvid", TEST_UUID)
-            .containsEntry("idsite", TEST_SITE_ID)
-            .hasEntrySatisfying("data") {
-                @Suppress("UNCHECKED_CAST")
-                it as Map<String, Any>
-                assertThat(it)
-                    .hasSize(5)
-                    .containsEntry("os", "android")
-                    .hasEntrySatisfying("ts") { timestamp ->
-                        assertThat(timestamp as Long).isBetween(1111111111111, 9999999999999)
-                    }
-                    .containsEntry("manufacturer", "robolectric")
-                    .containsEntry("os_version", "33")
-                    .containsEntry("parsely_site_uuid", null)
-            }
+            .sharedPixelAssertions()
     }
 
     @Test
@@ -112,25 +81,9 @@ internal class EventsBuilderTest {
 
         // then
         assertThat(event)
-            .hasSize(6)
             .containsEntry("action", "videostart")
-            .containsEntry("url", TEST_URL)
-            .containsEntry("urlref", "")
             .containsEntry("vsid", TEST_UUID)
-            .containsEntry("idsite", TEST_SITE_ID)
-            .hasEntrySatisfying("data") {
-                @Suppress("UNCHECKED_CAST")
-                it as Map<String, Any>
-                assertThat(it)
-                    .hasSize(5)
-                    .containsEntry("os", "android")
-                    .hasEntrySatisfying("ts") { timestamp ->
-                        assertThat(timestamp as Long).isBetween(1111111111111, 9999999999999)
-                    }
-                    .containsEntry("manufacturer", "robolectric")
-                    .containsEntry("os_version", "33")
-                    .containsEntry("parsely_site_uuid", null)
-            }
+            .sharedPixelAssertions()
     }
 
     @Test
@@ -147,11 +100,15 @@ internal class EventsBuilderTest {
 
         // then
         assertThat(event)
-            .hasSize(6)
             .containsEntry("action", "vheartbeat")
+            .containsEntry("vsid", TEST_UUID)
+            .sharedPixelAssertions()
+    }
+
+    private fun MapAssert<String, Any>.sharedPixelAssertions() =
+        hasSize(6)
             .containsEntry("url", TEST_URL)
             .containsEntry("urlref", "")
-            .containsEntry("vsid", TEST_UUID)
             .containsEntry("idsite", TEST_SITE_ID)
             .hasEntrySatisfying("data") {
                 @Suppress("UNCHECKED_CAST")
@@ -166,7 +123,7 @@ internal class EventsBuilderTest {
                     .containsEntry("os_version", "33")
                     .containsEntry("parsely_site_uuid", null)
             }
-    }
+
 
     companion object {
         const val TEST_SITE_ID = "Example"
