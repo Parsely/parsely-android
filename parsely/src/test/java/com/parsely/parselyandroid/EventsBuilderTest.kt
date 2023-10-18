@@ -149,6 +149,26 @@ internal class EventsBuilderTest {
             .containsAllEntriesOf(extraData)
     }
 
+    @Test
+    fun `given metadata is null, when creating a pixel, don't include metadata`() {
+        // given
+        val metadata: ParselyMetadata? = null
+
+        // when
+        val event: Map<String, Any> = sut.buildEvent(
+            TEST_URL,
+            "",
+            "pageview",
+            metadata,
+            null,
+            TEST_UUID,
+        )
+
+        // then
+        assertThat(event).doesNotContainKey("metadata")
+    }
+
+
     private fun MapAssert<String, Any>.sharedPixelAssertions() =
         hasSize(6)
             .containsEntry("url", TEST_URL)
