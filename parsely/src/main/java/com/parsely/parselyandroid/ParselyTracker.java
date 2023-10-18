@@ -80,7 +80,7 @@ public class ParselyTracker {
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
         context = c.getApplicationContext();
-        this.eventsBuilder = new EventsBuilder(context, siteId);
+        eventsBuilder = new EventsBuilder(context, siteId);
 
         // get the adkey straight away on instantiation
         timer = new Timer();
