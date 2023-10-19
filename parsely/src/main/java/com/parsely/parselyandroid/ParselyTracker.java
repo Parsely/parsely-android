@@ -525,7 +525,7 @@ public class ParselyTracker {
     /**
      * Delete the stored queue from persistent storage.
      */
-    protected void purgeStoredQueue() {
+    private void purgeStoredQueue() {
         persistObject(new ArrayList<Map<String, Object>>());
     }
 
