@@ -24,13 +24,13 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.HttpURLConnection;
 
-public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnection> {
+class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnection> {
 
     @NonNull
     private final ParselyTracker tracker;
     public Exception exception;
 
-    public ParselyAPIConnection(@NonNull ParselyTracker tracker) {
+    ParselyAPIConnection(@NonNull ParselyTracker tracker) {
         this.tracker = tracker;
     }
 
