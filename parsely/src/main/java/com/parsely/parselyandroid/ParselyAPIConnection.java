@@ -67,8 +67,7 @@ class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnectio
             ParselyTracker.PLog("Pixel request success");
 
             // only purge the queue if the request was successful
-            tracker.eventQueue.clear();
-            tracker.purgeStoredQueue();
+            tracker.purgeEventsQueue();
 
             ParselyTracker.PLog("Event queue empty, flush timer cleared.");
             tracker.stopFlushTimer();

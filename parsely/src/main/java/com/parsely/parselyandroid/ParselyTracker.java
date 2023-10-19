@@ -455,8 +455,7 @@ public class ParselyTracker {
 
         if (isDebug) {
             PLog("Debug mode on. Not sending to Parse.ly");
-            eventQueue.clear();
-            purgeStoredQueue();
+            purgeEventsQueue();
         } else {
             new ParselyAPIConnection(this).execute(ROOT_URL + "mobileproxy", JsonEncode(batchMap));
             PLog("Requested %s", ROOT_URL);
@@ -516,6 +515,11 @@ public class ParselyTracker {
             storedQueue = new ArrayList<>();
         }
         return storedQueue;
+    }
+
+    void purgeEventsQueue() {
+        eventQueue.clear();
+        purgeStoredQueue();
     }
 
     /**
