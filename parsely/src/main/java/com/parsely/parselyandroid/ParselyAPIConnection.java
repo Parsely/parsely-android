@@ -70,10 +70,8 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLCo
                 instance.eventQueue.clear();
                 instance.purgeStoredQueue();
 
-                if (instance.queueSize() == 0 && instance.storedEventsCount() == 0) {
-                    ParselyTracker.PLog("Event queue empty, flush timer cleared.");
-                    instance.stopFlushTimer();
-                }
+                ParselyTracker.PLog("Event queue empty, flush timer cleared.");
+                instance.stopFlushTimer();
             }
         }
     }
