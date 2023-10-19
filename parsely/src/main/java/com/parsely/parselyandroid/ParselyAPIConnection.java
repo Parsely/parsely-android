@@ -18,13 +18,21 @@ package com.parsely.parselyandroid;
 
 import android.os.AsyncTask;
 
+import androidx.annotation.NonNull;
+
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.HttpURLConnection;
 
 public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnection> {
 
+    @NonNull
+    private final ParselyTracker tracker;
     public Exception exception;
+
+    public ParselyAPIConnection(@NonNull ParselyTracker tracker) {
+        this.tracker = tracker;
+    }
 
     @Override
     protected HttpURLConnection doInBackground(String... data) {
@@ -58,21 +66,12 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLCo
         } else {
             ParselyTracker.PLog("Pixel request success");
 
-            ParselyTracker instance = null;
-            try {
-                instance = ParselyTracker.sharedInstance();
-            } catch (NullPointerException ex) {
-                ParselyTracker.PLog("ParselyTracker is null");
-            }
+            // only purge the queue if the request was successful
+            tracker.eventQueue.clear();
+            tracker.purgeStoredQueue();
 
-            if (instance != null) {
-                // only purge the queue if the request was successful
-                instance.eventQueue.clear();
-                instance.purgeStoredQueue();
-
-                ParselyTracker.PLog("Event queue empty, flush timer cleared.");
-                instance.stopFlushTimer();
-            }
+            ParselyTracker.PLog("Event queue empty, flush timer cleared.");
+            tracker.stopFlushTimer();
         }
     }
 }

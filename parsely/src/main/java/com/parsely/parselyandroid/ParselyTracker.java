@@ -458,7 +458,7 @@ public class ParselyTracker {
             eventQueue.clear();
             purgeStoredQueue();
         } else {
-            new ParselyAPIConnection().execute(ROOT_URL + "mobileproxy", JsonEncode(batchMap));
+            new ParselyAPIConnection(this).execute(ROOT_URL + "mobileproxy", JsonEncode(batchMap));
             PLog("Requested %s", ROOT_URL);
         }
         PLog("POST Data %s", JsonEncode(batchMap));
