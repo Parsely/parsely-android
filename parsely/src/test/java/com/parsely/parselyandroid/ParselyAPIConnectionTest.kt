@@ -30,15 +30,43 @@ class ParselyAPIConnectionTest {
         assertThat(mockServer.takeRequest().method).isEqualTo("GET")
     }
 
+    @Test
+    fun `when making connection with events, then make POST request with JSON Content-Type header`() {
+        // when
+        sut.execute(
+            mockServer.url("/").toString(), pixelPayload
+        )
+
+        // then
+        assertThat(mockServer.takeRequest()).satisfies({
+            assertThat(it.method).isEqualTo("POST")
+            assertThat(it.headers["Content-Type"]).isEqualTo("application/json")
+            assertThat(it.body.readUtf8()).isEqualTo(pixelPayload)
+        })
+    }
+
     @After
     fun tearDown() {
         mockServer.shutdown()
     }
 
+    companion object {
+        val pixelPayload = """
+{
+    "events": [
+        {
+            "idsite": "example.com"
+        },
+        {
+            "idsite": "example2.com"
+        }
+    ]
+}            
+""".trimIndent()
+    }
+
     object FakeTracker : ParselyTracker(
-        "siteId",
-        10,
-        ApplicationProvider.getApplicationContext()
+        "siteId", 10, ApplicationProvider.getApplicationContext()
     ) {
 
         var flushTimerStopped = false
