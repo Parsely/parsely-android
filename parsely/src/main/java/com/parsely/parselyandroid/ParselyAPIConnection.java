@@ -28,7 +28,7 @@ class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnectio
 
     @NonNull
     private final ParselyTracker tracker;
-    public Exception exception;
+    private Exception exception;
 
     ParselyAPIConnection(@NonNull ParselyTracker tracker) {
         this.tracker = tracker;
