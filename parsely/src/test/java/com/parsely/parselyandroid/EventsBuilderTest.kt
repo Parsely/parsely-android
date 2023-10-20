@@ -11,8 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class EventsBuilderTest {
-
+class EventsBuilderTest {
     private lateinit var sut: EventsBuilder
 
     @Before
@@ -166,8 +165,9 @@ internal class EventsBuilderTest {
     @Test
     fun `given metadata is not null, when creating a pixel, include metadata`() {
         // given
-        val metadata =
-            ParselyMetadata(ArrayList<String>(), "link", "section", null, null, null, null)
+        val metadata = ParselyMetadata(
+            ArrayList<String>(), "link", "section", null, null, null, null
+        )
 
         // when
         val event: Map<String, Any> = sut.buildEvent(
@@ -201,7 +201,6 @@ internal class EventsBuilderTest {
                     .containsEntry("os_version", "33")
                     .containsEntry("parsely_site_uuid", null)
             }
-
 
     companion object {
         const val TEST_SITE_ID = "Example"
