@@ -26,9 +26,6 @@ class EngagementManager {
     private long latestDelayMillis, totalTime;
     private Calendar startTime;
 
-    private static final long MAX_TIME_BETWEEN_HEARTBEATS = 60 * 60;
-    private static final long OFFSET_MATCHING_BASE_INTERVAL = 35;
-    private static final double BACKOFF_PROPORTION = 0.3;
 
 
     public EngagementManager(ParselyTracker parselyTracker, Timer parentTimer, long intervalMillis, Map<String, Object> baseEvent) {
@@ -110,14 +107,6 @@ class EngagementManager {
         parselyTracker.enqueueEvent(event);
     }
 
-    private void updateLatestInterval() {
-        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        long totalTrackedTime = (now.getTime().getTime() - startTime.getTime().getTime()) / 1000;
-        double totalWithOffset = totalTrackedTime + OFFSET_MATCHING_BASE_INTERVAL;
-        double newInterval = totalWithOffset * BACKOFF_PROPORTION;
-        long clampedNewInterval = (long) Math.min(MAX_TIME_BETWEEN_HEARTBEATS, newInterval);
-        latestDelayMillis = clampedNewInterval * 1000;
-    }
 
     public double getIntervalMillis() {
         return latestDelayMillis;
