@@ -75,6 +75,22 @@ class ParselyAPIConnectionTest {
         assertThat(FakeTracker.events).isEmpty()
     }
 
+    @Test
+    fun `given unsuccessful response, when request is made, do not purge events queue`() {
+        // given
+        mockServer.enqueue(MockResponse().setResponseCode(400))
+        val sampleEvents = mapOf("idsite" to "example.com")
+        FakeTracker.events.add(sampleEvents)
+        val url = mockServer.url("/").toString()
+
+        // when
+        sut.execute(url).get()
+        shadowMainLooper().idle();
+
+        // then
+        assertThat(FakeTracker.events).containsExactly(sampleEvents)
+    }
+
     @After
     fun tearDown() {
         mockServer.shutdown()
