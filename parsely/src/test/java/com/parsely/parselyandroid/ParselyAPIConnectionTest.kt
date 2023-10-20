@@ -28,9 +28,9 @@ class ParselyAPIConnectionTest {
     fun `when making connection without any events, then make GET request`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
+        val url = mockServer.url("").toString()
 
         // when
-        val url = mockServer.url("").toString()
         sut.execute(url).get()
         shadowMainLooper().idle();
 
@@ -46,9 +46,9 @@ class ParselyAPIConnectionTest {
     fun `when making connection with events, then make POST request with JSON Content-Type header`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
+        val url = mockServer.url("/").toString()
 
         // when
-        val url = mockServer.url("/").toString()
         sut.execute(url, pixelPayload).get()
         shadowMainLooper().idle();
 
