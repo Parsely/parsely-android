@@ -72,6 +72,7 @@ public class ParselyTracker {
     private String lastPageviewUuid = null;
     @NonNull
     private final EventsBuilder eventsBuilder;
+    @NonNull final UpdateEngagementIntervalCalculator intervalCalculator = new UpdateEngagementIntervalCalculator();
 
     /**
      * Create a new ParselyTracker instance.
@@ -287,7 +288,7 @@ public class ParselyTracker {
 
         // Start a new EngagementTask
         Map<String, Object> event = eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
-        engagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event);
+        engagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event, intervalCalculator);
         engagementManager.start();
     }
 
@@ -363,7 +364,7 @@ public class ParselyTracker {
         // Start a new engagement manager for the video.
         @NonNull final Map<String, Object> hbEvent = eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
         // TODO: Can we remove some metadata fields from this request?
-        videoEngagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent);
+        videoEngagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent, intervalCalculator);
         videoEngagementManager.start();
     }
 

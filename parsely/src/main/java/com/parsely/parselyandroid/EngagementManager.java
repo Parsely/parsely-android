@@ -25,13 +25,13 @@ class EngagementManager {
     private TimerTask waitingTimerTask;
     private long latestDelayMillis, totalTime;
     private Calendar startTime;
+    private final UpdateEngagementIntervalCalculator intervalCalculator;
 
-
-
-    public EngagementManager(ParselyTracker parselyTracker, Timer parentTimer, long intervalMillis, Map<String, Object> baseEvent) {
+    public EngagementManager(ParselyTracker parselyTracker, Timer parentTimer, long intervalMillis, Map<String, Object> baseEvent, UpdateEngagementIntervalCalculator intervalCalculator) {
         this.parselyTracker = parselyTracker;
         this.baseEvent = baseEvent;
         this.parentTimer = parentTimer;
+        this.intervalCalculator = intervalCalculator;
         latestDelayMillis = intervalMillis;
         totalTime = 0;
         startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -64,7 +64,7 @@ class EngagementManager {
         TimerTask task = new TimerTask() {
             public void run() {
                 doEnqueue(scheduledExecutionTime());
-                updateLatestInterval();
+                latestDelayMillis = intervalCalculator.updateLatestInterval(startTime);
                 scheduleNextExecution(latestDelayMillis);
             }
 
