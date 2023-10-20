@@ -174,7 +174,7 @@ public class ParselyTracker {
      * @return Whether the engagement tracker is running.
      */
     public boolean engagementIsActive() {
-        return engagementManager != null && engagementManager.started;
+        return engagementManager != null && engagementManager.isRunning();
     }
 
     /**
@@ -183,7 +183,7 @@ public class ParselyTracker {
      * @return Whether video tracking is active.
      */
     public boolean videoIsActive() {
-        return videoEngagementManager != null && videoEngagementManager.started;
+        return videoEngagementManager != null && videoEngagementManager.isRunning();
     }
 
     /**
