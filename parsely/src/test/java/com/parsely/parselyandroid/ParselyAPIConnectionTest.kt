@@ -26,7 +26,7 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `when making connection without any events, then make GET request`() {
+    fun `given successful response, when making connection without any events, then make GET request`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
 
@@ -43,7 +43,7 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `when making connection with events, then make POST request with JSON Content-Type header`() {
+    fun `given successful response, when making connection with events, then make POST request with JSON Content-Type header`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
 
