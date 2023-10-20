@@ -1,6 +1,7 @@
 package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
+import java.util.Calendar
 import java.util.Timer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -9,12 +10,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class EngagementManagerTest {
+internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
     private val tracker = FakeTracker()
     private val parentTimer = Timer()
     private val baseEvent = mapOf(
+        "action" to "heartbeat",
         "data" to mapOf(
             "os" to "android",
             "parsely_site_uuid" to "e8857cbe-5ace-44f4-a85e-7e7475f675c5",
@@ -31,6 +33,7 @@ class EngagementManagerTest {
             parentTimer,
             DEFAULT_INTERVAL_MILLIS,
             baseEvent,
+            FakeIntervalCalculator()
         )
     }
 
@@ -42,6 +45,20 @@ class EngagementManagerTest {
 
         // then
         assertThat(tracker.events).hasSize(1)
+    }
+
+    @Test
+    fun `when starting manager, then schedule task each interval period`() {
+        sut.start()
+
+        Thread.sleep(DEFAULT_INTERVAL_MILLIS)
+        assertThat(tracker.events).hasSize(1)
+
+        Thread.sleep(DEFAULT_INTERVAL_MILLIS)
+        assertThat(tracker.events).hasSize(2)
+
+        Thread.sleep(DEFAULT_INTERVAL_MILLIS)
+        assertThat(tracker.events).hasSize(3)
     }
 
     class FakeTracker : ParselyTracker(
@@ -57,7 +74,13 @@ class EngagementManagerTest {
 
     }
 
+    class FakeIntervalCalculator : UpdateEngagementIntervalCalculator() {
+        override fun updateLatestInterval(startTime: Calendar): Long {
+            return DEFAULT_INTERVAL_MILLIS
+        }
+    }
+
     companion object {
-        private const val DEFAULT_INTERVAL_MILLIS = 1 * 1000L
+        private const val DEFAULT_INTERVAL_MILLIS = 1 * 100L
     }
 }
