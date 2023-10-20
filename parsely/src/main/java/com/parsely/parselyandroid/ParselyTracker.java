@@ -414,7 +414,7 @@ public class ParselyTracker {
      *
      * @param event The event Map to enqueue.
      */
-    private void enqueueEvent(Map<String, Object> event) {
+    void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
         eventQueue.add(event);
         new QueueManager().execute();
