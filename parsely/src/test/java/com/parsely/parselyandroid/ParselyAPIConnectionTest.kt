@@ -75,7 +75,7 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `given unsuccessful response, when request is made, do not purge events queue`() {
+    fun `given unsuccessful response, when request is made, then do not purge events queue and do not stop flush timer`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(400))
         val sampleEvents = mapOf("idsite" to "example.com")
@@ -87,6 +87,7 @@ class ParselyAPIConnectionTest {
 
         // then
         assertThat(FakeTracker.events).containsExactly(sampleEvents)
+        assertThat(FakeTracker.flushTimerStopped).isFalse
     }
 
     @After
