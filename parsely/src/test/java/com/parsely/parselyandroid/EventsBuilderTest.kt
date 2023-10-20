@@ -11,8 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class EventsBuilderTest {
-
+class EventsBuilderTest {
     private lateinit var sut: EventsBuilder
 
     @Before
@@ -22,15 +21,10 @@ internal class EventsBuilderTest {
             applicationContext,
             TEST_SITE_ID,
         )
-        Settings.Secure.putString(
-            applicationContext.contentResolver,
-            Settings.Secure.ANDROID_ID,
-            "android_id"
-        )
     }
 
     @Test
-    fun `events builder prepares correct pageview pixel`() {
+    fun `when building pageview event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
@@ -49,7 +43,7 @@ internal class EventsBuilderTest {
     }
 
     @Test
-    fun `events builder prepares correct heartbeat pixel`() {
+    fun `when building heartbeat event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
@@ -68,7 +62,7 @@ internal class EventsBuilderTest {
     }
 
     @Test
-    fun `events builder prepares correct videostart pixel`() {
+    fun `when building videostart event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
@@ -87,7 +81,7 @@ internal class EventsBuilderTest {
     }
 
     @Test
-    fun `events builder prepares correct vheartbeat pixel`() {
+    fun `when building vheartbeat event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
@@ -171,8 +165,9 @@ internal class EventsBuilderTest {
     @Test
     fun `given metadata is not null, when creating a pixel, include metadata`() {
         // given
-        val metadata =
-            ParselyMetadata(ArrayList<String>(), "link", "section", null, null, null, null)
+        val metadata = ParselyMetadata(
+            ArrayList<String>(), "link", "section", null, null, null, null
+        )
 
         // when
         val event: Map<String, Any> = sut.buildEvent(
@@ -206,7 +201,6 @@ internal class EventsBuilderTest {
                     .containsEntry("os_version", "33")
                     .containsEntry("parsely_site_uuid", null)
             }
-
 
     companion object {
         const val TEST_SITE_ID = "Example"
