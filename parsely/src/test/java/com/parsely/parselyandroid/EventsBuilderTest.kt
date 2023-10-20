@@ -24,7 +24,7 @@ class EventsBuilderTest {
     }
 
     @Test
-    fun `events builder prepares correct pageview pixel`() {
+    fun `when building pageview event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
@@ -43,7 +43,7 @@ class EventsBuilderTest {
     }
 
     @Test
-    fun `events builder prepares correct heartbeat pixel`() {
+    fun `when building heartbeat event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
@@ -62,7 +62,7 @@ class EventsBuilderTest {
     }
 
     @Test
-    fun `events builder prepares correct videostart pixel`() {
+    fun `when building videostart event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
@@ -81,7 +81,7 @@ class EventsBuilderTest {
     }
 
     @Test
-    fun `events builder prepares correct vheartbeat pixel`() {
+    fun `when building vheartbeat event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
