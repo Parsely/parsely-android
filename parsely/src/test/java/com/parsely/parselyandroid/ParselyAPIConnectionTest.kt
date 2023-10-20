@@ -60,7 +60,7 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `given successful response, when request is made, purge events queue`() {
+    fun `given successful response, when request is made, then purge events queue and stop flush timer`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
         FakeTracker.events.add(mapOf("idsite" to "example.com"))
@@ -71,6 +71,7 @@ class ParselyAPIConnectionTest {
 
         // then
         assertThat(FakeTracker.events).isEmpty()
+        assertThat(FakeTracker.flushTimerStopped).isTrue
     }
 
     @Test
