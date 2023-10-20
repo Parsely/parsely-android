@@ -44,10 +44,13 @@ class ParselyAPIConnectionTest {
 
     @Test
     fun `when making connection with events, then make POST request with JSON Content-Type header`() {
+        // given
+        mockServer.enqueue(MockResponse().setResponseCode(200))
+
         // when
-        sut.execute(
-            mockServer.url("/").toString(), pixelPayload
-        )
+        val url = mockServer.url("/").toString()
+        sut.execute(url, pixelPayload).get()
+        shadowMainLooper().idle();
 
         // then
         assertThat(mockServer.takeRequest()).satisfies({
