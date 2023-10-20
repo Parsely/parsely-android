@@ -24,7 +24,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.HttpURLConnection;
 
-class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnection> {
+class ParselyAPIConnection extends AsyncTask<String, Exception, Void> {
 
     @NonNull
     private final ParselyTracker tracker;
@@ -35,7 +35,7 @@ class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnectio
     }
 
     @Override
-    protected HttpURLConnection doInBackground(String... data) {
+    protected Void doInBackground(String... data) {
         HttpURLConnection connection = null;
         try {
             if (data.length == 1) {  // non-batched (since no post data is included)
@@ -54,12 +54,12 @@ class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnectio
 
         } catch (Exception ex) {
             this.exception = ex;
-            return null;
         }
-        return connection;
+        return null;
     }
 
-    protected void onPostExecute(HttpURLConnection conn) {
+    @Override
+    protected void onPostExecute(Void result) {
         if (this.exception != null) {
             ParselyTracker.PLog("Pixel request exception");
             ParselyTracker.PLog(this.exception.toString());
