@@ -19,10 +19,11 @@ class ParselyAPIConnectionTest {
     private lateinit var sut: ParselyAPIConnection
     private val mockServer = MockWebServer()
     private val url = mockServer.url("").toString()
+    private val tracker = FakeTracker()
 
     @Before
     fun setUp() {
-        sut = ParselyAPIConnection(FakeTracker)
+        sut = ParselyAPIConnection(tracker)
     }
 
     @Test
@@ -63,15 +64,15 @@ class ParselyAPIConnectionTest {
     fun `given successful response, when request is made, then purge events queue and stop flush timer`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
-        FakeTracker.events.add(mapOf("idsite" to "example.com"))
+        tracker.events.add(mapOf("idsite" to "example.com"))
 
         // when
         sut.execute(url).get()
         shadowMainLooper().idle();
 
         // then
-        assertThat(FakeTracker.events).isEmpty()
-        assertThat(FakeTracker.flushTimerStopped).isTrue
+        assertThat(tracker.events).isEmpty()
+        assertThat(tracker.flushTimerStopped).isTrue
     }
 
     @Test
@@ -79,15 +80,15 @@ class ParselyAPIConnectionTest {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(400))
         val sampleEvents = mapOf("idsite" to "example.com")
-        FakeTracker.events.add(sampleEvents)
+        tracker.events.add(sampleEvents)
 
         // when
         sut.execute(url).get()
         shadowMainLooper().idle();
 
         // then
-        assertThat(FakeTracker.events).containsExactly(sampleEvents)
-        assertThat(FakeTracker.flushTimerStopped).isFalse
+        assertThat(tracker.events).containsExactly(sampleEvents)
+        assertThat(tracker.flushTimerStopped).isFalse
     }
 
     @After
@@ -110,7 +111,7 @@ class ParselyAPIConnectionTest {
 """.trimIndent()
     }
 
-    object FakeTracker : ParselyTracker(
+    private class FakeTracker : ParselyTracker(
         "siteId", 10, ApplicationProvider.getApplicationContext()
     ) {
 
