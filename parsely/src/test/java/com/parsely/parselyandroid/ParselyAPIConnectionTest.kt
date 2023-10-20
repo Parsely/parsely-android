@@ -1,7 +1,7 @@
 package com.parsely.parselyandroid
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
@@ -9,8 +9,11 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.LooperMode
+import org.robolectric.shadows.ShadowLooper.shadowMainLooper
 
 @RunWith(RobolectricTestRunner::class)
+@LooperMode(LooperMode.Mode.PAUSED)
 class ParselyAPIConnectionTest {
 
     private lateinit var sut: ParselyAPIConnection
@@ -23,11 +26,20 @@ class ParselyAPIConnectionTest {
 
     @Test
     fun `when making connection without any events, then make GET request`() {
+        // given
+        mockServer.enqueue(MockResponse().setResponseCode(200))
+
         // when
-        sut.execute(mockServer.url("/").toString())
+        val url = mockServer.url("").toString()
+        sut.execute(url).get()
+        shadowMainLooper().idle();
 
         // then
-        assertThat(mockServer.takeRequest().method).isEqualTo("GET")
+        val request = mockServer.takeRequest()
+        assertThat(request).satisfies({
+            assertThat(it.method).isEqualTo("GET")
+            assertThat(it.failure).isNull()
+        })
     }
 
     @Test
