@@ -18,6 +18,7 @@ class ParselyAPIConnectionTest {
 
     private lateinit var sut: ParselyAPIConnection
     private val mockServer = MockWebServer()
+    private val url = mockServer.url("").toString()
 
     @Before
     fun setUp() {
@@ -28,7 +29,6 @@ class ParselyAPIConnectionTest {
     fun `when making connection without any events, then make GET request`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
-        val url = mockServer.url("").toString()
 
         // when
         sut.execute(url).get()
@@ -46,7 +46,6 @@ class ParselyAPIConnectionTest {
     fun `when making connection with events, then make POST request with JSON Content-Type header`() {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
-        val url = mockServer.url("/").toString()
 
         // when
         sut.execute(url, pixelPayload).get()
@@ -65,7 +64,6 @@ class ParselyAPIConnectionTest {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
         FakeTracker.events.add(mapOf("idsite" to "example.com"))
-        val url = mockServer.url("/").toString()
 
         // when
         sut.execute(url).get()
@@ -81,7 +79,6 @@ class ParselyAPIConnectionTest {
         mockServer.enqueue(MockResponse().setResponseCode(400))
         val sampleEvents = mapOf("idsite" to "example.com")
         FakeTracker.events.add(sampleEvents)
-        val url = mockServer.url("/").toString()
 
         // when
         sut.execute(url).get()
