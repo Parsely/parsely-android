@@ -22,11 +22,6 @@ internal class EventsBuilderTest {
             applicationContext,
             TEST_SITE_ID,
         )
-        Settings.Secure.putString(
-            applicationContext.contentResolver,
-            Settings.Secure.ANDROID_ID,
-            "android_id"
-        )
     }
 
     @Test
