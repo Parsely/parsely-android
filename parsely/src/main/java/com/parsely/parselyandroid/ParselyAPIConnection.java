@@ -18,16 +18,24 @@ package com.parsely.parselyandroid;
 
 import android.os.AsyncTask;
 
+import androidx.annotation.NonNull;
+
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.HttpURLConnection;
 
-public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLConnection> {
+class ParselyAPIConnection extends AsyncTask<String, Exception, Void> {
 
-    public Exception exception;
+    @NonNull
+    private final ParselyTracker tracker;
+    private Exception exception;
+
+    ParselyAPIConnection(@NonNull ParselyTracker tracker) {
+        this.tracker = tracker;
+    }
 
     @Override
-    protected HttpURLConnection doInBackground(String... data) {
+    protected Void doInBackground(String... data) {
         HttpURLConnection connection = null;
         try {
             if (data.length == 1) {  // non-batched (since no post data is included)
@@ -46,35 +54,23 @@ public class ParselyAPIConnection extends AsyncTask<String, Exception, HttpURLCo
 
         } catch (Exception ex) {
             this.exception = ex;
-            return null;
         }
-        return connection;
+        return null;
     }
 
-    protected void onPostExecute(HttpURLConnection conn) {
+    @Override
+    protected void onPostExecute(Void result) {
         if (this.exception != null) {
             ParselyTracker.PLog("Pixel request exception");
             ParselyTracker.PLog(this.exception.toString());
         } else {
             ParselyTracker.PLog("Pixel request success");
 
-            ParselyTracker instance = null;
-            try {
-                instance = ParselyTracker.sharedInstance();
-            } catch (NullPointerException ex) {
-                ParselyTracker.PLog("ParselyTracker is null");
-            }
+            // only purge the queue if the request was successful
+            tracker.purgeEventsQueue();
 
-            if (instance != null) {
-                // only purge the queue if the request was successful
-                instance.eventQueue.clear();
-                instance.purgeStoredQueue();
-
-                if (instance.queueSize() == 0 && instance.storedEventsCount() == 0) {
-                    ParselyTracker.PLog("Event queue empty, flush timer cleared.");
-                    instance.stopFlushTimer();
-                }
-            }
+            ParselyTracker.PLog("Event queue empty, flush timer cleared.");
+            tracker.stopFlushTimer();
         }
     }
 }
