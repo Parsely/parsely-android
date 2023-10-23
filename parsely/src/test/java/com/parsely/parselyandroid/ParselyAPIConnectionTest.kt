@@ -97,18 +97,8 @@ class ParselyAPIConnectionTest {
     }
 
     companion object {
-        val pixelPayload = """
-{
-    "events": [
-        {
-            "idsite": "example.com"
-        },
-        {
-            "idsite": "example2.com"
-        }
-    ]
-}            
-""".trimIndent()
+        val pixelPayload: String =
+            this::class.java.getResource("pixel_payload.json")?.readText().orEmpty()
     }
 
     private class FakeTracker : ParselyTracker(
