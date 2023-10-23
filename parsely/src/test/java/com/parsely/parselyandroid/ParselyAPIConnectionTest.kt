@@ -26,6 +26,11 @@ class ParselyAPIConnectionTest {
         sut = ParselyAPIConnection(tracker)
     }
 
+    @After
+    fun tearDown() {
+        mockServer.shutdown()
+    }
+
     @Test
     fun `given successful response, when making connection without any events, then make GET request`() {
         // given
@@ -89,11 +94,6 @@ class ParselyAPIConnectionTest {
         // then
         assertThat(tracker.events).containsExactly(sampleEvents)
         assertThat(tracker.flushTimerStopped).isFalse
-    }
-
-    @After
-    fun tearDown() {
-        mockServer.shutdown()
     }
 
     companion object {
