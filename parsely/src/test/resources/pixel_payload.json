@@ -1,0 +1,10 @@
+{
+  "events": [
+    {
+      "idsite": "example.com"
+    },
+    {
+      "idsite": "example2.com"
+    }
+  ]
+}
