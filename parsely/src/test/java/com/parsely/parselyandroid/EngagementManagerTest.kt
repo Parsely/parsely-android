@@ -95,14 +95,38 @@ internal class EngagementManagerTest {
     fun `when starting manager, then schedule task each interval period`() {
         sut.start()
 
-        Thread.sleep(DEFAULT_INTERVAL_MILLIS)
-        assertThat(tracker.events).hasSize(1)
+        sleep(DEFAULT_INTERVAL_MILLIS)
+        val firstTimestamp = now - THREAD_SLEEPING_THRESHOLD
 
-        Thread.sleep(DEFAULT_INTERVAL_MILLIS)
-        assertThat(tracker.events).hasSize(2)
+        sleep(DEFAULT_INTERVAL_MILLIS)
+        val secondTimestamp = now - 2 * THREAD_SLEEPING_THRESHOLD
 
-        Thread.sleep(DEFAULT_INTERVAL_MILLIS)
-        assertThat(tracker.events).hasSize(3)
+        sleep(DEFAULT_INTERVAL_MILLIS)
+        val thirdTimestamp = now - 3 * THREAD_SLEEPING_THRESHOLD
+
+        sleep(THREAD_SLEEPING_THRESHOLD)
+
+        val firstEvent = tracker.events[0]
+        assertThat(firstEvent).isCorrectEvent(
+            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
+            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10)) },
+            // Ideally: timestamp should be equal to `now` at the time of recording the event
+            withTimestamp = { isCloseTo(firstTimestamp, within(20L)) }
+        )
+        val secondEvent = tracker.events[1]
+        assertThat(secondEvent).isCorrectEvent(
+            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS * 2
+            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS * 2, withinPercentage(10)) },
+            // Ideally: timestamp should be equal to `now` at the time of recording the event
+            withTimestamp = { isCloseTo(secondTimestamp, within(20L)) }
+        )
+        val thirdEvent = tracker.events[2]
+        assertThat(thirdEvent).isCorrectEvent(
+            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS * 3
+            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS * 3, withinPercentage(10)) },
+            // Ideally: timestamp should be equal to `now` at the time of recording the event
+            withTimestamp = { isCloseTo(thirdTimestamp, within(20L)) }
+        )
     }
 
     class FakeTracker : ParselyTracker(
