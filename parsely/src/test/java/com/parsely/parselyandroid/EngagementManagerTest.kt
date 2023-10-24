@@ -4,6 +4,7 @@ import androidx.test.core.app.ApplicationProvider
 import java.util.Calendar
 import java.util.Timer
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.withinPercentage
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,13 +41,40 @@ internal class EngagementManagerTest {
     }
 
     @Test
-    fun `when starting manager, then record next event execution after interval millis`() {
+    fun `when starting manager, then record the correct event after interval millis`() {
         // when
         sut.start()
-        Thread.sleep(DEFAULT_INTERVAL_MILLIS)
+        sleep(DEFAULT_INTERVAL_MILLIS)
 
         // then
-        assertThat(tracker.events).hasSize(1)
+
+        val trackedEvent = tracker.events[0]
+
+        assertThat(trackedEvent)
+            .containsEntry("action", "heartbeat")
+            .hasEntrySatisfying("inc") { incremental ->
+                incremental as Long
+                // Ideally: incremental should be 0
+                assertThat(incremental).isLessThan(5)
+            }
+            .hasEntrySatisfying("tt") { totalTime ->
+                totalTime as Long
+                // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
+                assertThat(totalTime).isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10))
+            }
+            .hasEntrySatisfying("data") { data ->
+                data as Map<String, Any>
+                assertThat(data).hasEntrySatisfying("ts") { timestamp ->
+                    timestamp as Long
+                    assertThat(timestamp).isCloseTo(
+                        System.currentTimeMillis() + DEFAULT_INTERVAL_MILLIS,
+                        withinPercentage(5)
+                    )
+                }.containsEntry("os", "android")
+                    .containsEntry("parsely_site_uuid", "e8857cbe-5ace-44f4-a85e-7e7475f675c5")
+                    .containsEntry("os_version", "34")
+                    .containsEntry("manufacturer", "Google")
+            }
     }
 
     @Test
@@ -82,7 +110,12 @@ internal class EngagementManagerTest {
         }
     }
 
+    private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
+
     companion object {
         private const val DEFAULT_INTERVAL_MILLIS = 1 * 100L
+
+        // Additional time to wait to ensure that the timer has fired
+        private const val THREAD_SLEEPING_THRESHOLD = 100L
     }
 }
