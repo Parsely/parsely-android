@@ -3,8 +3,12 @@ package com.parsely.parselyandroid
 import androidx.test.core.app.ApplicationProvider
 import java.util.Calendar
 import java.util.Timer
+import org.assertj.core.api.AbstractLongAssert
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.byLessThan
 import org.assertj.core.api.Assertions.withinPercentage
+import org.assertj.core.api.LongAssert
+import org.assertj.core.api.MapAssert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,29 +52,47 @@ internal class EngagementManagerTest {
         sleep(DEFAULT_INTERVAL_MILLIS)
 
         // then
+        assertThat(tracker.events[0]).isCorrectEvent(
+            withInc = {
+                // Ideally: incremental should be 0
+                isLessThan(10)
+            },
+            withTotalTime = {
+                // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
+                isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10))
+            },
+            withTimestamp = {
+                // Ideally: timestamp should be equal to System.currentTimeMillis() + DEFAULT_INTERVAL_MILLIS
+                isCloseTo(
+                    System.currentTimeMillis() + DEFAULT_INTERVAL_MILLIS,
+                    withinPercentage(5)
+                )
+            }
+        )
+    }
 
-        val trackedEvent = tracker.events[0]
-
-        assertThat(trackedEvent)
-            .containsEntry("action", "heartbeat")
+    private fun MapAssert<String, Any>.isCorrectEvent(
+        withInc: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
+        withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
+        withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
+    ): MapAssert<String, Any> {
+        return containsEntry("action", "heartbeat")
             .hasEntrySatisfying("inc") { incremental ->
                 incremental as Long
-                // Ideally: incremental should be 0
-                assertThat(incremental).isLessThan(5)
+                val assertThat = assertThat(incremental)
+                assertThat.withInc()
+                assertThat(incremental).withInc()
+
             }
             .hasEntrySatisfying("tt") { totalTime ->
                 totalTime as Long
-                // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
-                assertThat(totalTime).isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10))
+                assertThat(totalTime).withTotalTime()
             }
             .hasEntrySatisfying("data") { data ->
                 data as Map<String, Any>
                 assertThat(data).hasEntrySatisfying("ts") { timestamp ->
                     timestamp as Long
-                    assertThat(timestamp).isCloseTo(
-                        System.currentTimeMillis() + DEFAULT_INTERVAL_MILLIS,
-                        withinPercentage(5)
-                    )
+                    assertThat(timestamp).withTimestamp()
                 }.containsEntry("os", "android")
                     .containsEntry("parsely_site_uuid", "e8857cbe-5ace-44f4-a85e-7e7475f675c5")
                     .containsEntry("os_version", "34")
