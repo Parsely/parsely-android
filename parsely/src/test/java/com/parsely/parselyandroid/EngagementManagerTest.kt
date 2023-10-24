@@ -13,6 +13,7 @@ import org.robolectric.RobolectricTestRunner
 private typealias Event = MutableMap<String, Any>
 
 @RunWith(RobolectricTestRunner::class)
+@Suppress("UNCHECKED_CAST")
 internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
