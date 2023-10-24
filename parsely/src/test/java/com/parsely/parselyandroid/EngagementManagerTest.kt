@@ -2,6 +2,7 @@ package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
 import java.util.Calendar
+import java.util.TimeZone
 import java.util.Timer
 import org.assertj.core.api.AbstractLongAssert
 import org.assertj.core.api.Assertions.assertThat
@@ -49,14 +50,10 @@ internal class EngagementManagerTest {
         // when
         sut.start()
         sleep(DEFAULT_INTERVAL_MILLIS)
-        val timestamp = System.currentTimeMillis()
+        val timestamp = now - THREAD_SLEEPING_THRESHOLD
 
         // then
         assertThat(tracker.events[0]).isCorrectEvent(
-            withInc = {
-                // Ideally: incremental should be 0
-                isLessThan(10)
-            },
             withTotalTime = {
                 // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
                 isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10))
@@ -72,18 +69,12 @@ internal class EngagementManagerTest {
     }
 
     private fun MapAssert<String, Any>.isCorrectEvent(
-        withInc: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
     ): MapAssert<String, Any> {
         return containsEntry("action", "heartbeat")
-            .hasEntrySatisfying("inc") { incremental ->
-                incremental as Long
-                val assertThat = assertThat(incremental)
-                assertThat.withInc()
-                assertThat(incremental).withInc()
-
-            }
+            // Incremental will be always 0 because the interval is lower than 1s
+            .containsEntry("inc", 0L)
             .hasEntrySatisfying("tt") { totalTime ->
                 totalTime as Long
                 assertThat(totalTime).withTotalTime()
@@ -133,12 +124,15 @@ internal class EngagementManagerTest {
         }
     }
 
+    private val now: Long
+        get() = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
+
     private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
 
     companion object {
-        private const val DEFAULT_INTERVAL_MILLIS = 1 * 100L
+        private const val DEFAULT_INTERVAL_MILLIS = 100L
 
         // Additional time to wait to ensure that the timer has fired
-        private const val THREAD_SLEEPING_THRESHOLD = 100L
+        private const val THREAD_SLEEPING_THRESHOLD = 50L
     }
 }
