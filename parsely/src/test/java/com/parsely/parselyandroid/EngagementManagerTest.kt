@@ -5,9 +5,8 @@ import java.util.Calendar
 import java.util.Timer
 import org.assertj.core.api.AbstractLongAssert
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.byLessThan
+import org.assertj.core.api.Assertions.within
 import org.assertj.core.api.Assertions.withinPercentage
-import org.assertj.core.api.LongAssert
 import org.assertj.core.api.MapAssert
 import org.junit.Before
 import org.junit.Test
@@ -50,6 +49,7 @@ internal class EngagementManagerTest {
         // when
         sut.start()
         sleep(DEFAULT_INTERVAL_MILLIS)
+        val timestamp = System.currentTimeMillis()
 
         // then
         assertThat(tracker.events[0]).isCorrectEvent(
@@ -62,10 +62,10 @@ internal class EngagementManagerTest {
                 isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10))
             },
             withTimestamp = {
-                // Ideally: timestamp should be equal to System.currentTimeMillis() + DEFAULT_INTERVAL_MILLIS
+                // Ideally: timestamp should be equal to System.currentTimeMillis() at the time of recording the event
                 isCloseTo(
-                    System.currentTimeMillis() + DEFAULT_INTERVAL_MILLIS,
-                    withinPercentage(5)
+                    timestamp,
+                    within(100L)
                 )
             }
         )
