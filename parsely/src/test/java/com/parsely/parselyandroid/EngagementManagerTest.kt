@@ -9,15 +9,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+private typealias Event = MutableMap<String, Any>
+
 @RunWith(RobolectricTestRunner::class)
 internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
     private val tracker = FakeTracker()
     private val parentTimer = Timer()
-    private val baseEvent = mapOf(
+    private val baseEvent: Event = mutableMapOf(
         "action" to "heartbeat",
-        "data" to mapOf(
+        "data" to mutableMapOf<String, Any>(
             "os" to "android",
             "parsely_site_uuid" to "e8857cbe-5ace-44f4-a85e-7e7475f675c5",
             "os_version" to "34",
@@ -66,9 +68,9 @@ internal class EngagementManagerTest {
         0,
         ApplicationProvider.getApplicationContext()
     ) {
-        val events = mutableListOf<MutableMap<String, Any>>()
+        val events = mutableListOf<Event>()
 
-        override fun enqueueEvent(event: MutableMap<String, Any>) {
+        override fun enqueueEvent(event: Event) {
             events += event
         }
 
