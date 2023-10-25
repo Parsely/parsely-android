@@ -25,13 +25,7 @@ internal class EngagementManagerTest {
     private val parentTimer = Timer()
     private val baseEvent: Event = mutableMapOf(
         "action" to "heartbeat",
-        "data" to mutableMapOf<String, Any>(
-            "os" to "android",
-            "parsely_site_uuid" to "e8857cbe-5ace-44f4-a85e-7e7475f675c5",
-            "os_version" to "34",
-            "manufacturer" to "Google",
-            "ts" to 1697638552181
-        )
+        "data" to testData
     )
 
     @Before
@@ -84,10 +78,7 @@ internal class EngagementManagerTest {
                 assertThat(data).hasEntrySatisfying("ts") { timestamp ->
                     timestamp as Long
                     assertThat(timestamp).withTimestamp()
-                }.containsEntry("os", "android")
-                    .containsEntry("parsely_site_uuid", "e8857cbe-5ace-44f4-a85e-7e7475f675c5")
-                    .containsEntry("os_version", "34")
-                    .containsEntry("manufacturer", "Google")
+                }.containsAllEntriesOf(testData.minus("ts"))
             }
     }
 
@@ -139,7 +130,6 @@ internal class EngagementManagerTest {
         override fun enqueueEvent(event: Event) {
             events += event
         }
-
     }
 
     class FakeIntervalCalculator : UpdateEngagementIntervalCalculator() {
@@ -153,10 +143,16 @@ internal class EngagementManagerTest {
 
     private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
 
-    companion object {
-        private const val DEFAULT_INTERVAL_MILLIS = 100L
-
+    private companion object {
+        const val DEFAULT_INTERVAL_MILLIS = 100L
         // Additional time to wait to ensure that the timer has fired
-        private const val THREAD_SLEEPING_THRESHOLD = 50L
+        const val THREAD_SLEEPING_THRESHOLD = 50L
+        val testData = mutableMapOf<String, Any>(
+            "os" to "android",
+            "parsely_site_uuid" to "e8857cbe-5ace-44f4-a85e-7e7475f675c5",
+            "os_version" to "34",
+            "manufacturer" to "Google",
+            "ts" to 123L
+        )
     }
 }
