@@ -62,26 +62,6 @@ internal class EngagementManagerTest {
         )
     }
 
-    private fun MapAssert<String, Any>.isCorrectEvent(
-        withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
-        withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
-    ): MapAssert<String, Any> {
-        return containsEntry("action", "heartbeat")
-            // Incremental will be always 0 because the interval is lower than 1s
-            .containsEntry("inc", 0L)
-            .hasEntrySatisfying("tt") { totalTime ->
-                totalTime as Long
-                assertThat(totalTime).withTotalTime()
-            }
-            .hasEntrySatisfying("data") { data ->
-                data as Map<String, Any>
-                assertThat(data).hasEntrySatisfying("ts") { timestamp ->
-                    timestamp as Long
-                    assertThat(timestamp).withTimestamp()
-                }.containsAllEntriesOf(testData.minus("ts"))
-            }
-    }
-
     @Test
     fun `when starting manager, then schedule task each interval period`() {
         sut.start()
@@ -118,6 +98,26 @@ internal class EngagementManagerTest {
             // Ideally: timestamp should be equal to `now` at the time of recording the event
             withTimestamp = { isCloseTo(thirdTimestamp, within(20L)) }
         )
+    }
+
+    private fun MapAssert<String, Any>.isCorrectEvent(
+        withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
+        withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
+    ): MapAssert<String, Any> {
+        return containsEntry("action", "heartbeat")
+            // Incremental will be always 0 because the interval is lower than 1s
+            .containsEntry("inc", 0L)
+            .hasEntrySatisfying("tt") { totalTime ->
+                totalTime as Long
+                assertThat(totalTime).withTotalTime()
+            }
+            .hasEntrySatisfying("data") { data ->
+                data as Map<String, Any>
+                assertThat(data).hasEntrySatisfying("ts") { timestamp ->
+                    timestamp as Long
+                    assertThat(timestamp).withTimestamp()
+                }.containsAllEntriesOf(testData.minus("ts"))
+            }
     }
 
     class FakeTracker : ParselyTracker(
