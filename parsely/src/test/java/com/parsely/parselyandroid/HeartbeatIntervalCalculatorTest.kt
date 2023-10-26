@@ -32,7 +32,7 @@ internal class HeartbeatIntervalCalculatorTest {
         val result = sut.calculate(startTime)
 
         // then
-        // ((currentTime + offset) * BACKOFF_PROPORTION) * 1000
+        // ((currentTime + offset) * backoff) and then in milliseconds
         // (0 + 35) * 0.3 * 1000 = 10500
         assertThat(result).isEqualTo(10500)
     }
@@ -67,7 +67,7 @@ internal class HeartbeatIntervalCalculatorTest {
         val result = sut.calculate(startTime)
 
         // then
-        // ((currentTime + offset) * BACKOFF_PROPORTION) * 1000
+        // ((currentTime + offset) * backoff) and then in milliseconds
         // (2 + 35) * 0.3 * 1000 = 11100
         assertThat(result).isEqualTo(11100)
     }
