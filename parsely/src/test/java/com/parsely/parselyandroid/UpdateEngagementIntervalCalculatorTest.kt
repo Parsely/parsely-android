@@ -4,7 +4,6 @@ import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.B
 import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
 import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.OFFSET_MATCHING_BASE_INTERVAL
 import java.util.Calendar
-import java.util.TimeZone
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -31,10 +30,9 @@ internal class UpdateEngagementIntervalCalculatorTest {
         val result = sut.updateLatestInterval(startTime)
 
         // then
-        // ((currentTimeInMillis + OFFSET_MATCHING_BASE_INTERVAL) * BACKOFF_PROPORTION) * 1000
-        // (0 + 35) * 0.3 * 1000 = 10500 but the result is 10000 because newInterval
-        // is casted from double to long - instead of 10.5 seconds, it's 10 seconds
-        assertThat(result).isEqualTo(10000)
+        // ((currentTime + offset) * BACKOFF_PROPORTION) * 1000
+        // (0 + 35) * 0.3 * 1000 = 10500
+        assertThat(result).isEqualTo(10500)
     }
 
     @Test
@@ -61,7 +59,7 @@ internal class UpdateEngagementIntervalCalculatorTest {
         // given
         val timePoint = 2000L
         val startTime = Calendar.getInstance().apply {
-           timeInMillis = 0
+            timeInMillis = 0
         }
         fakeClock.fakeNow = timePoint
 
@@ -69,11 +67,9 @@ internal class UpdateEngagementIntervalCalculatorTest {
         val result = sut.updateLatestInterval(startTime)
 
         // then
-        // The formula is
-        // ((currentTimeInMillis + OFFSET_MATCHING_BASE_INTERVAL) * BACKOFF_PROPORTION) * 1000
-        // (2 + 35) * 0.3 * 1000 = 11100 but the result is 11000 because newInterval
-        // is casted from double to long - instead of 11.1 seconds, it's 11 seconds
-        assertThat(result).isEqualTo(11000L)
+        // ((currentTime + offset) * BACKOFF_PROPORTION) * 1000
+        // (2 + 35) * 0.3 * 1000 = 11100
+        assertThat(result).isEqualTo(11100)
     }
 
     class FakeClock : Clock() {
