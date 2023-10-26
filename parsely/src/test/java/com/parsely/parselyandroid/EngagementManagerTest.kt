@@ -92,6 +92,8 @@ internal class EngagementManagerTest {
         )
     }
 
+    private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
+
     private fun MapAssert<String, Any>.isCorrectEvent(
         withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
@@ -113,6 +115,9 @@ internal class EngagementManagerTest {
             }
     }
 
+    private val now: Long
+        get() = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
+
     class FakeTracker : ParselyTracker(
         "",
         0,
@@ -130,11 +135,6 @@ internal class EngagementManagerTest {
             return DEFAULT_INTERVAL_MILLIS
         }
     }
-
-    private val now: Long
-        get() = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-
-    private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
 
     private companion object {
         const val DEFAULT_INTERVAL_MILLIS = 100L
