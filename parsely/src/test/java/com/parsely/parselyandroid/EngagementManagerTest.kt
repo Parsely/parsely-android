@@ -17,7 +17,6 @@ import org.robolectric.RobolectricTestRunner
 private typealias Event = MutableMap<String, Any>
 
 @RunWith(RobolectricTestRunner::class)
-@Suppress("UNCHECKED_CAST")
 internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
@@ -105,6 +104,7 @@ internal class EngagementManagerTest {
                 assertThat(totalTime).withTotalTime()
             }
             .hasEntrySatisfying("data") { data ->
+                @Suppress("UNCHECKED_CAST")
                 data as Map<String, Any>
                 assertThat(data).hasEntrySatisfying("ts") { timestamp ->
                     timestamp as Long
