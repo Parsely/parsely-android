@@ -51,7 +51,7 @@ internal class EngagementManagerTest {
             // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
             withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10)) },
             // Ideally: timestamp should be equal to System.currentTimeMillis() at the time of recording the event
-            withTimestamp = { isCloseTo(timestamp, within(100L)) }
+            withTimestamp = { isCloseTo(timestamp, within(20L)) }
         )
     }
 
