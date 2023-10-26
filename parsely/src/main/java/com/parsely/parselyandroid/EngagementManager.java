@@ -25,14 +25,14 @@ class EngagementManager {
     private TimerTask waitingTimerTask;
     private long latestDelayMillis, totalTime;
     private Calendar startTime;
-    private final UpdateEngagementIntervalCalculator intervalCalculator;
+    private final HeartbeatIntervalCalculator intervalCalculator;
 
     public EngagementManager(
             ParselyTracker parselyTracker,
             Timer parentTimer,
             long intervalMillis,
             Map<String, Object> baseEvent,
-            UpdateEngagementIntervalCalculator intervalCalculator
+            HeartbeatIntervalCalculator intervalCalculator
     ) {
         this.parselyTracker = parselyTracker;
         this.baseEvent = baseEvent;
@@ -70,7 +70,7 @@ class EngagementManager {
         TimerTask task = new TimerTask() {
             public void run() {
                 doEnqueue(scheduledExecutionTime());
-                latestDelayMillis = intervalCalculator.updateLatestInterval(startTime);
+                latestDelayMillis = intervalCalculator.calculate(startTime);
                 scheduleNextExecution(latestDelayMillis);
             }
 

@@ -1,8 +1,8 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.BACKOFF_PROPORTION
-import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
-import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.OFFSET_MATCHING_BASE_INTERVAL
+import com.parsely.parselyandroid.HeartbeatIntervalCalculator.Companion.BACKOFF_PROPORTION
+import com.parsely.parselyandroid.HeartbeatIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
+import com.parsely.parselyandroid.HeartbeatIntervalCalculator.Companion.OFFSET_MATCHING_BASE_INTERVAL
 import java.util.Calendar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -10,14 +10,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 
-internal class UpdateEngagementIntervalCalculatorTest {
+internal class HeartbeatIntervalCalculatorTest {
 
-    private lateinit var sut: UpdateEngagementIntervalCalculator
-    val fakeClock = FakeClock()
+    private lateinit var sut: HeartbeatIntervalCalculator
+    private val fakeClock = FakeClock()
 
     @Before
     fun setUp() {
-        sut = UpdateEngagementIntervalCalculator(fakeClock)
+        sut = HeartbeatIntervalCalculator(fakeClock)
     }
 
     @Test
@@ -29,7 +29,7 @@ internal class UpdateEngagementIntervalCalculatorTest {
         }
 
         // when
-        val result = sut.updateLatestInterval(startTime)
+        val result = sut.calculate(startTime)
 
         // then
         // ((currentTime + offset) * BACKOFF_PROPORTION) * 1000
@@ -49,7 +49,7 @@ internal class UpdateEngagementIntervalCalculatorTest {
         }
 
         // when
-        val result = sut.updateLatestInterval(startTime)
+        val result = sut.calculate(startTime)
 
         // then
         assertThat(result).isEqualTo(MAX_TIME_BETWEEN_HEARTBEATS.inWholeMilliseconds)
@@ -64,7 +64,7 @@ internal class UpdateEngagementIntervalCalculatorTest {
         fakeClock.fakeNow = 2.seconds
 
         // when
-        val result = sut.updateLatestInterval(startTime)
+        val result = sut.calculate(startTime)
 
         // then
         // ((currentTime + offset) * BACKOFF_PROPORTION) * 1000
