@@ -42,8 +42,8 @@ internal class HeartbeatIntervalCalculatorTest {
         // surpass MAX_TIME_BETWEEN_HEARTBEATS
         // (currentTime + offset) * backoff = max
         // currentTime = (max / backoff) - offset, so
-        // (1 hour / 0.3) - 35 seconds = 11965 seconds. Add 1 second to be over the limit.
-        val excessiveTime = 11965.seconds + 1.seconds
+        // (15 minutes / 0.3) - 35 seconds = 2965 seconds. Add 1 second to be over the limit
+        val excessiveTime = 2965.seconds + 1.seconds
         fakeClock.fakeNow = excessiveTime
         val startTime = Calendar.getInstance().apply {
             timeInMillis = 0
