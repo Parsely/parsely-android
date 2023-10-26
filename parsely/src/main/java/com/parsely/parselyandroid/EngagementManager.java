@@ -99,7 +99,7 @@ class EngagementManager {
         @SuppressWarnings("unchecked")
         Map<String, Object> baseEventData = (Map<String, Object>) event.get("data");
         assert baseEventData != null;
-        Map<String, Object> data = new HashMap<>((Map<String, Object>) baseEventData);
+        Map<String, Object> data = new HashMap<>(baseEventData);
         data.put("ts", now.getTimeInMillis());
         event.put("data", data);
 
