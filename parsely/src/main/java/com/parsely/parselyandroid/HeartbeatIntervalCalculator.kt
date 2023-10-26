@@ -5,9 +5,9 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-internal open class UpdateEngagementIntervalCalculator(private val clock: Clock) {
+internal open class HeartbeatIntervalCalculator(private val clock: Clock) {
 
-    open fun updateLatestInterval(startTime: Calendar): Long {
+    open fun calculate(startTime: Calendar): Long {
         val startTimeDuration = startTime.time.time.milliseconds
         val nowDuration = clock.now
 
