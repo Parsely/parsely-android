@@ -27,7 +27,13 @@ class EngagementManager {
     private Calendar startTime;
     private final UpdateEngagementIntervalCalculator intervalCalculator;
 
-    public EngagementManager(ParselyTracker parselyTracker, Timer parentTimer, long intervalMillis, Map<String, Object> baseEvent, UpdateEngagementIntervalCalculator intervalCalculator) {
+    public EngagementManager(
+            ParselyTracker parselyTracker,
+            Timer parentTimer,
+            long intervalMillis,
+            Map<String, Object> baseEvent,
+            UpdateEngagementIntervalCalculator intervalCalculator
+    ) {
         this.parselyTracker = parselyTracker;
         this.baseEvent = baseEvent;
         this.parentTimer = parentTimer;
@@ -93,7 +99,7 @@ class EngagementManager {
         @SuppressWarnings("unchecked")
         Map<String, Object> baseEventData = (Map<String, Object>) event.get("data");
         assert baseEventData != null;
-        Map<String, Object> data = new HashMap<>((Map<String, Object>) baseEventData);
+        Map<String, Object> data = new HashMap<>(baseEventData);
         data.put("ts", now.getTimeInMillis());
         event.put("data", data);
 

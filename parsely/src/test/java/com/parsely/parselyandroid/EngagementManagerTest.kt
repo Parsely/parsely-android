@@ -17,7 +17,6 @@ import org.robolectric.RobolectricTestRunner
 private typealias Event = MutableMap<String, Any>
 
 @RunWith(RobolectricTestRunner::class)
-@Suppress("UNCHECKED_CAST")
 internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
@@ -48,17 +47,10 @@ internal class EngagementManagerTest {
 
         // then
         assertThat(tracker.events[0]).isCorrectEvent(
-            withTotalTime = {
-                // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
-                isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10))
-            },
-            withTimestamp = {
-                // Ideally: timestamp should be equal to System.currentTimeMillis() at the time of recording the event
-                isCloseTo(
-                    timestamp,
-                    within(100L)
-                )
-            }
+            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
+            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10)) },
+            // Ideally: timestamp should be equal to System.currentTimeMillis() at the time of recording the event
+            withTimestamp = { isCloseTo(timestamp, within(20L)) }
         )
     }
 
@@ -100,6 +92,8 @@ internal class EngagementManagerTest {
         )
     }
 
+    private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
+
     private fun MapAssert<String, Any>.isCorrectEvent(
         withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
@@ -112,6 +106,7 @@ internal class EngagementManagerTest {
                 assertThat(totalTime).withTotalTime()
             }
             .hasEntrySatisfying("data") { data ->
+                @Suppress("UNCHECKED_CAST")
                 data as Map<String, Any>
                 assertThat(data).hasEntrySatisfying("ts") { timestamp ->
                     timestamp as Long
@@ -119,6 +114,9 @@ internal class EngagementManagerTest {
                 }.containsAllEntriesOf(testData.minus("ts"))
             }
     }
+
+    private val now: Long
+        get() = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
 
     class FakeTracker : ParselyTracker(
         "",
@@ -137,11 +135,6 @@ internal class EngagementManagerTest {
             return DEFAULT_INTERVAL_MILLIS
         }
     }
-
-    private val now: Long
-        get() = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-
-    private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
 
     private companion object {
         const val DEFAULT_INTERVAL_MILLIS = 100L

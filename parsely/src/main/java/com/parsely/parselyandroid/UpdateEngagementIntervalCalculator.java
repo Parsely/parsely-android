@@ -21,7 +21,6 @@ class UpdateEngagementIntervalCalculator {
         double totalWithOffset = totalTrackedTime + OFFSET_MATCHING_BASE_INTERVAL;
         double newInterval = totalWithOffset * BACKOFF_PROPORTION;
         long clampedNewInterval = (long) Math.min(MAX_TIME_BETWEEN_HEARTBEATS, newInterval);
-        System.out.println("New interval: " + clampedNewInterval*1000);
         return clampedNewInterval * 1000;
     }
 }
