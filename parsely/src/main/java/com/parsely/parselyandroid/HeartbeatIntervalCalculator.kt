@@ -3,6 +3,7 @@ package com.parsely.parselyandroid
 import java.util.Calendar
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 internal open class HeartbeatIntervalCalculator(private val clock: Clock) {
@@ -21,6 +22,6 @@ internal open class HeartbeatIntervalCalculator(private val clock: Clock) {
     companion object {
         const val BACKOFF_PROPORTION = 0.3
         val OFFSET_MATCHING_BASE_INTERVAL = 35.seconds
-        val MAX_TIME_BETWEEN_HEARTBEATS = 1.hours
+        val MAX_TIME_BETWEEN_HEARTBEATS = 15.minutes
     }
 }
