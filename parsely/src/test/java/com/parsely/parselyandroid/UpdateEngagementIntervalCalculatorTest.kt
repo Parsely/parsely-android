@@ -42,7 +42,8 @@ internal class UpdateEngagementIntervalCalculatorTest {
         // given
         // "excessiveTime" is a calculated point in time where the resulting interval would
         // naturally surpass MAX_TIME_BETWEEN_HEARTBEATS
-        val excessiveTime = ((MAX_TIME_BETWEEN_HEARTBEATS / BACKOFF_PROPORTION) - OFFSET_MATCHING_BASE_INTERVAL) * 1000
+        val excessiveTime =
+            ((MAX_TIME_BETWEEN_HEARTBEATS / BACKOFF_PROPORTION) - OFFSET_MATCHING_BASE_INTERVAL) * 1000
         fakeClock.fakeNow = excessiveTime.toLong() + 1
         val startTime = Calendar.getInstance().apply {
             timeInMillis = 0
@@ -53,6 +54,26 @@ internal class UpdateEngagementIntervalCalculatorTest {
 
         // then
         assertThat(result).isEqualTo(MAX_TIME_BETWEEN_HEARTBEATS * 1000)
+    }
+
+    @Test
+    fun `given a specific time point, when updating latest interval, it correctly calculates the interval`() {
+        // given
+        val timePoint = 2000L
+        val startTime = Calendar.getInstance().apply {
+           timeInMillis = 0
+        }
+        fakeClock.fakeNow = timePoint
+
+        // when
+        val result = sut.updateLatestInterval(startTime)
+
+        // then
+        // The formula is
+        // ((currentTimeInMillis + OFFSET_MATCHING_BASE_INTERVAL) * BACKOFF_PROPORTION) * 1000
+        // (2 + 35) * 0.3 * 1000 = 11100 but the result is 11000 because newInterval
+        // is casted from double to long - instead of 11.1 seconds, it's 11 seconds
+        assertThat(result).isEqualTo(11000L)
     }
 
     class FakeClock : Clock() {
