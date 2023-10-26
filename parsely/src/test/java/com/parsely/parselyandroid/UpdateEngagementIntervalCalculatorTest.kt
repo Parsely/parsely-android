@@ -5,7 +5,6 @@ import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.M
 import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.OFFSET_MATCHING_BASE_INTERVAL
 import java.util.Calendar
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -43,9 +42,8 @@ internal class UpdateEngagementIntervalCalculatorTest {
         // given
         // "excessiveTime" is a calculated point in time where the resulting interval would
         // naturally surpass MAX_TIME_BETWEEN_HEARTBEATS
-        val excessiveTime =
-            ((MAX_TIME_BETWEEN_HEARTBEATS / BACKOFF_PROPORTION) - OFFSET_MATCHING_BASE_INTERVAL) * 1000
-        fakeClock.fakeNow = excessiveTime.milliseconds + 1.seconds
+        val excessiveTime = ((MAX_TIME_BETWEEN_HEARTBEATS / BACKOFF_PROPORTION) - OFFSET_MATCHING_BASE_INTERVAL)
+        fakeClock.fakeNow = excessiveTime + 1.seconds
         val startTime = Calendar.getInstance().apply {
             timeInMillis = 0
         }
@@ -54,7 +52,7 @@ internal class UpdateEngagementIntervalCalculatorTest {
         val result = sut.updateLatestInterval(startTime)
 
         // then
-        assertThat(result).isEqualTo(MAX_TIME_BETWEEN_HEARTBEATS * 1000)
+        assertThat(result).isEqualTo(MAX_TIME_BETWEEN_HEARTBEATS.inWholeMilliseconds)
     }
 
     @Test
