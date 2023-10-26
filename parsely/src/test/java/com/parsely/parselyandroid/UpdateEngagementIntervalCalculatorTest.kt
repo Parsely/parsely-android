@@ -1,8 +1,8 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.BACKOFF_PROPORTION
-import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.MAX_TIME_BETWEEN_HEARTBEATS
-import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.OFFSET_MATCHING_BASE_INTERVAL
+import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.BACKOFF_PROPORTION
+import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
+import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.OFFSET_MATCHING_BASE_INTERVAL
 import java.util.Calendar
 import java.util.TimeZone
 import org.assertj.core.api.Assertions.assertThat
