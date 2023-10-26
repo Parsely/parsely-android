@@ -132,7 +132,7 @@ internal class EngagementManagerTest {
         }
     }
 
-    class FakeIntervalCalculator : UpdateEngagementIntervalCalculator() {
+    class FakeIntervalCalculator : UpdateEngagementIntervalCalculator(Clock()) {
         override fun updateLatestInterval(startTime: Calendar): Long {
             return DEFAULT_INTERVAL_MILLIS
         }

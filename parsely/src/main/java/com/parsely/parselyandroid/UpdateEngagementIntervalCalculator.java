@@ -3,7 +3,6 @@ package com.parsely.parselyandroid;
 import androidx.annotation.NonNull;
 
 import java.util.Calendar;
-import java.util.TimeZone;
 
 class UpdateEngagementIntervalCalculator {
 
@@ -11,9 +10,14 @@ class UpdateEngagementIntervalCalculator {
     private static final long OFFSET_MATCHING_BASE_INTERVAL = 35;
     private static final double BACKOFF_PROPORTION = 0.3;
 
+    @NonNull private final Clock clock;
+
+    public UpdateEngagementIntervalCalculator(@NonNull Clock clock) {
+        this.clock = clock;
+    }
+
     long updateLatestInterval(@NonNull final Calendar startTime) {
-        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        long totalTrackedTime = (now.getTime().getTime() - startTime.getTime().getTime()) / 1000;
+        long totalTrackedTime = (clock.getNow() - startTime.getTime().getTime()) / 1000;
         double totalWithOffset = totalTrackedTime + OFFSET_MATCHING_BASE_INTERVAL;
         double newInterval = totalWithOffset * BACKOFF_PROPORTION;
         long clampedNewInterval = (long) Math.min(MAX_TIME_BETWEEN_HEARTBEATS, newInterval);
