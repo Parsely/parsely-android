@@ -9,7 +9,7 @@ internal open class UpdateEngagementIntervalCalculator(private val clock: Clock)
 
     open fun updateLatestInterval(startTime: Calendar): Long {
         val startTimeDuration = startTime.time.time.milliseconds
-        val nowDuration = clock.now.milliseconds
+        val nowDuration = clock.now
 
         val totalTrackedTime = nowDuration - startTimeDuration
         val totalWithOffset = totalTrackedTime + offset
