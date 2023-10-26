@@ -4,6 +4,9 @@ import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.B
 import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
 import com.parsely.parselyandroid.UpdateEngagementIntervalCalculator.Companion.OFFSET_MATCHING_BASE_INTERVAL
 import java.util.Calendar
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -21,7 +24,7 @@ internal class UpdateEngagementIntervalCalculatorTest {
     @Test
     fun `given the same time of start and current time, when calculating interval, return offset times backoff proportion`() {
         // given
-        fakeClock.fakeNow = 0L
+        fakeClock.fakeNow = Duration.ZERO
         val startTime = Calendar.getInstance().apply {
             timeInMillis = 0
         }
@@ -42,7 +45,7 @@ internal class UpdateEngagementIntervalCalculatorTest {
         // naturally surpass MAX_TIME_BETWEEN_HEARTBEATS
         val excessiveTime =
             ((MAX_TIME_BETWEEN_HEARTBEATS / BACKOFF_PROPORTION) - OFFSET_MATCHING_BASE_INTERVAL) * 1000
-        fakeClock.fakeNow = excessiveTime.toLong() + 1
+        fakeClock.fakeNow = excessiveTime.milliseconds + 1.seconds
         val startTime = Calendar.getInstance().apply {
             timeInMillis = 0
         }
@@ -57,11 +60,10 @@ internal class UpdateEngagementIntervalCalculatorTest {
     @Test
     fun `given a specific time point, when updating latest interval, it correctly calculates the interval`() {
         // given
-        val timePoint = 2000L
         val startTime = Calendar.getInstance().apply {
             timeInMillis = 0
         }
-        fakeClock.fakeNow = timePoint
+        fakeClock.fakeNow = 2.seconds
 
         // when
         val result = sut.updateLatestInterval(startTime)
@@ -73,9 +75,9 @@ internal class UpdateEngagementIntervalCalculatorTest {
     }
 
     class FakeClock : Clock() {
-        var fakeNow = 0L
+        var fakeNow = Duration.ZERO
 
-        override val now: Long
+        override val now: Duration
             get() = fakeNow
     }
 }
