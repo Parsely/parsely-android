@@ -1,8 +1,6 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.HeartbeatIntervalCalculator.Companion.BACKOFF_PROPORTION
 import com.parsely.parselyandroid.HeartbeatIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
-import com.parsely.parselyandroid.HeartbeatIntervalCalculator.Companion.OFFSET_MATCHING_BASE_INTERVAL
 import java.util.Calendar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -41,9 +39,12 @@ internal class HeartbeatIntervalCalculatorTest {
     fun `given a time that will cause the interval to surpass the MAX_TIME_BETWEEN_HEARTBEATS, when calculating interval, then return the MAX_TIME_BETWEEN_HEARTBEATS`() {
         // given
         // "excessiveTime" is a calculated point in time where the resulting interval would
-        // naturally surpass MAX_TIME_BETWEEN_HEARTBEATS
-        val excessiveTime = ((MAX_TIME_BETWEEN_HEARTBEATS / BACKOFF_PROPORTION) - OFFSET_MATCHING_BASE_INTERVAL)
-        fakeClock.fakeNow = excessiveTime + 1.seconds
+        // surpass MAX_TIME_BETWEEN_HEARTBEATS
+        // (currentTime + offset) * backoff = max
+        // currentTime = (max / backoff) - offset, so
+        // (1 hour / 0.3) - 35 seconds = 11965 seconds. Add 1 second to be over the limit.
+        val excessiveTime = 11965.seconds + 1.seconds
+        fakeClock.fakeNow = excessiveTime
         val startTime = Calendar.getInstance().apply {
             timeInMillis = 0
         }
