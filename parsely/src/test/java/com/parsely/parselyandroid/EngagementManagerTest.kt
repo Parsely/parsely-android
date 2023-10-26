@@ -48,17 +48,10 @@ internal class EngagementManagerTest {
 
         // then
         assertThat(tracker.events[0]).isCorrectEvent(
-            withTotalTime = {
-                // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
-                isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10))
-            },
-            withTimestamp = {
-                // Ideally: timestamp should be equal to System.currentTimeMillis() at the time of recording the event
-                isCloseTo(
-                    timestamp,
-                    within(100L)
-                )
-            }
+            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
+            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10)) },
+            // Ideally: timestamp should be equal to System.currentTimeMillis() at the time of recording the event
+            withTimestamp = { isCloseTo(timestamp, within(100L)) }
         )
     }
 
