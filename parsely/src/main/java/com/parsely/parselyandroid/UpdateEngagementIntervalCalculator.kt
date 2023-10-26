@@ -12,18 +12,15 @@ internal open class UpdateEngagementIntervalCalculator(private val clock: Clock)
         val nowDuration = clock.now
 
         val totalTrackedTime = nowDuration - startTimeDuration
-        val totalWithOffset = totalTrackedTime + offset
+        val totalWithOffset = totalTrackedTime + OFFSET_MATCHING_BASE_INTERVAL
         val newInterval = totalWithOffset * BACKOFF_PROPORTION
-        val clampedNewInterval = minOf(maxTimeBetweenHeartbeats, newInterval)
+        val clampedNewInterval = minOf(MAX_TIME_BETWEEN_HEARTBEATS, newInterval)
         return clampedNewInterval.inWholeMilliseconds
     }
 
     companion object {
-        const val MAX_TIME_BETWEEN_HEARTBEATS = (60 * 60).toLong()
-        const val OFFSET_MATCHING_BASE_INTERVAL: Long = 35
         const val BACKOFF_PROPORTION = 0.3
-
-        val offset = 35.seconds
-        val maxTimeBetweenHeartbeats = 1.hours
+        val OFFSET_MATCHING_BASE_INTERVAL = 35.seconds
+        val MAX_TIME_BETWEEN_HEARTBEATS = 1.hours
     }
 }
