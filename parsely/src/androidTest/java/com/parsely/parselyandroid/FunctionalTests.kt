@@ -3,6 +3,10 @@ package com.parsely.parselyandroid
 import android.app.Activity
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.File
 import java.io.FileInputStream
 import java.io.ObjectInputStream
@@ -16,6 +20,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.Test
@@ -57,7 +62,8 @@ class FunctionalTests {
             }
 
             // Waits for the SDK to send events (flush interval passes)
-            server.takeRequest()
+            val requestPayload = server.takeRequest().toMap()
+            assertThat(requestPayload["events"]).hasSize(51)
 
             runBlocking {
                 withTimeoutOrNull(500.milliseconds) {
@@ -69,9 +75,20 @@ class FunctionalTests {
                     }
                 } ?: fail("Local storage file is not empty!")
             }
-
         }
     }
+
+    private fun RecordedRequest.toMap(): Map<String, List<Event>> {
+        val listType: TypeReference<Map<String, List<Event>>> =
+            object : TypeReference<Map<String, List<Event>>>() {}
+
+        return ObjectMapper().readValue(body.readUtf8(), listType)
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class Event (
+        @JsonProperty("idsite") var idsite: String,
+    )
 
     private val locallyStoredEvents
         get() = FileInputStream(File("$appsFiles/parsely-events.ser")).use {
