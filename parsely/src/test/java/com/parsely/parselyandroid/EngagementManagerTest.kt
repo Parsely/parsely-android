@@ -130,8 +130,8 @@ internal class EngagementManagerTest {
         }
     }
 
-    class FakeIntervalCalculator : UpdateEngagementIntervalCalculator() {
-        override fun updateLatestInterval(startTime: Calendar): Long {
+    class FakeIntervalCalculator : HeartbeatIntervalCalculator(Clock()) {
+        override fun calculate(startTime: Calendar): Long {
             return DEFAULT_INTERVAL_MILLIS
         }
     }

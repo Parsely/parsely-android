@@ -72,7 +72,7 @@ public class ParselyTracker {
     private String lastPageviewUuid = null;
     @NonNull
     private final EventsBuilder eventsBuilder;
-    @NonNull final UpdateEngagementIntervalCalculator intervalCalculator = new UpdateEngagementIntervalCalculator();
+    @NonNull final HeartbeatIntervalCalculator intervalCalculator = new HeartbeatIntervalCalculator(new Clock());
 
     /**
      * Create a new ParselyTracker instance.
