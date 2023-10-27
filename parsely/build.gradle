@@ -10,6 +10,8 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 33
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -22,6 +24,7 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
+    testBuildType "debug"
 
     publishing {
         singleVariant('release') {
@@ -58,6 +61,12 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.24.2'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'org.assertj:assertj-core:3.24.2'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
 }
 
 apply from: "${rootProject.projectDir}/publication.gradle"
