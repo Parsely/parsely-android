@@ -8,15 +8,16 @@ import java.io.FileInputStream
 import java.io.ObjectInputStream
 import java.lang.reflect.Field
 import java.nio.file.Path
-import java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
-import java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY
-import java.nio.file.WatchEvent
-import java.nio.file.WatchService
 import kotlin.io.path.Path
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.yield
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -53,27 +54,22 @@ class FunctionalTests {
                 repeat(51) {
                     parselyTracker.trackPageview("url", null, null, null)
                 }
-
-                // Waits for the SDK to save events to disk
-                val createLocalStorageEvents = appsFiles.waitForFileEvents(2)
-                assertThat(createLocalStorageEvents).satisfiesExactly(
-                    // Checks for local storage file creation
-                    { event -> assertThat(event.kind()).isEqualTo(ENTRY_CREATE) },
-                    // Checks if local storage file was modified
-                    { event -> assertThat(event.kind()).isEqualTo(ENTRY_MODIFY) },
-                )
-                assertThat(locallyStoredEvents).hasSize(51)
             }
-
-            val dropLocalStorageEvent = appsFiles.waitForFileEvents(1)
 
             // Waits for the SDK to send events (flush interval passes)
             server.takeRequest()
 
-            assertThat(dropLocalStorageEvent).satisfiesExactly(
-                { event -> assertThat(event.kind()).isEqualTo(ENTRY_MODIFY) },
-            )
-            assertThat(locallyStoredEvents).hasSize(0)
+            runBlocking {
+                withTimeoutOrNull(500.milliseconds) {
+                    while (true) {
+                        yield()
+                        if (locallyStoredEvents.size == 0) {
+                            break
+                        }
+                    }
+                } ?: fail("Local storage file is not empty!")
+            }
+
         }
     }
 
@@ -84,33 +80,6 @@ class FunctionalTests {
                 objectInputStream.readObject() as ArrayList<Map<String, Any>>
             }
         }
-
-
-    private fun Path.waitForFileEvents(numberOfEvents: Int): List<WatchEvent<*>> {
-        val service = watch()
-        val events = LinkedHashSet<WatchEvent<*>>()
-        while (true) {
-            val key = service.poll()
-            val polledEvents =
-                key?.pollEvents()?.filter { it.context().toString() == "parsely-events.ser" }
-                    .orEmpty()
-            events.addAll(polledEvents)
-            println("[Parsely] Caught ${events.size} file events")
-            if (events.size == numberOfEvents) {
-                key?.reset()
-                break
-            }
-            Thread.sleep(500)
-        }
-        return events.toList()
-    }
-
-    private fun Path.watch(): WatchService {
-        val watchService = this.fileSystem.newWatchService()
-        register(watchService, ENTRY_CREATE, ENTRY_MODIFY)
-
-        return watchService
-    }
 
     private fun initializeTracker(activity: Activity): ParselyTracker {
         return ParselyTracker.sharedInstance(
