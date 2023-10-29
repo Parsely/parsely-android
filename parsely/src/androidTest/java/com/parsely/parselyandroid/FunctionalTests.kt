@@ -38,7 +38,7 @@ class FunctionalTests {
     private fun beforeEach(activity: Activity) {
         appsFiles = Path(activity.filesDir.path)
 
-        if (File("$appsFiles/parsely-events.ser").exists()) {
+        if (File("$appsFiles/$localStorageFileName").exists()) {
             throw RuntimeException("Local storage file exists. Something went wrong with orchestrating the tests.")
         }
     }
@@ -91,7 +91,7 @@ class FunctionalTests {
     )
 
     private val locallyStoredEvents
-        get() = FileInputStream(File("$appsFiles/parsely-events.ser")).use {
+        get() = FileInputStream(File("$appsFiles/$localStorageFileName")).use {
             ObjectInputStream(it).use { objectInputStream ->
                 @Suppress("UNCHECKED_CAST")
                 objectInputStream.readObject() as ArrayList<Map<String, Any>>
@@ -110,6 +110,7 @@ class FunctionalTests {
 
     private companion object {
         const val siteId = "123"
+        const val localStorageFileName = "parsely-events.ser"
         val flushInterval = 10.seconds
     }
 
