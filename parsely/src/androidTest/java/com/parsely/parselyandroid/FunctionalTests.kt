@@ -22,7 +22,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -65,16 +64,9 @@ class FunctionalTests {
             val requestPayload = server.takeRequest().toMap()
             assertThat(requestPayload["events"]).hasSize(51)
 
-            runBlocking {
-                withTimeoutOrNull(500.milliseconds) {
-                    while (true) {
-                        yield()
-                        if (locallyStoredEvents.size == 0) {
-                            break
-                        }
-                    }
-                } ?: fail("Local storage file is not empty!")
-            }
+            // Wait a moment to give SDK time to delete the content of local storage file
+            waitFor { locallyStoredEvents.isEmpty() }
+            assertThat(locallyStoredEvents).isEmpty()
         }
     }
 
@@ -86,7 +78,7 @@ class FunctionalTests {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    data class Event (
+    data class Event(
         @JsonProperty("idsite") var idsite: String,
     )
 
@@ -115,4 +107,15 @@ class FunctionalTests {
     }
 
     class SampleActivity : Activity()
+
+    private fun waitFor(condition: () -> Boolean) = runBlocking {
+        withTimeoutOrNull(500.milliseconds) {
+            while (true) {
+                yield()
+                if (condition()) {
+                    break
+                }
+            }
+        }
+    }
 }
