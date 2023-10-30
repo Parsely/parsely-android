@@ -1,7 +1,10 @@
 package com.parsely.parselyandroid
 
-import java.util.Timer
-import java.util.TimerTask
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Manager for the event flush timer.
@@ -12,29 +15,30 @@ import java.util.TimerTask
  */
 internal class FlushManager(
     private val parselyTracker: ParselyTracker,
-    private val parentTimer: Timer,
-    @JvmField val intervalMillis: Long
+    val intervalMillis: Long,
+    private val coroutineScope: CoroutineScope
 ) {
-    private var runningTask: TimerTask? = null
+    private var job: Job? = null
+
     fun start() {
-        if (runningTask != null) {
+        if (job?.isActive == true) {
             return
         }
-        runningTask = object : TimerTask() {
-            override fun run() {
+        job = coroutineScope.launch {
+            while (isActive) {
+                delay(intervalMillis)
                 parselyTracker.flushEvents()
             }
         }
-        parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis)
     }
 
     fun stop() {
-        if (runningTask != null) {
-            runningTask!!.cancel()
-            runningTask = null
+        if (job != null) {
+            job!!.cancel()
+            job = null
         }
     }
 
     val isRunning: Boolean
-        get() = runningTask != null
+        get() = job?.isActive ?: false
 }
