@@ -28,13 +28,10 @@ internal class FlushManager(
         parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis)
     }
 
-    fun stop(): Boolean {
-        return if (runningTask == null) {
-            false
-        } else {
-            val output = runningTask!!.cancel()
+    fun stop() {
+        if (runningTask != null) {
+            runningTask!!.cancel()
             runningTask = null
-            output
         }
     }
 
