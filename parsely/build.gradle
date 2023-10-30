@@ -33,7 +33,6 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
-    testBuildType "debug"
 
     publishing {
         singleVariant('release') {
