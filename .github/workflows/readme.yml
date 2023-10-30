@@ -43,3 +43,33 @@ jobs:
         with:
           name: artifact
           path: ~/.m2/repository/com/parsely/parsely/*
+  functional-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Functional Tests
+        uses: reactivecircus/android-emulator-runner@v2.28.0
+        with:
+          working-directory: .
+          api-level: 31
+          profile: Nexus 6
+          arch: x86_64
+          force-avd-creation: false
+          avd-name: macOS-avd-x86_64-31
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: ./gradlew :parsely:connectedDebugAndroidTest
+      - name: Publish build artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: artifact
+          path: ./parsely/build/reports/*

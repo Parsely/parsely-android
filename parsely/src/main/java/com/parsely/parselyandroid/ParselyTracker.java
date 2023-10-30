@@ -59,9 +59,9 @@ public class ParselyTracker {
     private static final int QUEUE_SIZE_LIMIT = 50;
     private static final int STORAGE_SIZE_LIMIT = 100;
     private static final String STORAGE_KEY = "parsely-events.ser";
-// emulator localhost
-//    private static final String ROOT_URL = "http://10.0.2.2:5001/";
-    private static final String ROOT_URL = "https://p1.parsely.com/";
+    @SuppressWarnings("StringOperationCanBeSimplified")
+//    private static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
+    private static final String ROOT_URL = "https://p1.parsely.com/".intern();
     protected ArrayList<Map<String, Object>> eventQueue;
     private boolean isDebug;
     private final Context context;
