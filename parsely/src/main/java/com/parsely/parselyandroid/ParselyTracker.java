@@ -38,7 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
 /**
@@ -83,7 +82,7 @@ public class ParselyTracker {
 
         eventQueue = new ArrayList<>();
 
-        flushManager = new FlushManager(timer, flushInterval * 1000L);
+        flushManager = new FlushManager(this, timer, flushInterval * 1000L);
 
         if (localStorageRepository.getStoredQueue().size() > 0) {
             startFlushTimer();
@@ -575,56 +574,7 @@ public class ParselyTracker {
         }
     }
 
-    /**
-     * Manager for the event flush timer.
-     * <p>
-     * Handles stopping and starting the flush timer. The flush timer
-     * controls how often we send events to Parse.ly servers.
-     */
-    private class FlushManager {
-
-        private final Timer parentTimer;
-        private final long intervalMillis;
-        private TimerTask runningTask;
-
-        public FlushManager(Timer parentTimer, long intervalMillis) {
-            this.parentTimer = parentTimer;
-            this.intervalMillis = intervalMillis;
-        }
-
-        public void start() {
-            if (runningTask != null) {
-                return;
-            }
-
-            runningTask = new TimerTask() {
-                public void run() {
-                    flushEvents();
-                }
-            };
-            parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis);
-        }
-
-        public boolean stop() {
-            if (runningTask == null) {
-                return false;
-            } else {
-                boolean output = runningTask.cancel();
-                runningTask = null;
-                return output;
-            }
-        }
-
-        public boolean isRunning() {
-            return runningTask != null;
-        }
-
-        public long getIntervalMillis() {
-            return intervalMillis;
-        }
-    }
-
-    private void flushEvents() {
+    void flushEvents() {
         new FlushQueue().execute();
     }
 
