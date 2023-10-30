@@ -61,9 +61,7 @@ public class ParselyTracker {
     private static final String STORAGE_KEY = "parsely-events.ser";
 // emulator localhost
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/";
-    /**
-     * @noinspection StringOperationCanBeSimplified
-     */
+    @SuppressWarnings("StringOperationCanBeSimplified")
     private static final String ROOT_URL = "https://p1.parsely.com/".intern();
     protected ArrayList<Map<String, Object>> eventQueue;
     private boolean isDebug;
