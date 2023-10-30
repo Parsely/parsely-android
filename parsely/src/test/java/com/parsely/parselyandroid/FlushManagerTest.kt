@@ -70,14 +70,32 @@ class FlushManagerTest {
             assertThat(tracker.flushEventsCounter).isEqualTo(0)
         }
 
+    @Test
+    fun `when timer starts, and another timer starts after some time, then flush queue according to the first start`() =
+        runTest {
+            sut = FlushManager(tracker, DEFAULT_INTERVAL_MILLIS, backgroundScope)
+
+            sut.start()
+            advanceTimeBy(DEFAULT_INTERVAL_MILLIS / 2)
+            runCurrent()
+            sut.start()
+            advanceTimeBy(DEFAULT_INTERVAL_MILLIS / 2)
+            runCurrent()
+
+            assertThat(tracker.flushEventsCounter).isEqualTo(1)
+
+            advanceTimeBy(DEFAULT_INTERVAL_MILLIS / 2)
+            runCurrent()
+
+            assertThat(tracker.flushEventsCounter).isEqualTo(1)
+        }
+
     private companion object {
         val DEFAULT_INTERVAL_MILLIS: Long = 30.seconds.inWholeMilliseconds
     }
 
     class FakeTracker : ParselyTracker(
-        "",
-        0,
-        ApplicationProvider.getApplicationContext()
+        "", 0, ApplicationProvider.getApplicationContext()
     ) {
         var flushEventsCounter = 0
 
