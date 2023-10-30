@@ -33,10 +33,7 @@ internal class FlushManager(
     }
 
     fun stop() {
-        if (job != null) {
-            job!!.cancel()
-            job = null
-        }
+        job?.cancel()
     }
 
     val isRunning: Boolean
