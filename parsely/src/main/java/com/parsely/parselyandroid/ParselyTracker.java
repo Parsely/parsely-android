@@ -192,7 +192,7 @@ public class ParselyTracker {
      * @return The interval at which the event queue is flushed to Parse.ly.
      */
     public long getFlushInterval() {
-        return flushManager.getIntervalMillis() / 1000;
+        return flushManager.intervalMillis / 1000;
     }
 
     /**
@@ -420,7 +420,7 @@ public class ParselyTracker {
         new QueueManager(this, localStorageRepository).execute();
         if (!flushTimerIsActive()) {
             startFlushTimer();
-            PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
+            PLog("Flush flushTimer set to %ds", (flushManager.intervalMillis / 1000));
         }
     }
 
