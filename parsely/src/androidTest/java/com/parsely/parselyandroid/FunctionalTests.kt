@@ -77,39 +77,43 @@ class FunctionalTests {
     }
 
     /**
-     * In this scenario, the consumer application:
-     * 1. Goes to the background
-     * 2. Is re-launched
-     * This pattern occurs twice, which allows us to confirm the following assertions:
-     * 1. The event request is triggered when the consumer application is moved to the background
-     * 2. If the consumer application is sent to the background again within a short interval,
-     * the request is not duplicated.
+     * In this scenario, the consumer app tracks 2 events during the first flush interval.
+     * Then, we validate, that after flush interval passed the SDK sends the events
+     * to Parse.ly servers.
+     *
+     * Then, the consumer app tracks another event and we validate that the SDK sends the event
+     * to Parse.ly servers as well.
      */
     @Test
-    fun appSendsEventsWhenMovedToBackgroundAndDoesntSendDuplicatedRequestWhenItsMovedToBackgroundAgainQuickly() {
-        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    fun appFlushesEventsAfterFlushInterval() {
         ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity, flushInterval = 1.hours)
+                parselyTracker = initializeTracker(activity)
 
-                repeat(20) {
-                    parselyTracker.trackPageview("url", null, null, null)
-                }
+                parselyTracker.trackPageview("url", null, null, null)
             }
 
-            device.pressHome()
-            device.pressRecentApps()
-            device.findObject(UiSelector().descriptionContains("com.parsely")).click()
-            device.pressHome()
+            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
 
-            val firstRequest = server.takeRequest(10000, TimeUnit.MILLISECONDS)?.toMap()
-            val secondRequest = server.takeRequest(10000, TimeUnit.MILLISECONDS)?.toMap()
+            scenario.onActivity {
+                parselyTracker.trackPageview("url", null, null, null)
+            }
 
-            assertThat(firstRequest!!["events"]).hasSize(20)
-            assertThat(secondRequest).isNull()
+            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
+
+            val firstRequestPayload = server.takeRequest(100, TimeUnit.MILLISECONDS)?.toMap()
+            assertThat(firstRequestPayload!!["events"]).hasSize(2)
+
+            scenario.onActivity {
+                parselyTracker.trackPageview("url", null, null, null)
+            }
+
+            Thread.sleep(flushInterval.inWholeMilliseconds)
+
+            val secondRequestPayload = server.takeRequest(100, TimeUnit.MILLISECONDS)?.toMap()
+            assertThat(secondRequestPayload!!["events"]).hasSize(1)
         }
     }
 
