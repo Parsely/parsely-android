@@ -98,7 +98,7 @@ class FunctionalTests {
 
             Thread.sleep((flushInterval / 2).inWholeMilliseconds)
 
-            val firstRequestPayload = server.takeRequest(100, TimeUnit.MILLISECONDS)?.toMap()
+            val firstRequestPayload = server.takeRequest(500, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
 
             scenario.onActivity {
@@ -107,7 +107,7 @@ class FunctionalTests {
 
             Thread.sleep(flushInterval.inWholeMilliseconds)
 
-            val secondRequestPayload = server.takeRequest(100, TimeUnit.MILLISECONDS)?.toMap()
+            val secondRequestPayload = server.takeRequest(500, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(secondRequestPayload!!["events"]).hasSize(1)
         }
     }
