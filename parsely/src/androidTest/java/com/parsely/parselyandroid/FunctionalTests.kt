@@ -153,7 +153,7 @@ class FunctionalTests {
     private companion object {
         const val siteId = "123"
         const val localStorageFileName = "parsely-events.ser"
-        val defaultFlushInterval = 10.seconds
+        val flushInterval = 5.seconds
     }
 
     class SampleActivity : Activity()
