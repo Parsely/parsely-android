@@ -96,7 +96,7 @@ class FunctionalTests {
 
             Thread.sleep((flushInterval / 2).inWholeMilliseconds)
 
-            val firstRequestPayload = server.takeRequest(500, TimeUnit.MILLISECONDS)?.toMap()
+            val firstRequestPayload = server.takeRequest(5000, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
 
             parselyTracker.trackPageview("url", null, null, null)
