@@ -96,6 +96,7 @@ public class ParselyTracker {
         ProcessLifecycleOwner.get().getLifecycle().addObserver(
                 (LifecycleEventObserver) (lifecycleOwner, event) -> {
                     if (event == Lifecycle.Event.ON_STOP) {
+                        PLog("App is in ON_STOP. Flushing events.");
                         flushEvents();
                     }
                 }
