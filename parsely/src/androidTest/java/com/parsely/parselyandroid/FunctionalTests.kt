@@ -129,12 +129,17 @@ class FunctionalTests {
         }
 
     private fun initializeTracker(activity: Activity): ParselyTracker {
-        return ParselyTracker.sharedInstance(
-            siteId, flushInterval.inWholeSeconds.toInt(), activity.application
-        ).apply {
-            val f: Field = this::class.java.getDeclaredField("ROOT_URL")
-            f.isAccessible = true
-            f.set(this, url)
+
+        return try {
+            ParselyTracker.sharedInstance(
+                siteId, flushInterval.inWholeSeconds.toInt(), activity.application
+            ).apply {
+                val f: Field = this::class.java.getDeclaredField("ROOT_URL")
+                f.isAccessible = true
+                f.set(this, url)
+            }
+        } catch (exception: Exception) {
+            throw RuntimeException("Failed to initialize tracker", exception)
         }
     }
 
