@@ -86,24 +86,20 @@ class FunctionalTests {
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
                 parselyTracker = initializeTracker(activity)
-
-                parselyTracker.trackPageview("url", null, null, null)
             }
+
+            parselyTracker.trackPageview("url", null, null, null)
 
             Thread.sleep((flushInterval / 2).inWholeMilliseconds)
 
-            scenario.onActivity {
-                parselyTracker.trackPageview("url", null, null, null)
-            }
+            parselyTracker.trackPageview("url", null, null, null)
 
             Thread.sleep((flushInterval / 2).inWholeMilliseconds)
 
             val firstRequestPayload = server.takeRequest(500, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
 
-            scenario.onActivity {
-                parselyTracker.trackPageview("url", null, null, null)
-            }
+            parselyTracker.trackPageview("url", null, null, null)
 
             Thread.sleep(flushInterval.inWholeMilliseconds)
 
