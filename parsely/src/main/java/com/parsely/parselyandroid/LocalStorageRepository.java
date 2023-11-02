@@ -22,7 +22,7 @@ class LocalStorageRepository {
 
     private final Context context;
 
-    public LocalStorageRepository(Context context) {
+    LocalStorageRepository(Context context) {
         this.context = context;
     }
 
@@ -31,7 +31,7 @@ class LocalStorageRepository {
      *
      * @param o Object to store.
      */
-    void persistObject(Object o) {
+    private void persistObject(Object o) {
         try {
             FileOutputStream fos = context.getApplicationContext().openFileOutput(
                     STORAGE_KEY,
