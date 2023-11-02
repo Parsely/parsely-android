@@ -1,104 +1,91 @@
-package com.parsely.parselyandroid;
+package com.parsely.parselyandroid
 
-import static com.parsely.parselyandroid.ParselyTracker.PLog;
+import android.content.Context
+import java.io.EOFException
+import java.io.FileNotFoundException
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-
-import java.io.EOFException;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-class LocalStorageRepository {
-    private static final String STORAGE_KEY = "parsely-events.ser";
-
-    private final Context context;
-
-    LocalStorageRepository(Context context) {
-        this.context = context;
-    }
-
+internal class LocalStorageRepository(private val context: Context) {
     /**
      * Persist an object to storage.
      *
      * @param o Object to store.
      */
-    private void persistObject(Object o) {
+    private fun persistObject(o: Any) {
         try {
-            FileOutputStream fos = context.getApplicationContext().openFileOutput(
-                    STORAGE_KEY,
-                    android.content.Context.MODE_PRIVATE
-            );
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(o);
-            oos.close();
-        } catch (Exception ex) {
-            PLog("Exception thrown during queue serialization: %s", ex.toString());
+            val fos = context.applicationContext.openFileOutput(
+                STORAGE_KEY,
+                Context.MODE_PRIVATE
+            )
+            val oos = ObjectOutputStream(fos)
+            oos.writeObject(o)
+            oos.close()
+        } catch (ex: Exception) {
+            ParselyTracker.PLog("Exception thrown during queue serialization: %s", ex.toString())
         }
     }
 
     /**
      * Delete the stored queue from persistent storage.
      */
-    void purgeStoredQueue() {
-        persistObject(new ArrayList<Map<String, Object>>());
+    fun purgeStoredQueue() {
+        persistObject(ArrayList<Map<String, Any>>())
     }
 
-    /**
-     * Get the stored event queue from persistent storage.
-     *
-     * @return The stored queue of events.
-     */
-    @NonNull
-    ArrayList<Map<String, Object>> getStoredQueue() {
-        ArrayList<Map<String, Object>> storedQueue = null;
-        try {
-            FileInputStream fis = context.getApplicationContext().openFileInput(STORAGE_KEY);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            //noinspection unchecked
-            storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
-            ois.close();
-        } catch (EOFException ex) {
-            // Nothing to do here.
-        } catch (FileNotFoundException ex) {
-            // Nothing to do here. Means there was no saved queue.
-        } catch (Exception ex) {
-            PLog("Exception thrown during queue deserialization: %s", ex.toString());
+    val storedQueue: ArrayList<Map<String?, Any?>?>
+        /**
+         * Get the stored event queue from persistent storage.
+         *
+         * @return The stored queue of events.
+         */
+        get() {
+            var storedQueue: ArrayList<Map<String?, Any?>?>? = null
+            try {
+                val fis = context.applicationContext.openFileInput(STORAGE_KEY)
+                val ois = ObjectInputStream(fis)
+                storedQueue = ois.readObject() as ArrayList<Map<String?, Any?>?>
+                ois.close()
+            } catch (ex: EOFException) {
+                // Nothing to do here.
+            } catch (ex: FileNotFoundException) {
+                // Nothing to do here. Means there was no saved queue.
+            } catch (ex: Exception) {
+                ParselyTracker.PLog(
+                    "Exception thrown during queue deserialization: %s",
+                    ex.toString()
+                )
+            }
+            if (storedQueue == null) {
+                storedQueue = ArrayList()
+            }
+            return storedQueue
         }
-
-        if (storedQueue == null) {
-            storedQueue = new ArrayList<>();
-        }
-        return storedQueue;
-    }
 
     /**
      * Delete an event from the stored queue.
      */
-    void expelStoredEvent() {
-        ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
-        storedQueue.remove(0);
+    fun expelStoredEvent() {
+        val storedQueue = storedQueue
+        storedQueue.removeAt(0)
     }
 
     /**
      * Save the event queue to persistent storage.
      */
-    synchronized void persistQueue(@NonNull final List<Map<String, Object>> inMemoryQueue) {
-        PLog("Persisting event queue");
-        ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
-        HashSet<Map<String, Object>> hs = new HashSet<>();
-        hs.addAll(storedQueue);
-        hs.addAll(inMemoryQueue);
-        storedQueue.clear();
-        storedQueue.addAll(hs);
-        persistObject(storedQueue);
+    @Synchronized
+    fun persistQueue(inMemoryQueue: List<Map<String?, Any?>?>) {
+        ParselyTracker.PLog("Persisting event queue")
+        val storedQueue = storedQueue
+        val hs = HashSet<Map<String?, Any?>?>()
+        hs.addAll(storedQueue)
+        hs.addAll(inMemoryQueue)
+        storedQueue.clear()
+        storedQueue.addAll(hs)
+        persistObject(storedQueue)
+    }
+
+    companion object {
+        private const val STORAGE_KEY = "parsely-events.ser"
     }
 }
