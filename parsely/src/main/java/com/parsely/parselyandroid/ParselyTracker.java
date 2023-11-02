@@ -50,8 +50,6 @@ public class ParselyTracker {
     private static ParselyTracker instance = null;
     private static final int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static final int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
-    private static final int QUEUE_SIZE_LIMIT = 50;
-    private static final int STORAGE_SIZE_LIMIT = 100;
     @SuppressWarnings("StringOperationCanBeSimplified")
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
     private static final String ROOT_URL = "https://p1.parsely.com/".intern();
@@ -415,7 +413,7 @@ public class ParselyTracker {
     void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
         eventQueue.add(event);
-        new QueueManager().execute();
+        new QueueManager(this, localStorageRepository).execute();
         if (!flushTimerIsActive()) {
             startFlushTimer();
             PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
@@ -544,23 +542,6 @@ public class ParselyTracker {
     public int storedEventsCount() {
         ArrayList<Map<String, Object>> ar = localStorageRepository.getStoredQueue();
         return ar.size();
-    }
-
-    private class QueueManager extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            // if event queue is too big, push to persisted storage
-            if (eventQueue.size() > QUEUE_SIZE_LIMIT) {
-                PLog("Queue size exceeded, expelling oldest event to persistent memory");
-                localStorageRepository.persistQueue(eventQueue);
-                eventQueue.remove(0);
-                // if persisted storage is too big, expel one
-                if (storedEventsCount() > STORAGE_SIZE_LIMIT) {
-                    localStorageRepository.expelStoredEvent();
-                }
-            }
-            return null;
-        }
     }
 
     private class FlushQueue extends AsyncTask<Void, Void, Void> {
