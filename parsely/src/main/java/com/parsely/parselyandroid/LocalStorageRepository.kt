@@ -39,27 +39,25 @@ internal open class LocalStorageRepository(private val context: Context) {
      * @return The stored queue of events.
      */
     open fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
-            var storedQueue: ArrayList<Map<String, Any?>?>? = null
-            try {
-                val fis = context.applicationContext.openFileInput(STORAGE_KEY)
-                val ois = ObjectInputStream(fis)
-                storedQueue = ois.readObject() as ArrayList<Map<String, Any?>?>
-                ois.close()
-            } catch (ex: EOFException) {
-                // Nothing to do here.
-            } catch (ex: FileNotFoundException) {
-                // Nothing to do here. Means there was no saved queue.
-            } catch (ex: Exception) {
-                ParselyTracker.PLog(
-                    "Exception thrown during queue deserialization: %s",
-                    ex.toString()
-                )
-            }
-            if (storedQueue == null) {
-                storedQueue = ArrayList()
-            }
-            return storedQueue
+        var storedQueue: ArrayList<Map<String, Any?>?> = ArrayList()
+        try {
+            val fis = context.applicationContext.openFileInput(STORAGE_KEY)
+            val ois = ObjectInputStream(fis)
+            @Suppress("UNCHECKED_CAST")
+            storedQueue = ois.readObject() as ArrayList<Map<String, Any?>?>
+            ois.close()
+        } catch (ex: EOFException) {
+            // Nothing to do here.
+        } catch (ex: FileNotFoundException) {
+            // Nothing to do here. Means there was no saved queue.
+        } catch (ex: Exception) {
+            ParselyTracker.PLog(
+                "Exception thrown during queue deserialization: %s",
+                ex.toString()
+            )
         }
+        return storedQueue
+    }
 
     /**
      * Delete an event from the stored queue.
