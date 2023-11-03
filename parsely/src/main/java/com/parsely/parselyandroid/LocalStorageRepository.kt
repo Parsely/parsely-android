@@ -6,7 +6,7 @@ import java.io.FileNotFoundException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-internal class LocalStorageRepository(private val context: Context) {
+internal open class LocalStorageRepository(private val context: Context) {
     /**
      * Persist an object to storage.
      *
@@ -33,7 +33,7 @@ internal class LocalStorageRepository(private val context: Context) {
         persistObject(ArrayList<Map<String, Any>>())
     }
 
-    val storedQueue: ArrayList<Map<String, Any?>?>
+    open val storedQueue: ArrayList<Map<String, Any?>?>
         /**
          * Get the stored event queue from persistent storage.
          *
@@ -65,7 +65,7 @@ internal class LocalStorageRepository(private val context: Context) {
     /**
      * Delete an event from the stored queue.
      */
-    fun expelStoredEvent() {
+    open fun expelStoredEvent() {
         val storedQueue = storedQueue
         storedQueue.removeAt(0)
     }
@@ -74,7 +74,7 @@ internal class LocalStorageRepository(private val context: Context) {
      * Save the event queue to persistent storage.
      */
     @Synchronized
-    fun persistQueue(inMemoryQueue: List<Map<String, Any?>?>) {
+    open fun persistQueue(inMemoryQueue: List<Map<String, Any?>?>) {
         ParselyTracker.PLog("Persisting event queue")
         val storedQueue = storedQueue
         val hs = HashSet<Map<String, Any?>?>()

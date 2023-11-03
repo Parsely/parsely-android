@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.UUID;
@@ -52,7 +53,7 @@ public class ParselyTracker {
     @SuppressWarnings("StringOperationCanBeSimplified")
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
     private static final String ROOT_URL = "https://p1.parsely.com/".intern();
-    protected ArrayList<Map<String, Object>> eventQueue;
+    private final ArrayList<Map<String, Object>> eventQueue;
     private boolean isDebug;
     private final Context context;
     private final Timer timer;
@@ -95,6 +96,10 @@ public class ParselyTracker {
                     }
                 }
         );
+    }
+
+    List<Map<String, Object>> getInMemoryQueue() {
+        return eventQueue;
     }
 
     /**
