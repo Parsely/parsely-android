@@ -29,7 +29,7 @@ class LocalStorageRepositoryTest {
         sut.expelStoredEvent()
 
         // then
-        assertThat(sut.storedQueue).hasSize(100)
+        assertThat(sut.getStoredQueue()).hasSize(100)
     }
 
     @Test
@@ -41,12 +41,12 @@ class LocalStorageRepositoryTest {
         sut.persistQueue(eventsList)
 
         // then
-        assertThat(sut.storedQueue).hasSize(10).containsExactlyInAnyOrderElementsOf(eventsList)
+        assertThat(sut.getStoredQueue()).hasSize(10).containsExactlyInAnyOrderElementsOf(eventsList)
     }
 
     @Test
     fun `given no locally stored list, when requesting stored queue, then return an empty list`() {
-        assertThat(sut.storedQueue).isEmpty()
+        assertThat(sut.getStoredQueue()).isEmpty()
     }
 
     @Test
@@ -61,7 +61,7 @@ class LocalStorageRepositoryTest {
 
         // then
         val expectedQueue = (1..10).map { mapOf("index" to it) }
-        assertThat(sut.storedQueue).hasSize(10).containsExactlyInAnyOrderElementsOf(expectedQueue)
+        assertThat(sut.getStoredQueue()).hasSize(10).containsExactlyInAnyOrderElementsOf(expectedQueue)
     }
 
     @Test
@@ -74,7 +74,7 @@ class LocalStorageRepositoryTest {
         sut.purgeStoredQueue()
 
         // then
-        assertThat(sut.storedQueue).isEmpty()
+        assertThat(sut.getStoredQueue()).isEmpty()
     }
 
     @Test
@@ -84,7 +84,7 @@ class LocalStorageRepositoryTest {
         File(ClassLoader.getSystemResource("valid-java-parsely-events.ser")?.path!!).copyTo(file)
 
         // when
-        val queue = sut.storedQueue
+        val queue = sut.getStoredQueue()
 
         // then
         assertThat(queue).isEqualTo(
