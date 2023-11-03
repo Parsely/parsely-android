@@ -21,9 +21,8 @@ internal class FlushManager(
     private var job: Job? = null
 
     fun start() {
-        if (job?.isActive == true) {
-            return
-        }
+        if (job?.isActive == true) return
+
         job = coroutineScope.launch {
             while (isActive) {
                 delay(intervalMillis)
@@ -32,9 +31,7 @@ internal class FlushManager(
         }
     }
 
-    fun stop() {
-        job?.cancel()
-    }
+    fun stop() = job?.cancel()
 
     val isRunning: Boolean
         get() = job?.isActive ?: false
