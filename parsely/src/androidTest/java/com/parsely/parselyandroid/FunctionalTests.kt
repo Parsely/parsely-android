@@ -12,6 +12,7 @@ import java.io.FileInputStream
 import java.io.ObjectInputStream
 import java.lang.reflect.Field
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -70,6 +71,47 @@ class FunctionalTests {
         }
     }
 
+    /**
+     * In this scenario, the consumer app tracks 2 events during the first flush interval.
+     * Then, we validate, that after flush interval passed the SDK sends the events
+     * to Parse.ly servers.
+     *
+     * Then, the consumer app tracks another event and we validate that the SDK sends the event
+     * to Parse.ly servers as well.
+     */
+    @Test
+    fun appFlushesEventsAfterFlushInterval() {
+        ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
+            scenario.onActivity { activity: Activity ->
+                beforeEach(activity)
+                server.enqueue(MockResponse().setResponseCode(200))
+                parselyTracker = initializeTracker(activity)
+
+                parselyTracker.trackPageview("url", null, null, null)
+            }
+
+            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
+
+            scenario.onActivity {
+                parselyTracker.trackPageview("url", null, null, null)
+            }
+
+            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
+
+            val firstRequestPayload = server.takeRequest(2000, TimeUnit.MILLISECONDS)?.toMap()
+            assertThat(firstRequestPayload!!["events"]).hasSize(2)
+
+            scenario.onActivity {
+                parselyTracker.trackPageview("url", null, null, null)
+            }
+
+            Thread.sleep(flushInterval.inWholeMilliseconds)
+
+            val secondRequestPayload = server.takeRequest(2000, TimeUnit.MILLISECONDS)?.toMap()
+            assertThat(secondRequestPayload!!["events"]).hasSize(1)
+        }
+    }
+
     private fun RecordedRequest.toMap(): Map<String, List<Event>> {
         val listType: TypeReference<Map<String, List<Event>>> =
             object : TypeReference<Map<String, List<Event>>>() {}
@@ -103,7 +145,7 @@ class FunctionalTests {
     private companion object {
         const val siteId = "123"
         const val localStorageFileName = "parsely-events.ser"
-        val flushInterval = 10.seconds
+        val flushInterval = 5.seconds
     }
 
     class SampleActivity : Activity()
