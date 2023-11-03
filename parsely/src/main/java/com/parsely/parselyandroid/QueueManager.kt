@@ -1,38 +1,28 @@
-package com.parsely.parselyandroid;
+package com.parsely.parselyandroid
 
-import android.os.AsyncTask;
+import android.os.AsyncTask
 
-import androidx.annotation.NonNull;
+internal class QueueManager(
+    private val parselyTracker: ParselyTracker,
+    private val localStorageRepository: LocalStorageRepository
+) : AsyncTask<Void?, Void?, Void?>() {
 
-class QueueManager extends AsyncTask<Void, Void, Void> {
-    static final int QUEUE_SIZE_LIMIT = 50;
-    static final int STORAGE_SIZE_LIMIT = 100;
-
-    @NonNull
-    private final ParselyTracker parselyTracker;
-    @NonNull
-    private final LocalStorageRepository localStorageRepository;
-
-    public QueueManager(
-            @NonNull ParselyTracker parselyTracker,
-            @NonNull LocalStorageRepository localStorageRepository
-    ) {
-        this.parselyTracker = parselyTracker;
-        this.localStorageRepository = localStorageRepository;
-    }
-
-    @Override
-    protected Void doInBackground(Void... params) {
+    override fun doInBackground(vararg params: Void?): Void? {
         // if event queue is too big, push to persisted storage
-        if (parselyTracker.getInMemoryQueue().size() > QUEUE_SIZE_LIMIT) {
-            ParselyTracker.PLog("Queue size exceeded, expelling oldest event to persistent memory");
-            localStorageRepository.persistQueue(parselyTracker.getInMemoryQueue());
-            parselyTracker.getInMemoryQueue().remove(0);
+        if (parselyTracker.inMemoryQueue.size > QUEUE_SIZE_LIMIT) {
+            ParselyTracker.PLog("Queue size exceeded, expelling oldest event to persistent memory")
+            localStorageRepository.persistQueue(parselyTracker.inMemoryQueue)
+            parselyTracker.inMemoryQueue.removeAt(0)
             // if persisted storage is too big, expel one
             if (parselyTracker.storedEventsCount() > STORAGE_SIZE_LIMIT) {
-                localStorageRepository.expelStoredEvent();
+                localStorageRepository.expelStoredEvent()
             }
         }
-        return null;
+        return null
+    }
+
+    companion object {
+        const val QUEUE_SIZE_LIMIT = 50
+        const val STORAGE_SIZE_LIMIT = 100
     }
 }
