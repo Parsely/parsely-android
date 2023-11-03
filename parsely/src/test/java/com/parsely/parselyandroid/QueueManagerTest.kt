@@ -1,8 +1,8 @@
 package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
-import com.parsely.parselyandroid.QueueManager.QUEUE_SIZE_LIMIT
-import com.parsely.parselyandroid.QueueManager.STORAGE_SIZE_LIMIT
+import com.parsely.parselyandroid.QueueManager.Companion.QUEUE_SIZE_LIMIT
+import com.parsely.parselyandroid.QueueManager.Companion.STORAGE_SIZE_LIMIT
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
