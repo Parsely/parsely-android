@@ -29,18 +29,13 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.EOFException;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.UUID;
@@ -55,13 +50,10 @@ public class ParselyTracker {
     private static ParselyTracker instance = null;
     private static final int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static final int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
-    private static final int QUEUE_SIZE_LIMIT = 50;
-    private static final int STORAGE_SIZE_LIMIT = 100;
-    private static final String STORAGE_KEY = "parsely-events.ser";
     @SuppressWarnings("StringOperationCanBeSimplified")
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
     private static final String ROOT_URL = "https://p1.parsely.com/".intern();
-    protected ArrayList<Map<String, Object>> eventQueue;
+    private final ArrayList<Map<String, Object>> eventQueue;
     private boolean isDebug;
     private final Context context;
     private final Timer timer;
@@ -71,7 +63,10 @@ public class ParselyTracker {
     private String lastPageviewUuid = null;
     @NonNull
     private final EventsBuilder eventsBuilder;
-    @NonNull final HeartbeatIntervalCalculator intervalCalculator = new HeartbeatIntervalCalculator(new Clock());
+    @NonNull
+    private final HeartbeatIntervalCalculator intervalCalculator = new HeartbeatIntervalCalculator(new Clock());
+    @NonNull
+    private final LocalStorageRepository localStorageRepository;
 
     /**
      * Create a new ParselyTracker instance.
@@ -79,6 +74,7 @@ public class ParselyTracker {
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
         context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(context, siteId);
+        localStorageRepository = new LocalStorageRepository(context);
 
         // get the adkey straight away on instantiation
         timer = new Timer();
@@ -89,7 +85,7 @@ public class ParselyTracker {
         flushManager = new FlushManager(this, flushInterval * 1000L,
                 ParselyCoroutineScopeKt.getSdkScope());
 
-        if (getStoredQueue().size() > 0) {
+        if (localStorageRepository.getStoredQueue().size() > 0) {
             startFlushTimer();
         }
 
@@ -100,6 +96,10 @@ public class ParselyTracker {
                     }
                 }
         );
+    }
+
+    List<Map<String, Object>> getInMemoryQueue() {
+        return eventQueue;
     }
 
     /**
@@ -418,7 +418,7 @@ public class ParselyTracker {
     void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
         eventQueue.add(event);
-        new QueueManager().execute();
+        new QueueManager(this, localStorageRepository).execute();
         if (!flushTimerIsActive()) {
             startFlushTimer();
             PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
@@ -474,85 +474,9 @@ public class ParselyTracker {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    /**
-     * Save the event queue to persistent storage.
-     */
-    private synchronized void persistQueue() {
-        PLog("Persisting event queue");
-        ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
-        HashSet<Map<String, Object>> hs = new HashSet<>();
-        hs.addAll(storedQueue);
-        hs.addAll(eventQueue);
-        storedQueue.clear();
-        storedQueue.addAll(hs);
-        persistObject(storedQueue);
-    }
-
-    /**
-     * Get the stored event queue from persistent storage.
-     *
-     * @return The stored queue of events.
-     */
-    @NonNull
-    private ArrayList<Map<String, Object>> getStoredQueue() {
-        ArrayList<Map<String, Object>> storedQueue = null;
-        try {
-            FileInputStream fis = context.getApplicationContext().openFileInput(STORAGE_KEY);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            //noinspection unchecked
-            storedQueue = (ArrayList<Map<String, Object>>) ois.readObject();
-            ois.close();
-        } catch (EOFException ex) {
-            // Nothing to do here.
-        } catch (FileNotFoundException ex) {
-            // Nothing to do here. Means there was no saved queue.
-        } catch (Exception ex) {
-            PLog("Exception thrown during queue deserialization: %s", ex.toString());
-        }
-
-        if (storedQueue == null) {
-            storedQueue = new ArrayList<>();
-        }
-        return storedQueue;
-    }
-
     void purgeEventsQueue() {
         eventQueue.clear();
-        purgeStoredQueue();
-    }
-
-    /**
-     * Delete the stored queue from persistent storage.
-     */
-    private void purgeStoredQueue() {
-        persistObject(new ArrayList<Map<String, Object>>());
-    }
-
-    /**
-     * Delete an event from the stored queue.
-     */
-    private void expelStoredEvent() {
-        ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
-        storedQueue.remove(0);
-    }
-
-    /**
-     * Persist an object to storage.
-     *
-     * @param o Object to store.
-     */
-    private void persistObject(Object o) {
-        try {
-            FileOutputStream fos = context.getApplicationContext().openFileOutput(
-                    STORAGE_KEY,
-                    android.content.Context.MODE_PRIVATE
-            );
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(o);
-            oos.close();
-        } catch (Exception ex) {
-            PLog("Exception thrown during queue serialization: %s", ex.toString());
-        }
+        localStorageRepository.purgeStoredQueue();
     }
 
     /**
@@ -621,31 +545,14 @@ public class ParselyTracker {
      * @return The number of events stored in persistent storage.
      */
     public int storedEventsCount() {
-        ArrayList<Map<String, Object>> ar = getStoredQueue();
+        ArrayList<Map<String, Object>> ar = localStorageRepository.getStoredQueue();
         return ar.size();
-    }
-
-    private class QueueManager extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            // if event queue is too big, push to persisted storage
-            if (eventQueue.size() > QUEUE_SIZE_LIMIT) {
-                PLog("Queue size exceeded, expelling oldest event to persistent memory");
-                persistQueue();
-                eventQueue.remove(0);
-                // if persisted storage is too big, expel one
-                if (storedEventsCount() > STORAGE_SIZE_LIMIT) {
-                    expelStoredEvent();
-                }
-            }
-            return null;
-        }
     }
 
     private class FlushQueue extends AsyncTask<Void, Void, Void> {
         @Override
         protected synchronized Void doInBackground(Void... params) {
-            ArrayList<Map<String, Object>> storedQueue = getStoredQueue();
+            ArrayList<Map<String, Object>> storedQueue = localStorageRepository.getStoredQueue();
             PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
             if ((eventQueue == null || eventQueue.size() == 0) && storedQueue.size() == 0) {
