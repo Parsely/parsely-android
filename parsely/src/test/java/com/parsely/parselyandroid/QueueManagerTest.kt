@@ -37,7 +37,7 @@ internal class QueueManagerTest {
 
         // then
         assertThat(tracker.inMemoryQueue).isEqualTo(initialInMemoryQueue)
-        assertThat(repository.storedQueue).isEmpty()
+        assertThat(repository.getStoredQueue()).isEmpty()
     }
 
     @Test
@@ -51,7 +51,7 @@ internal class QueueManagerTest {
         shadowMainLooper().idle();
 
         // then
-        assertThat(repository.storedQueue).isEqualTo(initialInMemoryQueue)
+        assertThat(repository.getStoredQueue()).isEqualTo(initialInMemoryQueue)
         assertThat(tracker.inMemoryQueue).hasSize(QUEUE_SIZE_LIMIT)
     }
 
@@ -84,7 +84,7 @@ internal class QueueManagerTest {
         }
 
         override fun storedEventsCount(): Int {
-            return repository.storedQueue.size
+            return repository.getStoredQueue().size
         }
     }
 
@@ -98,9 +98,7 @@ internal class QueueManagerTest {
             this.localFileQueue += inMemoryQueue
         }
 
-        override val storedQueue: ArrayList<Map<String, Any?>?>
-            get() = ArrayList(localFileQueue)
-
+        override fun getStoredQueue() = ArrayList(localFileQueue)
 
         override fun expelStoredEvent() {
             wasEventExpelled = true

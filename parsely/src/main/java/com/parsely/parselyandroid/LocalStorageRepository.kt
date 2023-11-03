@@ -33,13 +33,12 @@ internal open class LocalStorageRepository(private val context: Context) {
         persistObject(ArrayList<Map<String, Any>>())
     }
 
-    open val storedQueue: ArrayList<Map<String, Any?>?>
-        /**
-         * Get the stored event queue from persistent storage.
-         *
-         * @return The stored queue of events.
-         */
-        get() {
+    /**
+     * Get the stored event queue from persistent storage.
+     *
+     * @return The stored queue of events.
+     */
+    open fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
             var storedQueue: ArrayList<Map<String, Any?>?>? = null
             try {
                 val fis = context.applicationContext.openFileInput(STORAGE_KEY)
@@ -66,7 +65,7 @@ internal open class LocalStorageRepository(private val context: Context) {
      * Delete an event from the stored queue.
      */
     open fun expelStoredEvent() {
-        val storedQueue = storedQueue
+        val storedQueue = getStoredQueue()
         storedQueue.removeAt(0)
     }
 
@@ -76,7 +75,7 @@ internal open class LocalStorageRepository(private val context: Context) {
     @Synchronized
     open fun persistQueue(inMemoryQueue: List<Map<String, Any?>?>) {
         ParselyTracker.PLog("Persisting event queue")
-        val storedQueue = storedQueue
+        val storedQueue = getStoredQueue()
         val hs = HashSet<Map<String, Any?>?>()
         hs.addAll(storedQueue)
         hs.addAll(inMemoryQueue)
