@@ -18,9 +18,9 @@ import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.times
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
@@ -95,13 +95,13 @@ class FunctionalTests {
                 parselyTracker.trackPageview("url", null, null, null)
             }
 
-            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
+            Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
 
             scenario.onActivity {
                 parselyTracker.trackPageview("url", null, null, null)
             }
 
-            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
+            Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
 
             val firstRequestPayload = server.takeRequest(2000, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
@@ -110,10 +110,44 @@ class FunctionalTests {
                 parselyTracker.trackPageview("url", null, null, null)
             }
 
-            Thread.sleep(flushInterval.inWholeMilliseconds)
+            Thread.sleep(defaultFlushInterval.inWholeMilliseconds)
 
             val secondRequestPayload = server.takeRequest(2000, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(secondRequestPayload!!["events"]).hasSize(1)
+        }
+    }
+
+    /**
+     * In this scenario we "stress test" the concurrency model to see if we have any conflict during
+     *
+     * - Unexpectedly high number of recorded events in small intervals (I/O locking)
+     * - Scenario in which a request is sent at the same time as new events are recorded
+     */
+    @Test
+    fun stressTest() {
+        val stressMultiplier = 10
+        val batchSize = 50
+
+        ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
+            scenario.onActivity { activity: Activity ->
+                beforeEach(activity)
+                server.enqueue(MockResponse().setResponseCode(200))
+                parselyTracker = initializeTracker(activity)
+
+                repeat(stressMultiplier * batchSize) {
+                    parselyTracker.trackPageview("url", null, null, null)
+                }
+            }
+
+            Thread.sleep((stressMultiplier * defaultFlushInterval).inWholeMilliseconds)
+
+            val requests = (1..stressMultiplier).mapNotNull {
+                runCatching { server.takeRequest(500, TimeUnit.MILLISECONDS) }.getOrNull()
+            }.flatMap {
+                it.toMap()["events"]!!
+            }
+
+            assertThat(requests).hasSize(stressMultiplier * batchSize)
         }
     }
 
@@ -153,7 +187,7 @@ class FunctionalTests {
     private companion object {
         const val siteId = "123"
         const val localStorageFileName = "parsely-events.ser"
-        val flushInterval = 5.seconds
+        val defaultFlushInterval = 5.seconds
     }
 
     class SampleActivity : Activity()
