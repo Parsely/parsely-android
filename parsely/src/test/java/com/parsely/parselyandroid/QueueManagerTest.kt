@@ -3,17 +3,17 @@ package com.parsely.parselyandroid
 import androidx.test.core.app.ApplicationProvider
 import com.parsely.parselyandroid.QueueManager.Companion.QUEUE_SIZE_LIMIT
 import com.parsely.parselyandroid.QueueManager.Companion.STORAGE_SIZE_LIMIT
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
-import org.robolectric.shadows.ShadowLooper.shadowMainLooper
 
-@Suppress("DEPRECATION")
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-@LooperMode(LooperMode.Mode.PAUSED)
 internal class QueueManagerTest {
 
     private lateinit var sut: QueueManager
@@ -21,20 +21,16 @@ internal class QueueManagerTest {
     private val tracker = FakeTracker()
     private val repository = FakeLocalRepository()
 
-    @Before
-    fun setUp() {
-        sut = QueueManager(tracker, repository)
-    }
-
     @Test
-    fun `given the queue is smaller than any threshold, when querying flush manager, do nothing`() {
+    fun `given the queue is smaller than any threshold, when querying flush manager, do nothing`() = runTest {
         // given
+        sut = QueueManager(tracker, repository, this)
         val initialInMemoryQueue = listOf(mapOf("test" to "test"))
         tracker.applyFakeQueue(initialInMemoryQueue)
 
         // when
-        sut.execute().get()
-        shadowMainLooper().idle();
+        sut.validateQueue()
+        runCurrent()
 
         // then
         assertThat(tracker.inMemoryQueue).isEqualTo(initialInMemoryQueue)
@@ -42,14 +38,15 @@ internal class QueueManagerTest {
     }
 
     @Test
-    fun `given the in-memory queue is above the in-memory limit, when querying flush manager, then save queue to local storage and remove first event`() {
+    fun `given the in-memory queue is above the in-memory limit, when querying flush manager, then save queue to local storage and remove first event`() = runTest {
         // given
+        sut = QueueManager(tracker, repository, this)
         val initialInMemoryQueue = (1..QUEUE_SIZE_LIMIT + 1).map { mapOf("test" to it) }
         tracker.applyFakeQueue(initialInMemoryQueue)
 
         // when
-        sut.execute().get()
-        shadowMainLooper().idle();
+        sut.validateQueue()
+        runCurrent()
 
         // then
         assertThat(repository.getStoredQueue()).isEqualTo(initialInMemoryQueue)
@@ -57,16 +54,17 @@ internal class QueueManagerTest {
     }
 
     @Test
-    fun `given the in-memory queue is above the in-memory limit and stored events queue is above stored-queue limit, when querying flush manager, then expel the last event from local storage`() {
+    fun `given the in-memory queue is above the in-memory limit and stored events queue is above stored-queue limit, when querying flush manager, then expel the last event from local storage`() = runTest {
         // given
+        sut = QueueManager(tracker, repository, this)
         val initialInMemoryQueue = (1..QUEUE_SIZE_LIMIT + 1).map { mapOf("in memory" to it) }
         tracker.applyFakeQueue(initialInMemoryQueue)
         val initialStoredQueue = (1..STORAGE_SIZE_LIMIT + 1).map { mapOf("storage" to it) }
         repository.persistQueue(initialStoredQueue)
 
         // when
-        sut.execute().get()
-        shadowMainLooper().idle();
+        sut.validateQueue()
+        runCurrent()
 
         // then
         assertThat(repository.wasEventExpelled).isTrue
