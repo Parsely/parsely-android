@@ -73,13 +73,7 @@ internal open class LocalStorageRepository(private val context: Context) {
     @Synchronized
     open fun persistQueue(inMemoryQueue: List<Map<String, Any?>?>) {
         ParselyTracker.PLog("Persisting event queue")
-        val storedQueue = getStoredQueue()
-        val hs = HashSet<Map<String, Any?>?>()
-        hs.addAll(storedQueue)
-        hs.addAll(inMemoryQueue)
-        storedQueue.clear()
-        storedQueue.addAll(hs)
-        persistObject(storedQueue)
+        persistObject((inMemoryQueue + getStoredQueue()).distinct())
     }
 
     companion object {
