@@ -21,6 +21,7 @@ internal open class LocalStorageRepository(private val context: Context) {
             val oos = ObjectOutputStream(fos)
             oos.writeObject(o)
             oos.close()
+            fos.close()
         } catch (ex: Exception) {
             ParselyTracker.PLog("Exception thrown during queue serialization: %s", ex.toString())
         }
@@ -46,6 +47,7 @@ internal open class LocalStorageRepository(private val context: Context) {
             @Suppress("UNCHECKED_CAST")
             storedQueue = ois.readObject() as ArrayList<Map<String, Any?>?>
             ois.close()
+            fis.close()
         } catch (ex: EOFException) {
             // Nothing to do here.
         } catch (ex: FileNotFoundException) {
