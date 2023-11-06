@@ -1,26 +1,33 @@
 package com.parsely.parselyandroid
 
-import android.os.AsyncTask
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
-@Suppress("DEPRECATION")
 internal class QueueManager(
     private val parselyTracker: ParselyTracker,
-    private val localStorageRepository: LocalStorageRepository
-) : AsyncTask<Void?, Void?, Void?>() {
+    private val localStorageRepository: LocalStorageRepository,
+    private val coroutineScope: CoroutineScope,
+) {
 
-    @Deprecated("Deprecated in Java")
-    override fun doInBackground(vararg params: Void?): Void? {
-        // if event queue is too big, push to persisted storage
-        if (parselyTracker.inMemoryQueue.size > QUEUE_SIZE_LIMIT) {
-            ParselyTracker.PLog("Queue size exceeded, expelling oldest event to persistent memory")
-            localStorageRepository.persistQueue(parselyTracker.inMemoryQueue)
-            parselyTracker.inMemoryQueue.removeAt(0)
-            // if persisted storage is too big, expel one
-            if (parselyTracker.storedEventsCount() > STORAGE_SIZE_LIMIT) {
-                localStorageRepository.expelStoredEvent()
+    private val mutex = Mutex()
+
+    fun validateQueue() {
+        coroutineScope.launch {
+            mutex.withLock {
+                if (parselyTracker.inMemoryQueue.size > QUEUE_SIZE_LIMIT) {
+                    ParselyTracker.PLog("Queue size exceeded, expelling oldest event to persistent memory")
+                    val copyInMemoryQueue = parselyTracker.inMemoryQueue.toList()
+                    localStorageRepository.persistQueue(copyInMemoryQueue)
+                    parselyTracker.inMemoryQueue.removeFirstOrNull()
+                    // if persisted storage is too big, expel one
+                    if (parselyTracker.storedEventsCount() > STORAGE_SIZE_LIMIT) {
+                        localStorageRepository.expelStoredEvent()
+                    }
+                }
             }
         }
-        return null
     }
 
     companion object {

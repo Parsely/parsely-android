@@ -67,6 +67,8 @@ public class ParselyTracker {
     private final HeartbeatIntervalCalculator intervalCalculator = new HeartbeatIntervalCalculator(new Clock());
     @NonNull
     private final LocalStorageRepository localStorageRepository;
+    @NonNull
+    private final QueueManager queueManager;
 
     /**
      * Create a new ParselyTracker instance.
@@ -75,6 +77,7 @@ public class ParselyTracker {
         context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(context, siteId);
         localStorageRepository = new LocalStorageRepository(context);
+        queueManager = new QueueManager(this, localStorageRepository, ParselyCoroutineScopeKt.getSdkScope());
 
         // get the adkey straight away on instantiation
         timer = new Timer();
@@ -418,7 +421,7 @@ public class ParselyTracker {
     void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
         eventQueue.add(event);
-        new QueueManager(this, localStorageRepository).execute();
+        queueManager.validateQueue();
         if (!flushTimerIsActive()) {
             startFlushTimer();
             PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
