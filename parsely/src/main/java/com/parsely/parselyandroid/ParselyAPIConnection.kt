@@ -19,9 +19,12 @@ import android.os.AsyncTask
 import java.net.HttpURLConnection
 import java.net.URL
 
+@Suppress("DEPRECATION")
 internal class ParselyAPIConnection(private val tracker: ParselyTracker) : AsyncTask<String?, Exception?, Void?>() {
     private var exception: Exception? = null
-    protected override fun doInBackground(vararg data: String?): Void? {
+
+    @Deprecated("Deprecated in Java")
+    override fun doInBackground(vararg data: String?): Void? {
         var connection: HttpURLConnection? = null
         try {
             if (data.size == 1) {  // non-batched (since no post data is included)
@@ -42,6 +45,7 @@ internal class ParselyAPIConnection(private val tracker: ParselyTracker) : Async
         return null
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onPostExecute(result: Void?) {
         if (exception != null) {
             ParselyTracker.PLog("Pixel request exception")
