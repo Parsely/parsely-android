@@ -13,64 +13,46 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+package com.parsely.parselyandroid
 
-package com.parsely.parselyandroid;
+import android.os.AsyncTask
+import java.net.HttpURLConnection
+import java.net.URL
 
-import android.os.AsyncTask;
-
-import androidx.annotation.NonNull;
-
-import java.io.OutputStream;
-import java.net.URL;
-import java.net.HttpURLConnection;
-
-class ParselyAPIConnection extends AsyncTask<String, Exception, Void> {
-
-    @NonNull
-    private final ParselyTracker tracker;
-    private Exception exception;
-
-    ParselyAPIConnection(@NonNull ParselyTracker tracker) {
-        this.tracker = tracker;
-    }
-
-    @Override
-    protected Void doInBackground(String... data) {
-        HttpURLConnection connection = null;
+internal class ParselyAPIConnection(private val tracker: ParselyTracker) : AsyncTask<String?, Exception?, Void?>() {
+    private var exception: Exception? = null
+    protected override fun doInBackground(vararg data: String?): Void? {
+        var connection: HttpURLConnection? = null
         try {
-            if (data.length == 1) {  // non-batched (since no post data is included)
-                connection = (HttpURLConnection) new URL(data[0]).openConnection();
-                connection.getInputStream();
-            } else if (data.length == 2) {  // batched (post data included)
-                connection = (HttpURLConnection) new URL(data[0]).openConnection();
-                connection.setDoOutput(true);  // Triggers POST (aka silliest interface ever)
-                connection.setRequestProperty("Content-Type", "application/json");
-
-                OutputStream output = connection.getOutputStream();
-                output.write(data[1].getBytes());
-                output.close();
-                connection.getInputStream();
+            if (data.size == 1) {  // non-batched (since no post data is included)
+                connection = URL(data[0]).openConnection() as HttpURLConnection
+                connection.inputStream
+            } else if (data.size == 2) {  // batched (post data included)
+                connection = URL(data[0]).openConnection() as HttpURLConnection
+                connection.doOutput = true // Triggers POST (aka silliest interface ever)
+                connection.setRequestProperty("Content-Type", "application/json")
+                val output = connection.outputStream
+                output.write(data[1]?.toByteArray())
+                output.close()
+                connection.inputStream
             }
-
-        } catch (Exception ex) {
-            this.exception = ex;
+        } catch (ex: Exception) {
+            exception = ex
         }
-        return null;
+        return null
     }
 
-    @Override
-    protected void onPostExecute(Void result) {
-        if (this.exception != null) {
-            ParselyTracker.PLog("Pixel request exception");
-            ParselyTracker.PLog(this.exception.toString());
+    override fun onPostExecute(result: Void?) {
+        if (exception != null) {
+            ParselyTracker.PLog("Pixel request exception")
+            ParselyTracker.PLog(exception.toString())
         } else {
-            ParselyTracker.PLog("Pixel request success");
+            ParselyTracker.PLog("Pixel request success")
 
             // only purge the queue if the request was successful
-            tracker.purgeEventsQueue();
-
-            ParselyTracker.PLog("Event queue empty, flush timer cleared.");
-            tracker.stopFlushTimer();
+            tracker.purgeEventsQueue()
+            ParselyTracker.PLog("Event queue empty, flush timer cleared.")
+            tracker.stopFlushTimer()
         }
     }
 }
