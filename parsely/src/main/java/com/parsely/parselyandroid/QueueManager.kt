@@ -2,11 +2,13 @@ package com.parsely.parselyandroid
 
 import android.os.AsyncTask
 
+@Suppress("DEPRECATION")
 internal class QueueManager(
     private val parselyTracker: ParselyTracker,
     private val localStorageRepository: LocalStorageRepository
 ) : AsyncTask<Void?, Void?, Void?>() {
 
+    @Deprecated("Deprecated in Java")
     override fun doInBackground(vararg params: Void?): Void? {
         // if event queue is too big, push to persisted storage
         if (parselyTracker.inMemoryQueue.size > QUEUE_SIZE_LIMIT) {

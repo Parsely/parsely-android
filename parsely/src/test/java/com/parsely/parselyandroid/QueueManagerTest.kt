@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
 import org.robolectric.shadows.ShadowLooper.shadowMainLooper
 
+@Suppress("DEPRECATION")
 @RunWith(RobolectricTestRunner::class)
 @LooperMode(LooperMode.Mode.PAUSED)
 internal class QueueManagerTest {
