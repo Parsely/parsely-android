@@ -3,12 +3,16 @@ package com.parsely.parselyandroid
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class LocalStorageRepositoryTest {
 
@@ -21,11 +25,10 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `when expelling stored event, then assert that it has no effect`() {
+    fun `when expelling stored event, then assert that it has no effect`() = runTest {
         // given
-        ((1..100).map { mapOf("index" to it) }).forEach {
-            sut.persistEvent(it)
-        }
+        sut.insertEvents(((1..100).map { mapOf("index" to it) }))
+        runCurrent()
 
         // when
         sut.expelStoredEvent()
@@ -35,14 +38,13 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given the list of events, when persisting the list, then querying the list returns the same result`() {
+    fun `given the list of events, when persisting the list, then querying the list returns the same result`() = runTest {
         // given
         val eventsList = (1..10).map { mapOf("index" to it) }
 
         // when
-        eventsList.forEach {
-            sut.persistEvent(it)
-        }
+        sut.insertEvents(eventsList)
+        runCurrent()
 
         // then
         assertThat(sut.getStoredQueue()).hasSize(10).containsExactlyInAnyOrderElementsOf(eventsList)
@@ -54,14 +56,16 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given stored queue with some elements, when persisting an event, then assert there'll be no duplicates`() {
+    fun `given stored queue with some elements, when persisting an event, then assert there'll be no duplicates`() = runTest {
         // given
         val storedQueue = (1..5).map { mapOf("index" to it) }
         val newEvents = (3..10).map { mapOf("index" to it) }
-        storedQueue.forEach { sut.persistEvent(it) }
+        sut.insertEvents(storedQueue)
+        runCurrent()
 
         // when
-        newEvents.forEach { sut.persistEvent(it) }
+        sut.insertEvents(newEvents)
+        runCurrent()
 
         // then
         val expectedQueue = (1..10).map { mapOf("index" to it) }
@@ -69,10 +73,11 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given stored queue, when removing some events, then assert queue is doesn't contain removed events and contains not removed events`() {
+    fun `given stored queue, when removing some events, then assert queue is doesn't contain removed events and contains not removed events`() = runTest {
         // given
         val initialList = (1..10).map { mapOf("index" to it) }
-        initialList.forEach { sut.persistEvent(it) }
+        sut.insertEvents(initialList)
+        runCurrent()
         val eventsToRemove = initialList.slice(0..5)
         val eventsToKeep = initialList.slice(6..9)
 
