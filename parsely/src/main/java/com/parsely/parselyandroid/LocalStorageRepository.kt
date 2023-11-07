@@ -73,9 +73,10 @@ internal open class LocalStorageRepository(private val context: Context) {
      * Save the event queue to persistent storage.
      */
     @Synchronized
-    open fun persistQueue(inMemoryQueue: List<Map<String, Any?>?>) {
-        ParselyTracker.PLog("Persisting event queue")
-        persistObject((inMemoryQueue + getStoredQueue()).distinct())
+    open fun persistEvent(event: Map<String, Any?>) {
+        val storedQueue = getStoredQueue()
+        ParselyTracker.PLog("Persisting event queue. Current size: ${storedQueue.size}")
+        persistObject(ArrayList(storedQueue.plus(event).distinct()))
     }
 
     companion object {

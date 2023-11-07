@@ -1,8 +1,6 @@
 package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
-import com.parsely.parselyandroid.QueueManager.Companion.QUEUE_SIZE_LIMIT
-import com.parsely.parselyandroid.QueueManager.Companion.STORAGE_SIZE_LIMIT
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -10,7 +8,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.LooperMode
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -18,89 +15,43 @@ internal class QueueManagerTest {
 
     private lateinit var sut: QueueManager
 
-    private val tracker = FakeTracker()
     private val repository = FakeLocalRepository()
 
     @Test
-    fun `given the queue is smaller than any threshold, when querying flush manager, do nothing`() = runTest {
+    fun `when adding an event, then persist it in local storage and call onEventAdded`() = runTest {
         // given
-        sut = QueueManager(tracker, repository, this)
-        val initialInMemoryQueue = listOf(mapOf("test" to "test"))
-        tracker.applyFakeQueue(initialInMemoryQueue)
-
-        // when
-        sut.validateQueue()
-        runCurrent()
-
-        // then
-        assertThat(tracker.inMemoryQueue).isEqualTo(initialInMemoryQueue)
-        assertThat(repository.getStoredQueue()).isEmpty()
-    }
-
-    @Test
-    fun `given the in-memory queue is above the in-memory limit, when querying flush manager, then save queue to local storage and remove first event`() = runTest {
-        // given
-        sut = QueueManager(tracker, repository, this)
-        val initialInMemoryQueue = (1..QUEUE_SIZE_LIMIT + 1).map { mapOf("test" to it) }
-        tracker.applyFakeQueue(initialInMemoryQueue)
-
-        // when
-        sut.validateQueue()
-        runCurrent()
-
-        // then
-        assertThat(repository.getStoredQueue()).isEqualTo(initialInMemoryQueue)
-        assertThat(tracker.inMemoryQueue).hasSize(QUEUE_SIZE_LIMIT)
-    }
-
-    @Test
-    fun `given the in-memory queue is above the in-memory limit and stored events queue is above stored-queue limit, when querying flush manager, then expel the last event from local storage`() = runTest {
-        // given
-        sut = QueueManager(tracker, repository, this)
-        val initialInMemoryQueue = (1..QUEUE_SIZE_LIMIT + 1).map { mapOf("in memory" to it) }
-        tracker.applyFakeQueue(initialInMemoryQueue)
-        val initialStoredQueue = (1..STORAGE_SIZE_LIMIT + 1).map { mapOf("storage" to it) }
-        repository.persistQueue(initialStoredQueue)
-
-        // when
-        sut.validateQueue()
-        runCurrent()
-
-        // then
-        assertThat(repository.wasEventExpelled).isTrue
-    }
-
-    inner class FakeTracker : ParselyTracker(
-        "siteId", 10, ApplicationProvider.getApplicationContext()
-    ) {
-
-        private var fakeQueue: List<Map<String, Any>> = emptyList()
-
-        internal override fun getInMemoryQueue(): List<Map<String, Any>> = fakeQueue
-
-        fun applyFakeQueue(fakeQueue: List<Map<String, Any>>) {
-            this.fakeQueue = fakeQueue.toList()
+        sut = QueueManager(repository, this) {
+            FakeOnEventAdded.fakeOnEventAdded()
         }
+        val testEvent = mapOf("test" to 123)
 
-        override fun storedEventsCount(): Int {
-            return repository.getStoredQueue().size
+        // when
+        sut.addEvent(testEvent)
+        runCurrent()
+
+        // then
+        assertThat(FakeOnEventAdded.onEventAdded).isTrue
+        assertThat(repository.getStoredQueue()).containsExactly(testEvent)
+    }
+
+    object FakeOnEventAdded {
+        var onEventAdded = false
+
+        fun fakeOnEventAdded() {
+            onEventAdded = true
         }
     }
+
 
     class FakeLocalRepository :
         LocalStorageRepository(ApplicationProvider.getApplicationContext()) {
 
         private var localFileQueue = emptyList<Map<String, Any?>?>()
-        var wasEventExpelled = false
 
-        override fun persistQueue(inMemoryQueue: List<Map<String, Any?>?>) {
-            this.localFileQueue += inMemoryQueue
+        override fun persistEvent(event: Map<String, Any?>) {
+            this.localFileQueue += event
         }
 
         override fun getStoredQueue() = ArrayList(localFileQueue)
-
-        override fun expelStoredEvent() {
-            wasEventExpelled = true
-        }
     }
 }

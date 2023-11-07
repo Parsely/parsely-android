@@ -34,11 +34,12 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.UUID;
+
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 /**
  * Tracks Parse.ly app views in Android apps
@@ -53,7 +54,6 @@ public class ParselyTracker {
     @SuppressWarnings("StringOperationCanBeSimplified")
 //    private static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
     private static final String ROOT_URL = "https://p1.parsely.com/".intern();
-    private final ArrayList<Map<String, Object>> eventQueue;
     private boolean isDebug;
     private final Context context;
     private final Timer timer;
@@ -77,16 +77,26 @@ public class ParselyTracker {
         context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(context, siteId);
         localStorageRepository = new LocalStorageRepository(context);
-        queueManager = new QueueManager(this, localStorageRepository, ParselyCoroutineScopeKt.getSdkScope());
-
         // get the adkey straight away on instantiation
         timer = new Timer();
         isDebug = false;
 
-        eventQueue = new ArrayList<>();
-
         flushManager = new FlushManager(this, flushInterval * 1000L,
                 ParselyCoroutineScopeKt.getSdkScope());
+
+        Function0<Unit> onEventAdded = () -> {
+            if (!flushTimerIsActive()) {
+                startFlushTimer();
+                PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
+            }
+            return Unit.INSTANCE;
+        };
+        queueManager = new QueueManager(
+                localStorageRepository,
+                ParselyCoroutineScopeKt.getSdkScope(),
+                onEventAdded
+        );
+
 
         if (localStorageRepository.getStoredQueue().size() > 0) {
             startFlushTimer();
@@ -99,10 +109,6 @@ public class ParselyTracker {
                     }
                 }
         );
-    }
-
-    List<Map<String, Object>> getInMemoryQueue() {
-        return eventQueue;
     }
 
     /**
@@ -420,12 +426,7 @@ public class ParselyTracker {
      */
     void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
-        eventQueue.add(event);
-        queueManager.validateQueue();
-        if (!flushTimerIsActive()) {
-            startFlushTimer();
-            PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
-        }
+        queueManager.addEvent(event);
     }
 
     /**
@@ -478,7 +479,6 @@ public class ParselyTracker {
     }
 
     void purgeEventsQueue() {
-        eventQueue.clear();
         localStorageRepository.purgeStoredQueue();
     }
 
@@ -539,7 +539,7 @@ public class ParselyTracker {
      * @return The number of events waiting to be flushed to Parsely.
      */
     public int queueSize() {
-        return eventQueue.size();
+        return localStorageRepository.getStoredQueue().size();
     }
 
     /**
@@ -556,9 +556,9 @@ public class ParselyTracker {
         @Override
         protected synchronized Void doInBackground(Void... params) {
             ArrayList<Map<String, Object>> storedQueue = localStorageRepository.getStoredQueue();
-            PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
+            PLog("%d stored events", storedEventsCount());
             // in case both queues have been flushed and app quits, don't crash
-            if ((eventQueue == null || eventQueue.size() == 0) && storedQueue.size() == 0) {
+            if (storedQueue.size() == 0) {
                 stopFlushTimer();
                 return null;
             }
@@ -566,14 +566,8 @@ public class ParselyTracker {
                 PLog("Network unreachable. Not flushing.");
                 return null;
             }
-            HashSet<Map<String, Object>> hs = new HashSet<>();
-            ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
-
-            hs.addAll(eventQueue);
-            hs.addAll(storedQueue);
-            newQueue.addAll(hs);
             PLog("Flushing queue");
-            sendBatchRequest(newQueue);
+            sendBatchRequest(storedQueue);
             return null;
         }
     }
