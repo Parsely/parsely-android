@@ -34,6 +34,10 @@ internal open class LocalStorageRepository(private val context: Context) {
         persistObject(ArrayList<Map<String, Any>>())
     }
 
+    fun remove(toRemove: List<Map<String, Any>>) {
+        persistObject(getStoredQueue() - toRemove.toSet())
+    }
+
     /**
      * Get the stored event queue from persistent storage.
      *

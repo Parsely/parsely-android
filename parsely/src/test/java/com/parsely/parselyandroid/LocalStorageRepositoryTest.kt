@@ -69,16 +69,21 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given stored queue, when purging stored queue, then assert queue is purged`() {
+    fun `given stored queue, when removing some events, then assert queue is doesn't contain removed events and contains not removed events`() {
         // given
-        val eventsList = (1..10).map { mapOf("index" to it) }
-        eventsList.forEach { sut.persistEvent(it) }
+        val initialList = (1..10).map { mapOf("index" to it) }
+        initialList.forEach { sut.persistEvent(it) }
+        val eventsToRemove = initialList.slice(0..5)
+        val eventsToKeep = initialList.slice(6..9)
 
         // when
-        sut.purgeStoredQueue()
+        sut.remove(eventsToRemove)
 
         // then
-        assertThat(sut.getStoredQueue()).isEmpty()
+        assertThat(sut.getStoredQueue())
+            .hasSize(4)
+            .containsExactlyInAnyOrderElementsOf(eventsToKeep)
+            .doesNotContainAnyElementsOf(eventsToRemove)
     }
 
     @Test
