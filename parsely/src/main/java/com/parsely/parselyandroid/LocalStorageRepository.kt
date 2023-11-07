@@ -34,6 +34,10 @@ internal open class LocalStorageRepository(private val context: Context) {
         persistObject(ArrayList<Map<String, Any>>())
     }
 
+    fun remove(toRemove: List<Map<String, Any>>) {
+        persistObject(getStoredQueue() - toRemove.toSet())
+    }
+
     /**
      * Get the stored event queue from persistent storage.
      *
@@ -67,6 +71,12 @@ internal open class LocalStorageRepository(private val context: Context) {
     open fun expelStoredEvent() {
         val storedQueue = getStoredQueue()
         storedQueue.removeAt(0)
+    }
+
+    open fun persistEvent(event: Map<String, Any?>) {
+        val storedQueue = getStoredQueue()
+        ParselyTracker.PLog("Persisting event queue. Current size: ${storedQueue.size}")
+        persistObject(ArrayList(storedQueue.plus(event).distinct()))
     }
 
     /**

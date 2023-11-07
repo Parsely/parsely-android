@@ -23,7 +23,9 @@ class LocalStorageRepositoryTest {
     @Test
     fun `when expelling stored event, then assert that it has no effect`() {
         // given
-        sut.persistQueue((1..100).map { mapOf("index" to it) })
+        ((1..100).map { mapOf("index" to it) }).forEach {
+            sut.persistEvent(it)
+        }
 
         // when
         sut.expelStoredEvent()
@@ -38,7 +40,9 @@ class LocalStorageRepositoryTest {
         val eventsList = (1..10).map { mapOf("index" to it) }
 
         // when
-        sut.persistQueue(eventsList)
+        eventsList.forEach {
+            sut.persistEvent(it)
+        }
 
         // then
         assertThat(sut.getStoredQueue()).hasSize(10).containsExactlyInAnyOrderElementsOf(eventsList)
@@ -50,14 +54,14 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given stored queue with some elements, when persisting in-memory queue, then assert there'll be no duplicates and queues will be combined`() {
+    fun `given stored queue with some elements, when persisting an event, then assert there'll be no duplicates`() {
         // given
         val storedQueue = (1..5).map { mapOf("index" to it) }
-        val inMemoryQueue = (3..10).map { mapOf("index" to it) }
-        sut.persistQueue(storedQueue)
+        val newEvents = (3..10).map { mapOf("index" to it) }
+        storedQueue.forEach { sut.persistEvent(it) }
 
         // when
-        sut.persistQueue(inMemoryQueue)
+        newEvents.forEach { sut.persistEvent(it) }
 
         // then
         val expectedQueue = (1..10).map { mapOf("index" to it) }
@@ -65,16 +69,21 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given stored queue, when purging stored queue, then assert queue is purged`() {
+    fun `given stored queue, when removing some events, then assert queue is doesn't contain removed events and contains not removed events`() {
         // given
-        val eventsList = (1..10).map { mapOf("index" to it) }
-        sut.persistQueue(eventsList)
+        val initialList = (1..10).map { mapOf("index" to it) }
+        initialList.forEach { sut.persistEvent(it) }
+        val eventsToRemove = initialList.slice(0..5)
+        val eventsToKeep = initialList.slice(6..9)
 
         // when
-        sut.purgeStoredQueue()
+        sut.remove(eventsToRemove)
 
         // then
-        assertThat(sut.getStoredQueue()).isEmpty()
+        assertThat(sut.getStoredQueue())
+            .hasSize(4)
+            .containsExactlyInAnyOrderElementsOf(eventsToKeep)
+            .doesNotContainAnyElementsOf(eventsToRemove)
     }
 
     @Test
