@@ -20,10 +20,11 @@ internal class InMemoryBufferTest {
     private val repository = FakeLocalStorageRepository()
 
     @Test
-    fun `when adding a new event, then save it to local storage`() = runTest {
+    fun `when adding a new event, then save it to local storage and run onEventAdded listener`() = runTest {
         // given
         val event = mapOf("test" to 123)
-        sut = InMemoryBuffer(backgroundScope, repository)
+        var onEventAddedExecuted = false
+        sut = InMemoryBuffer(backgroundScope, repository) { onEventAddedExecuted = true }
 
         // when
         sut.add(event)
@@ -33,6 +34,7 @@ internal class InMemoryBufferTest {
 
         // then
         assertThat(repository.getStoredQueue()).containsOnlyOnce(event)
+        assertThat(onEventAddedExecuted).isTrue()
     }
 
     @Test
@@ -40,7 +42,7 @@ internal class InMemoryBufferTest {
         runTest {
             // given
             val events = (0..2).map { mapOf("test" to it) }
-            sut = InMemoryBuffer(backgroundScope, repository)
+            sut = InMemoryBuffer(backgroundScope, repository) {}
 
             // when
             sut.add(events[0])
@@ -61,7 +63,7 @@ internal class InMemoryBufferTest {
             assertThat(repository.getStoredQueue()).containsOnlyOnceElementsOf(events)
         }
 
-    class FakeLocalStorageRepository() :
+    class FakeLocalStorageRepository :
         LocalStorageRepository(ApplicationProvider.getApplicationContext()) {
 
         private val events = mutableListOf<Map<String, Any?>?>()
