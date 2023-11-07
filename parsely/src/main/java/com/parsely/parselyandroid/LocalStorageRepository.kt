@@ -5,8 +5,14 @@ import java.io.EOFException
 import java.io.FileNotFoundException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal open class LocalStorageRepository(private val context: Context) {
+
+    private val mutex = Mutex()
+
     /**
      * Persist an object to storage.
      *
@@ -73,19 +79,13 @@ internal open class LocalStorageRepository(private val context: Context) {
         storedQueue.removeAt(0)
     }
 
-    open fun persistEvent(event: Map<String, Any?>) {
-        val storedQueue = getStoredQueue()
-        ParselyTracker.PLog("Persisting event queue. Current size: ${storedQueue.size}")
-        persistObject(ArrayList(storedQueue.plus(event).distinct()))
-    }
-
     /**
      * Save the event queue to persistent storage.
      */
-    @Synchronized
-    open fun persistQueue(inMemoryQueue: List<Map<String, Any?>?>) {
+    open suspend fun insertEvents(toInsert: List<Map<String, Any?>?>) = mutex.withLock {
+        println("Test: ${currentCoroutineContext()}")
         ParselyTracker.PLog("Persisting event queue")
-        persistObject((inMemoryQueue + getStoredQueue()).distinct())
+        persistObject(ArrayList((toInsert + getStoredQueue()).distinct()))
     }
 
     companion object {
