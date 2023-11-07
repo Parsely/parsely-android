@@ -411,7 +411,7 @@ public class ParselyTracker {
      * Place a data structure representing the event into the in-memory queue for later use.
      * <p>
      * **Note**: Events placed into this queue will be discarded if the size of the persistent queue
-     * store exceeds {@link #STORAGE_SIZE_LIMIT}.
+     * store exceeds {@link QueueManager#STORAGE_SIZE_LIMIT}.
      *
      * @param event The event Map to enqueue.
      */
