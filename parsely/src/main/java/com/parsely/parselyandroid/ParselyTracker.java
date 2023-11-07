@@ -40,6 +40,9 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.UUID;
 
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+
 /**
  * Tracks Parse.ly app views in Android apps
  * <p>
@@ -77,7 +80,15 @@ public class ParselyTracker {
         context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(context, siteId);
         localStorageRepository = new LocalStorageRepository(context);
-        inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository);
+        flushManager = new FlushManager(this, flushInterval * 1000L,
+                ParselyCoroutineScopeKt.getSdkScope());
+        inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, () -> {
+            if (!flushTimerIsActive()) {
+                startFlushTimer();
+                PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
+            }
+            return Unit.INSTANCE;
+        });
 
         // get the adkey straight away on instantiation
         timer = new Timer();
@@ -85,8 +96,6 @@ public class ParselyTracker {
 
         eventQueue = new ArrayList<>();
 
-        flushManager = new FlushManager(this, flushInterval * 1000L,
-                ParselyCoroutineScopeKt.getSdkScope());
 
         if (localStorageRepository.getStoredQueue().size() > 0) {
             startFlushTimer();
@@ -419,10 +428,6 @@ public class ParselyTracker {
     void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
         inMemoryBuffer.add(event);
-        if (!flushTimerIsActive()) {
-            startFlushTimer();
-            PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
-        }
     }
 
     /**

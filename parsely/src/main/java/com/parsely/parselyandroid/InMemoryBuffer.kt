@@ -11,6 +11,7 @@ import kotlinx.coroutines.sync.withLock
 internal class InMemoryBuffer(
     private val coroutineScope: CoroutineScope,
     private val localStorageRepository: LocalStorageRepository,
+    private val onEventAddedListener: () -> Unit,
 ) {
 
     private val mutex = Mutex()
@@ -35,6 +36,7 @@ internal class InMemoryBuffer(
             mutex.withLock {
                 ParselyTracker.PLog("Event added")
                 buffer.add(event)
+                onEventAddedListener()
             }
         }
     }
