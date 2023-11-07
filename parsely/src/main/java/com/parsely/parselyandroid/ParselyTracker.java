@@ -68,7 +68,7 @@ public class ParselyTracker {
     @NonNull
     private final LocalStorageRepository localStorageRepository;
     @NonNull
-    private final QueueManager queueManager;
+    private final InMemoryBuffer inMemoryBuffer;
 
     /**
      * Create a new ParselyTracker instance.
@@ -77,7 +77,7 @@ public class ParselyTracker {
         context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(context, siteId);
         localStorageRepository = new LocalStorageRepository(context);
-        queueManager = new QueueManager(this, localStorageRepository, ParselyCoroutineScopeKt.getSdkScope());
+        inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository);
 
         // get the adkey straight away on instantiation
         timer = new Timer();
@@ -413,15 +413,12 @@ public class ParselyTracker {
      * <p>
      * Place a data structure representing the event into the in-memory queue for later use.
      * <p>
-     * **Note**: Events placed into this queue will be discarded if the size of the persistent queue
-     * store exceeds {@link QueueManager#STORAGE_SIZE_LIMIT}.
      *
      * @param event The event Map to enqueue.
      */
     void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
-        eventQueue.add(event);
-        queueManager.validateQueue();
+        inMemoryBuffer.add(event);
         if (!flushTimerIsActive()) {
             startFlushTimer();
             PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
