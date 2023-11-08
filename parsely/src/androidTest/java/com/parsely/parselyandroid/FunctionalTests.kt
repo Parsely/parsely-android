@@ -20,7 +20,6 @@ import kotlin.io.path.Path
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.times
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
@@ -49,12 +48,12 @@ class FunctionalTests {
     }
 
     /**
-     * In this scenario, the consumer application tracks more than 50 events-threshold during a flush interval.
+     * In this scenario, the consumer application tracks 51 events-threshold during a flush interval.
      * The SDK will save the events to disk and send them in the next flush interval.
      * At the end, when all events are sent, the SDK will delete the content of local storage file.
      */
     @Test
-    fun appTracksEventsAboveQueueSizeLimit() {
+    fun appTracksEventsDuringTheFlushInterval() {
         ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
