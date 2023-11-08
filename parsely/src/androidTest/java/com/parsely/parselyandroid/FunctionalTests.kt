@@ -77,8 +77,13 @@ class FunctionalTests {
     }
 
     /**
-     * In this scenario, the consumer application goes to the background, re-launches the app,
-     * and moves to the background again. It asserts, that only one payload has been sent.
+     * In this scenario, the consumer application:
+     * 1. Goes to the background
+     * 2. Is re-launched
+     * This pattern occurs twice, which allows us to confirm the following assertions:
+     * 1. The event request is triggered when the consumer application is moved to the background
+     * 2. If the consumer application is sent to the background again within a short interval,
+     * the request is not duplicated.
      */
     @Test
     fun appSendsEventsWhenMovedToBackgroundAndDoesntSendDuplicatedRequestWhenItsMovedToBackgroundAgainQuickly() {
