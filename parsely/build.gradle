@@ -78,6 +78,7 @@ dependencies {
     androidTestImplementation "org.assertj:assertj-core:$assertJVersion"
     androidTestImplementation "com.squareup.okhttp3:mockwebserver:$mockWebServerVersion"
     androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
     androidTestUtil 'androidx.test:orchestrator:1.4.2'
 }
 
