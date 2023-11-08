@@ -125,8 +125,7 @@ class FunctionalTests {
      */
     @Test
     fun stressTest() {
-        val stressMultiplier = 10
-        val batchSize = 50
+        val eventsToSend = 500
 
         ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
             scenario.onActivity { activity: Activity ->
@@ -134,20 +133,23 @@ class FunctionalTests {
                 server.enqueue(MockResponse().setResponseCode(200))
                 parselyTracker = initializeTracker(activity)
 
-                repeat(stressMultiplier * batchSize) {
+                repeat(eventsToSend) {
                     parselyTracker.trackPageview("url", null, null, null)
                 }
             }
 
-            Thread.sleep((stressMultiplier * defaultFlushInterval).inWholeMilliseconds)
+            // Wait some time to give events chance to be saved in local data storage
+            Thread.sleep((defaultFlushInterval * 2).inWholeMilliseconds)
 
-            val requests = (1..stressMultiplier).mapNotNull {
-                runCatching { server.takeRequest(500, TimeUnit.MILLISECONDS) }.getOrNull()
+            // Catch up to 10 requests. We don't know how many requests the device we test on will
+            // perform. It's probably more like 1-2, but we're on safe (not flaky) side here.
+            val requests = (1..10).mapNotNull {
+                runCatching { server.takeRequest(100, TimeUnit.MILLISECONDS) }.getOrNull()
             }.flatMap {
                 it.toMap()["events"]!!
             }
 
-            assertThat(requests).hasSize(stressMultiplier * batchSize)
+            assertThat(requests).hasSize(eventsToSend)
         }
     }
 
