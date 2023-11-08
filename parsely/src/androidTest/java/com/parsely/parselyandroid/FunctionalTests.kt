@@ -3,6 +3,9 @@ package com.parsely.parselyandroid
 import android.app.Activity
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
@@ -14,6 +17,8 @@ import java.lang.reflect.Field
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
@@ -90,13 +95,13 @@ class FunctionalTests {
                 parselyTracker.trackPageview("url", null, null, null)
             }
 
-            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
+            Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
 
             scenario.onActivity {
                 parselyTracker.trackPageview("url", null, null, null)
             }
 
-            Thread.sleep((flushInterval / 2).inWholeMilliseconds)
+            Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
 
             val firstRequestPayload = server.takeRequest(2000, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
@@ -105,10 +110,47 @@ class FunctionalTests {
                 parselyTracker.trackPageview("url", null, null, null)
             }
 
-            Thread.sleep(flushInterval.inWholeMilliseconds)
+            Thread.sleep(defaultFlushInterval.inWholeMilliseconds)
 
             val secondRequestPayload = server.takeRequest(2000, TimeUnit.MILLISECONDS)?.toMap()
             assertThat(secondRequestPayload!!["events"]).hasSize(1)
+        }
+    }
+
+    /**
+     * In this scenario, the consumer application:
+     * 1. Goes to the background
+     * 2. Is re-launched
+     * This pattern occurs twice, which allows us to confirm the following assertions:
+     * 1. The event request is triggered when the consumer application is moved to the background
+     * 2. If the consumer application is sent to the background again within a short interval,
+     * the request is not duplicated.
+     */
+    @Test
+    fun appSendsEventsWhenMovedToBackgroundAndDoesntSendDuplicatedRequestWhenItsMovedToBackgroundAgainQuickly() {
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
+            scenario.onActivity { activity: Activity ->
+                beforeEach(activity)
+                server.enqueue(MockResponse().setResponseCode(200))
+                server.enqueue(MockResponse().setResponseCode(200))
+                parselyTracker = initializeTracker(activity, flushInterval = 1.hours)
+
+                repeat(20) {
+                    parselyTracker.trackPageview("url", null, null, null)
+                }
+            }
+
+            device.pressHome()
+            device.pressRecentApps()
+            device.findObject(UiSelector().descriptionContains("com.parsely")).click()
+            device.pressHome()
+
+            val firstRequest = server.takeRequest(10000, TimeUnit.MILLISECONDS)?.toMap()
+            val secondRequest = server.takeRequest(10000, TimeUnit.MILLISECONDS)?.toMap()
+
+            assertThat(firstRequest!!["events"]).hasSize(20)
+            assertThat(secondRequest).isNull()
         }
     }
 
@@ -132,7 +174,10 @@ class FunctionalTests {
             }
         }
 
-    private fun initializeTracker(activity: Activity): ParselyTracker {
+    private fun initializeTracker(
+        activity: Activity,
+        flushInterval: Duration = defaultFlushInterval
+    ): ParselyTracker {
         return ParselyTracker.sharedInstance(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
         ).apply {
@@ -145,7 +190,7 @@ class FunctionalTests {
     private companion object {
         const val siteId = "123"
         const val localStorageFileName = "parsely-events.ser"
-        val flushInterval = 5.seconds
+        val defaultFlushInterval = 5.seconds
     }
 
     class SampleActivity : Activity()
