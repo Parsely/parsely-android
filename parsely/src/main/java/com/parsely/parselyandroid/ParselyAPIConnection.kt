@@ -13,13 +13,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+@file:Suppress("DEPRECATION")
 package com.parsely.parselyandroid
 
 import android.os.AsyncTask
 import java.net.HttpURLConnection
 import java.net.URL
 
-@Suppress("DEPRECATION")
 internal class ParselyAPIConnection(private val tracker: ParselyTracker) : AsyncTask<String?, Exception?, Void?>() {
     private var exception: Exception? = null
 
