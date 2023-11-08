@@ -34,7 +34,7 @@ internal class InMemoryBuffer(
     fun add(event: Map<String, Any>) {
         coroutineScope.launch {
             mutex.withLock {
-                ParselyTracker.PLog("Event added")
+                ParselyTracker.PLog("Event added to buffer")
                 buffer.add(event)
                 onEventAddedListener()
             }
