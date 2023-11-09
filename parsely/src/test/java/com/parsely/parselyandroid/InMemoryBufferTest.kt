@@ -20,7 +20,7 @@ internal class InMemoryBufferTest {
     private val repository = FakeLocalStorageRepository()
 
     @Test
-    fun `when adding a new event, then save it to local storage and run onEventAdded listener`() = runTest {
+    fun `when adding a new event, then save it to local storage`() = runTest {
         // given
         val event = mapOf("test" to 123)
         sut = InMemoryBuffer(backgroundScope, repository) { }
