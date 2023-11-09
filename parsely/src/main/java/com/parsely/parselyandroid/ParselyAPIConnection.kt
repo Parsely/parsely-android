@@ -15,7 +15,6 @@
 */
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.ParselyTracker.ROOT_URL
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.coroutines.CoroutineDispatcher
