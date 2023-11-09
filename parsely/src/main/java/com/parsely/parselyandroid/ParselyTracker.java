@@ -82,7 +82,7 @@ public class ParselyTracker {
             }
             return Unit.INSTANCE;
         });
-        sendEvents = new SendEvents(this, localStorageRepository);
+        sendEvents = new SendEvents(this, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy", this), ParselyCoroutineScopeKt.getSdkScope());
 
         // get the adkey straight away on instantiation
         timer = new Timer();
