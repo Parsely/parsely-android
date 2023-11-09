@@ -31,7 +31,7 @@ internal class ParselyAPIConnection @JvmOverloads constructor(
 
     suspend fun send(payload: String) {
         withContext(dispatcher) {
-            val connection: HttpURLConnection?
+            var connection: HttpURLConnection? = null
             try {
                 connection = URL(url).openConnection() as HttpURLConnection
                 connection.doOutput = true
@@ -42,6 +42,8 @@ internal class ParselyAPIConnection @JvmOverloads constructor(
                 connection.inputStream
             } catch (ex: Exception) {
                 exception = ex
+            } finally {
+                connection?.disconnect()
             }
 
             if (exception != null) {
