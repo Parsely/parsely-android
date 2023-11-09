@@ -450,10 +450,10 @@ public class ParselyTracker {
             PLog("Debug mode on. Not sending to Parse.ly");
             purgeEventsQueue();
         } else {
-            new ParselyAPIConnection(this).execute(ROOT_URL + "mobileproxy", JsonEncode(batchMap));
+            new ParselyAPIConnection(this).execute(ROOT_URL + "mobileproxy", JsonSerializer.INSTANCE.toJson(batchMap));
             PLog("Requested %s", ROOT_URL);
         }
-        PLog("POST Data %s", JsonEncode(batchMap));
+        PLog("POST Data %s", JsonSerializer.INSTANCE.toJson(batchMap));
     }
 
     /**
@@ -470,25 +470,6 @@ public class ParselyTracker {
 
     void purgeEventsQueue() {
         localStorageRepository.purgeStoredQueue();
-    }
-
-    /**
-     * Encode an event Map as JSON.
-     *
-     * @param map The Map object to encode as JSON.
-     * @return The JSON-encoded value of `map`.
-     */
-    private String JsonEncode(Map<String, Object> map) {
-        ObjectMapper mapper = new ObjectMapper();
-        String ret = null;
-        try {
-            StringWriter strWriter = new StringWriter();
-            mapper.writeValue(strWriter, map);
-            ret = strWriter.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return ret;
     }
 
     /**
