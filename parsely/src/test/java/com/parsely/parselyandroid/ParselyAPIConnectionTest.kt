@@ -1,6 +1,6 @@
 package com.parsely.parselyandroid
 
-import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
@@ -13,17 +13,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ParselyAPIConnectionTest {
 
     private lateinit var sut: ParselyAPIConnection
     private val mockServer = MockWebServer()
     private val url = mockServer.url("").toString()
-    private val tracker = FakeTracker()
 
     @Before
     fun setUp() {
-        sut = ParselyAPIConnection(url, tracker)
+        sut = ParselyAPIConnection(url)
     }
 
     @After
@@ -51,37 +51,17 @@ class ParselyAPIConnectionTest {
         }
 
     @Test
-    fun `given successful response, when request is made, then purge events queue and stop flush timer`() =
-        runTest {
-            // given
-            mockServer.enqueue(MockResponse().setResponseCode(200))
-            tracker.events.add(mapOf("idsite" to "example.com"))
-
-            // when
-            val result = sut.send(pixelPayload)
-            runCurrent()
-
-            // then
-            assertThat(tracker.events).isEmpty()
-            assertThat(tracker.flushTimerStopped).isTrue
-            assertThat(result.isSuccess).isTrue
-        }
-
-    @Test
-    fun `given unsuccessful response, when request is made, then do not purge events queue and do not stop flush timer`() =
+    fun `given unsuccessful response, when request is made, then return failure with exception`() =
         runTest {
             // given
             mockServer.enqueue(MockResponse().setResponseCode(400))
             val sampleEvents = mapOf("idsite" to "example.com")
-            tracker.events.add(sampleEvents)
 
             // when
             val result = sut.send(pixelPayload)
             runCurrent()
 
             // then
-            assertThat(tracker.events).containsExactly(sampleEvents)
-            assertThat(tracker.flushTimerStopped).isFalse
             assertThat(result.isFailure).isTrue
             assertThat(result.exceptionOrNull()).isInstanceOf(IOException::class.java)
         }
@@ -89,21 +69,5 @@ class ParselyAPIConnectionTest {
     companion object {
         val pixelPayload: String =
             this::class.java.getResource("pixel_payload.json")?.readText().orEmpty()
-    }
-
-    private class FakeTracker : ParselyTracker(
-        "siteId", 10, ApplicationProvider.getApplicationContext()
-    ) {
-
-        var flushTimerStopped = false
-        val events = mutableListOf<Map<String, Any>>()
-
-        override fun purgeEventsQueue() {
-            events.clear()
-        }
-
-        override fun stopFlushTimer() {
-            flushTimerStopped = true
-        }
     }
 }
