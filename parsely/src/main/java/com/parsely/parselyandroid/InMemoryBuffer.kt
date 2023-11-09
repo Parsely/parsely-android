@@ -22,6 +22,7 @@ internal class InMemoryBuffer(
             while (isActive) {
                 mutex.withLock {
                     if (buffer.isNotEmpty()) {
+                        ParselyTracker.PLog("Persisting ${buffer.size} events")
                         localStorageRepository.insertEvents(buffer)
                         buffer.clear()
                     }
