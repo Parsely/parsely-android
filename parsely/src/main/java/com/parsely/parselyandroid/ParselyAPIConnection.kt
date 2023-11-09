@@ -26,10 +26,8 @@ internal class ParselyAPIConnection @JvmOverloads constructor(
     private val tracker: ParselyTracker,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    private var exception: Exception? = null
-
-    suspend fun send(payload: String) {
-        withContext(dispatcher) {
+    suspend fun send(payload: String): Result<Unit> {
+        return withContext(dispatcher) {
             var connection: HttpURLConnection? = null
             try {
                 connection = URL(url).openConnection() as HttpURLConnection
@@ -40,22 +38,20 @@ internal class ParselyAPIConnection @JvmOverloads constructor(
                 output.close()
                 connection.inputStream
             } catch (ex: Exception) {
-                exception = ex
+                ParselyTracker.PLog("Pixel request exception")
+                ParselyTracker.PLog(ex.toString())
+                return@withContext Result.failure(ex)
             } finally {
                 connection?.disconnect()
             }
 
-            if (exception != null) {
-                ParselyTracker.PLog("Pixel request exception")
-                ParselyTracker.PLog(exception.toString())
-            } else {
-                ParselyTracker.PLog("Pixel request success")
+            ParselyTracker.PLog("Pixel request success")
 
-                // only purge the queue if the request was successful
-                tracker.purgeEventsQueue()
-                ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-                tracker.stopFlushTimer()
-            }
+            // only purge the queue if the request was successful
+            tracker.purgeEventsQueue()
+            ParselyTracker.PLog("Event queue empty, flush timer cleared.")
+            tracker.stopFlushTimer()
+            Result.success(Unit)
         }
     }
 }
