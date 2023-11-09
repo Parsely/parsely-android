@@ -1,6 +1,8 @@
 package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
@@ -13,7 +15,6 @@ import org.robolectric.annotation.LooperMode
 import org.robolectric.shadows.ShadowLooper.shadowMainLooper
 
 @RunWith(RobolectricTestRunner::class)
-@LooperMode(LooperMode.Mode.PAUSED)
 class ParselyAPIConnectionTest {
 
     private lateinit var sut: ParselyAPIConnection
@@ -23,7 +24,7 @@ class ParselyAPIConnectionTest {
 
     @Before
     fun setUp() {
-        sut = ParselyAPIConnection(tracker)
+        sut = ParselyAPIConnection(url, tracker)
     }
 
     @After
@@ -32,12 +33,12 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `given successful response, when making connection without any events, then make GET request`() {
+    fun `given successful response, when making connection without any events, then make GET request`() = runTest {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
 
         // when
-        sut.execute(url).get()
+        sut.send("")
         shadowMainLooper().idle();
 
         // then
@@ -49,13 +50,13 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `given successful response, when making connection with events, then make POST request with JSON Content-Type header`() {
+    fun `given successful response, when making connection with events, then make POST request with JSON Content-Type header`() = runTest {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
 
         // when
-        sut.execute(url, pixelPayload).get()
-        shadowMainLooper().idle();
+        sut.send(pixelPayload)
+        runCurrent()
 
         // then
         assertThat(mockServer.takeRequest()).satisfies({
@@ -66,14 +67,14 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `given successful response, when request is made, then purge events queue and stop flush timer`() {
+    fun `given successful response, when request is made, then purge events queue and stop flush timer`() = runTest {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
         tracker.events.add(mapOf("idsite" to "example.com"))
 
         // when
-        sut.execute(url).get()
-        shadowMainLooper().idle();
+        sut.send(pixelPayload)
+        runCurrent()
 
         // then
         assertThat(tracker.events).isEmpty()
@@ -81,15 +82,15 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `given unsuccessful response, when request is made, then do not purge events queue and do not stop flush timer`() {
+    fun `given unsuccessful response, when request is made, then do not purge events queue and do not stop flush timer`() = runTest {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(400))
         val sampleEvents = mapOf("idsite" to "example.com")
         tracker.events.add(sampleEvents)
 
         // when
-        sut.execute(url).get()
-        shadowMainLooper().idle();
+        sut.send(pixelPayload)
+        runCurrent()
 
         // then
         assertThat(tracker.events).containsExactly(sampleEvents)
