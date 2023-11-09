@@ -27,13 +27,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Formatter;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.UUID;
@@ -51,8 +46,8 @@ public class ParselyTracker {
     private static final int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static final int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     @SuppressWarnings("StringOperationCanBeSimplified")
-//    private static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
-    private static final String ROOT_URL = "https://p1.parsely.com/".intern();
+//    static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
+    static final String ROOT_URL = "https://p1.parsely.com/".intern();
     private boolean isDebug;
     private final Context context;
     private final Timer timer;
@@ -68,6 +63,8 @@ public class ParselyTracker {
     private final LocalStorageRepository localStorageRepository;
     @NonNull
     private final InMemoryBuffer inMemoryBuffer;
+    @NonNull
+    private final SendEvents sendEvents;
 
     /**
      * Create a new ParselyTracker instance.
@@ -85,6 +82,7 @@ public class ParselyTracker {
             }
             return Unit.INSTANCE;
         });
+        sendEvents = new SendEvents(this, localStorageRepository);
 
         // get the adkey straight away on instantiation
         timer = new Timer();
@@ -437,23 +435,7 @@ public class ParselyTracker {
      * @param events The list of event dictionaries to serialize
      */
     private void sendBatchRequest(ArrayList<Map<String, Object>> events) {
-        if (events == null || events.size() == 0) {
-            return;
-        }
-        PLog("Sending request with %d events", events.size());
-
-        // Put in a Map for the proxy server
-        Map<String, Object> batchMap = new HashMap<>();
-        batchMap.put("events", events);
-
-        if (isDebug) {
-            PLog("Debug mode on. Not sending to Parse.ly");
-            purgeEventsQueue();
-        } else {
-            new ParselyAPIConnection(this).execute(ROOT_URL + "mobileproxy", JsonSerializer.INSTANCE.toJson(batchMap));
-            PLog("Requested %s", ROOT_URL);
-        }
-        PLog("POST Data %s", JsonSerializer.INSTANCE.toJson(batchMap));
+        sendEvents.invoke(isDebug);
     }
 
     /**
