@@ -83,7 +83,6 @@ internal open class LocalStorageRepository(private val context: Context) {
      * Save the event queue to persistent storage.
      */
     open suspend fun insertEvents(toInsert: List<Map<String, Any?>?>) = mutex.withLock {
-        ParselyTracker.PLog("Persisting ${toInsert.size} events")
         persistObject(ArrayList((toInsert + getStoredQueue()).distinct()))
     }
 
