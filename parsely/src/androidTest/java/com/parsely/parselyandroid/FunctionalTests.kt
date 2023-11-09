@@ -49,12 +49,12 @@ class FunctionalTests {
     }
 
     /**
-     * In this scenario, the consumer application tracks more than 50 events-threshold during a flush interval.
+     * In this scenario, the consumer application tracks 51 events-threshold during a flush interval.
      * The SDK will save the events to disk and send them in the next flush interval.
      * At the end, when all events are sent, the SDK will delete the content of local storage file.
      */
     @Test
-    fun appTracksEventsAboveQueueSizeLimit() {
+    fun appTracksEventsDuringTheFlushInterval() {
         ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
@@ -151,6 +151,42 @@ class FunctionalTests {
 
             assertThat(firstRequest!!["events"]).hasSize(20)
             assertThat(secondRequest).isNull()
+        }
+    }
+
+    /**
+     * In this scenario we "stress test" the concurrency model to see if we have any conflict during
+     *
+     * - Unexpectedly high number of recorded events in small intervals (I/O locking)
+     * - Scenario in which a request is sent at the same time as new events are recorded
+     */
+    @Test
+    fun stressTest() {
+        val eventsToSend = 500
+
+        ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
+            scenario.onActivity { activity: Activity ->
+                beforeEach(activity)
+                server.enqueue(MockResponse().setResponseCode(200))
+                parselyTracker = initializeTracker(activity)
+
+                repeat(eventsToSend) {
+                    parselyTracker.trackPageview("url", null, null, null)
+                }
+            }
+
+            // Wait some time to give events chance to be saved in local data storage
+            Thread.sleep((defaultFlushInterval * 2).inWholeMilliseconds)
+
+            // Catch up to 10 requests. We don't know how many requests the device we test on will
+            // perform. It's probably more like 1-2, but we're on safe (not flaky) side here.
+            val requests = (1..10).mapNotNull {
+                runCatching { server.takeRequest(100, TimeUnit.MILLISECONDS) }.getOrNull()
+            }.flatMap {
+                it.toMap()["events"]!!
+            }
+
+            assertThat(requests).hasSize(eventsToSend)
         }
     }
 
