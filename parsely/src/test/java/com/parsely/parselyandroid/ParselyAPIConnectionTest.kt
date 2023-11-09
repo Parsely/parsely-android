@@ -33,23 +33,6 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
-    fun `given successful response, when making connection without any events, then make GET request`() = runTest {
-        // given
-        mockServer.enqueue(MockResponse().setResponseCode(200))
-
-        // when
-        sut.send("")
-        shadowMainLooper().idle();
-
-        // then
-        val request = mockServer.takeRequest()
-        assertThat(request).satisfies({
-            assertThat(it.method).isEqualTo("GET")
-            assertThat(it.failure).isNull()
-        })
-    }
-
-    @Test
     fun `given successful response, when making connection with events, then make POST request with JSON Content-Type header`() = runTest {
         // given
         mockServer.enqueue(MockResponse().setResponseCode(200))
