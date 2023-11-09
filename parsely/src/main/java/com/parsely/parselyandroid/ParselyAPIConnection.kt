@@ -23,7 +23,6 @@ import kotlinx.coroutines.withContext
 
 internal class ParselyAPIConnection @JvmOverloads constructor(
     private val url: String,
-    private val tracker: ParselyTracker,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     suspend fun send(payload: String): Result<Unit> {
@@ -38,19 +37,11 @@ internal class ParselyAPIConnection @JvmOverloads constructor(
                 output.close()
                 connection.inputStream
             } catch (ex: Exception) {
-                ParselyTracker.PLog("Pixel request exception")
-                ParselyTracker.PLog(ex.toString())
                 return@withContext Result.failure(ex)
             } finally {
                 connection?.disconnect()
             }
 
-            ParselyTracker.PLog("Pixel request success")
-
-            // only purge the queue if the request was successful
-            tracker.purgeEventsQueue()
-            ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-            tracker.stopFlushTimer()
             Result.success(Unit)
         }
     }

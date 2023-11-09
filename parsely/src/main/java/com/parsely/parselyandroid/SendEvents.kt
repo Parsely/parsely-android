@@ -24,15 +24,27 @@ internal class SendEvents(
             batchMap["events"] = eventsToSend
             val jsonPayload = toJson(batchMap).orEmpty()
 
+            ParselyTracker.PLog("POST Data %s", jsonPayload)
+
             if (isDebug) {
                 ParselyTracker.PLog("Debug mode on. Not sending to Parse.ly")
                 localStorageRepository.purgeStoredQueue()
             } else {
                 ParselyTracker.PLog("Requested %s", ParselyTracker.ROOT_URL)
-
                 parselyAPIConnection.send(jsonPayload)
+                    .fold(
+                        onSuccess = {
+                            ParselyTracker.PLog("Pixel request success")
+                            parselyTracker.purgeEventsQueue()
+                            ParselyTracker.PLog("Event queue empty, flush timer cleared.")
+                            parselyTracker.stopFlushTimer()
+                        },
+                        onFailure = {
+                            ParselyTracker.PLog("Pixel request exception")
+                            ParselyTracker.PLog(it.toString())
+                        }
+                    )
             }
-            ParselyTracker.PLog("POST Data %s", toJson(batchMap))
         }
     }
 }
