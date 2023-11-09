@@ -23,6 +23,22 @@ internal class InMemoryBufferTest {
     fun `when adding a new event, then save it to local storage and run onEventAdded listener`() = runTest {
         // given
         val event = mapOf("test" to 123)
+        sut = InMemoryBuffer(backgroundScope, repository) { }
+
+        // when
+        sut.add(event)
+        advanceTimeBy(1.seconds)
+        runCurrent()
+        backgroundScope.cancel()
+
+        // then
+        assertThat(repository.getStoredQueue()).containsOnlyOnce(event)
+    }
+
+    @Test
+    fun `given an onEventAdded listener, when adding a new event, then run the onEventAdded listener`() = runTest {
+        // given
+        val event = mapOf("test" to 123)
         var onEventAddedExecuted = false
         sut = InMemoryBuffer(backgroundScope, repository) { onEventAddedExecuted = true }
 
@@ -33,8 +49,7 @@ internal class InMemoryBufferTest {
         backgroundScope.cancel()
 
         // then
-        assertThat(repository.getStoredQueue()).containsOnlyOnce(event)
-        assertThat(onEventAddedExecuted).isTrue()
+        assertThat(onEventAddedExecuted).isTrue
     }
 
     @Test
