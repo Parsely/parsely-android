@@ -35,7 +35,7 @@ internal class SendEvents(
                     .fold(
                         onSuccess = {
                             ParselyTracker.PLog("Pixel request success")
-                            parselyTracker.purgeEventsQueue()
+                            localStorageRepository.purgeStoredQueue()
                             ParselyTracker.PLog("Event queue empty, flush timer cleared.")
                             parselyTracker.stopFlushTimer()
                         },
