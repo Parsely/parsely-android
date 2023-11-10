@@ -450,10 +450,6 @@ public class ParselyTracker {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    void purgeEventsQueue() {
-        localStorageRepository.purgeStoredQueue();
-    }
-
     /**
      * Start the timer to flush events to Parsely.
      * <p>
