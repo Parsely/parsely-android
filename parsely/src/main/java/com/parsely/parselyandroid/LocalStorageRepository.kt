@@ -40,7 +40,7 @@ internal open class LocalStorageRepository(private val context: Context) {
         persistObject(ArrayList<Map<String, Any>>())
     }
 
-    fun remove(toRemove: List<Map<String, Any>>) {
+    suspend fun remove(toRemove: List<Map<String, Any?>?>) = mutex.withLock {
         persistObject(getStoredQueue() - toRemove.toSet())
     }
 
