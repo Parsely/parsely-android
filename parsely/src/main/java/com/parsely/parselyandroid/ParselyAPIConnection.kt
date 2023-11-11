@@ -21,11 +21,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal class ParselyAPIConnection @JvmOverloads constructor(
+internal open class ParselyAPIConnection @JvmOverloads constructor(
     private val url: String,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    suspend fun send(payload: String): Result<Unit> {
+    open suspend fun send(payload: String): Result<Unit> {
         return withContext(dispatcher) {
             var connection: HttpURLConnection? = null
             try {
