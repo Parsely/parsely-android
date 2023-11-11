@@ -19,7 +19,6 @@ package com.parsely.parselyandroid;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,7 +26,6 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Map;
 import java.util.Timer;
@@ -88,9 +86,8 @@ public class ParselyTracker {
         timer = new Timer();
         isDebug = false;
 
-        if (localStorageRepository.getStoredQueue().size() > 0) {
-            startFlushTimer();
-        }
+        final SdkInit sdkInit = new SdkInit(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, flushManager);
+        sdkInit.initialize();
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(
                 (LifecycleEventObserver) (lifecycleOwner, event) -> {
@@ -461,25 +458,6 @@ public class ParselyTracker {
     @NonNull
     private String generatePixelId() {
         return UUID.randomUUID().toString();
-    }
-
-    /**
-     * Get the number of events waiting to be flushed to Parsely.
-     *
-     * @return The number of events waiting to be flushed to Parsely.
-     */
-    public int queueSize() {
-        return localStorageRepository.getStoredQueue().size();
-    }
-
-    /**
-     * Get the number of events stored in persistent storage.
-     *
-     * @return The number of events stored in persistent storage.
-     */
-    public int storedEventsCount() {
-        ArrayList<Map<String, Object>> ar = localStorageRepository.getStoredQueue();
-        return ar.size();
     }
 
     void flushEvents() {
