@@ -1,6 +1,6 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.JsonSerializer.toJson
+import com.parsely.parselyandroid.JsonSerializer.toParselyEventsPayload
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -20,9 +20,7 @@ internal class SendEvents(
             }
             ParselyTracker.PLog("Sending request with %d events", eventsToSend.size)
 
-            val batchMap: MutableMap<String, Any> = HashMap()
-            batchMap["events"] = eventsToSend
-            val jsonPayload = toJson(batchMap).orEmpty()
+            val jsonPayload = toParselyEventsPayload(eventsToSend)
 
             ParselyTracker.PLog("POST Data %s", jsonPayload)
 
