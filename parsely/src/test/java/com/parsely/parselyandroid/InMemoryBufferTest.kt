@@ -87,7 +87,7 @@ internal class InMemoryBufferTest {
             events.addAll(toInsert)
         }
 
-        override fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
+        override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
             return ArrayList(events)
         }
     }

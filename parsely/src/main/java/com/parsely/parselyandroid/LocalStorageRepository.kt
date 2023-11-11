@@ -41,7 +41,8 @@ internal open class LocalStorageRepository(private val context: Context) {
      *
      * @return The stored queue of events.
      */
-    open fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
+    open suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> = mutex.withLock {
+
         var storedQueue: ArrayList<Map<String, Any?>?> = ArrayList()
         try {
             val fis = context.applicationContext.openFileInput(STORAGE_KEY)

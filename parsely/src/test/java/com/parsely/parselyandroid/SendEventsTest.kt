@@ -165,7 +165,7 @@ class SendEventsTest {
             // given
             val flushManager = FakeFlushManager(this)
             val repository = object : FakeLocalStorageRepository() {
-                override fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
+                override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
                     return ArrayList(listOf(mapOf("test" to 123)))
                 }
             }
@@ -217,12 +217,6 @@ class SendEventsTest {
     private class FakeTracker : ParselyTracker(
         "siteId", 10, ApplicationProvider.getApplicationContext()
     ) {
-
-        var flushTimerStopped = false
-
-        override fun stopFlushTimer() {
-            flushTimerStopped = true
-        }
     }
 
     private open class FakeLocalStorageRepository :
@@ -237,7 +231,7 @@ class SendEventsTest {
             storage = storage - toRemove.toSet()
         }
 
-        override fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
+        override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
             return ArrayList(storage)
         }
     }
