@@ -28,14 +28,14 @@ internal class SendEvents(
 
             if (isDebug) {
                 ParselyTracker.PLog("Debug mode on. Not sending to Parse.ly")
-                localStorageRepository.purgeStoredQueue()
+                localStorageRepository.remove(eventsToSend)
             } else {
                 ParselyTracker.PLog("Requested %s", ParselyTracker.ROOT_URL)
                 parselyAPIConnection.send(jsonPayload)
                     .fold(
                         onSuccess = {
                             ParselyTracker.PLog("Pixel request success")
-                            localStorageRepository.purgeStoredQueue()
+                            localStorageRepository.remove(eventsToSend)
                             ParselyTracker.PLog("Event queue empty, flush timer cleared.")
                             flushManager.stop()
                         },
