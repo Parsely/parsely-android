@@ -427,18 +427,6 @@ public class ParselyTracker {
     }
 
     /**
-     * Send the batched event request to Parsely.
-     * <p>
-     * Creates a POST request containing the JSON encoding of the event queue.
-     * Sends this request to Parse.ly servers.
-     *
-     * @param events The list of event dictionaries to serialize
-     */
-    private void sendBatchRequest(ArrayList<Map<String, Object>> events) {
-        sendEvents.invoke(isDebug);
-    }
-
-    /**
      * Returns whether the network is accessible and Parsely is reachable.
      *
      * @return Whether the network is accessible and Parsely is reachable.
@@ -468,13 +456,6 @@ public class ParselyTracker {
      */
     public boolean flushTimerIsActive() {
         return flushManager.isRunning();
-    }
-
-    /**
-     * Stop the event queue flush timer.
-     */
-    public void stopFlushTimer() {
-        flushManager.stop();
     }
 
     @NonNull
