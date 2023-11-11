@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 internal class SendEvents(
-    private val parselyTracker: ParselyTracker,
+    private val flushManager: FlushManager,
     private val localStorageRepository: LocalStorageRepository,
     private val parselyAPIConnection: ParselyAPIConnection,
     private val scope: CoroutineScope
@@ -37,7 +37,7 @@ internal class SendEvents(
                             ParselyTracker.PLog("Pixel request success")
                             localStorageRepository.purgeStoredQueue()
                             ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-                            parselyTracker.stopFlushTimer()
+                            flushManager.stop()
                         },
                         onFailure = {
                             ParselyTracker.PLog("Pixel request exception")
