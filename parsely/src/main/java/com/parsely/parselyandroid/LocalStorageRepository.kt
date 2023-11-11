@@ -32,8 +32,12 @@ internal open class LocalStorageRepository(private val context: Context) {
         }
     }
 
-    open suspend fun remove(toRemove: List<Map<String, Any?>?>) = mutex.withLock {
-        persistObject(getStoredQueue() - toRemove.toSet())
+    open suspend fun remove(toRemove: List<Map<String, Any?>?>) {
+        val storedEvents = getStoredQueue()
+
+        mutex.withLock {
+            persistObject(storedEvents - toRemove.toSet())
+        }
     }
 
     /**
@@ -67,8 +71,12 @@ internal open class LocalStorageRepository(private val context: Context) {
     /**
      * Save the event queue to persistent storage.
      */
-    open suspend fun insertEvents(toInsert: List<Map<String, Any?>?>) = mutex.withLock {
-        persistObject(ArrayList((toInsert + getStoredQueue()).distinct()))
+    open suspend fun insertEvents(toInsert: List<Map<String, Any?>?>){
+        val storedEvents = getStoredQueue()
+
+        mutex.withLock {
+            persistObject(ArrayList((toInsert + storedEvents).distinct()))
+        }
     }
 
     companion object {
