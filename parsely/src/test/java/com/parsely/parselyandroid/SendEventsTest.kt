@@ -159,6 +159,34 @@ class SendEventsTest {
             assertThat(flushManager.stopped).isFalse
         }
 
+    @Test
+    fun `given non-empty local storage and debug mode off, when storage is not empty after successful event, then flush manager is not stopped`() =
+        runTest {
+            // given
+            val flushManager = FakeFlushManager(this)
+            val repository = object : FakeLocalStorageRepository() {
+                override fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
+                    return ArrayList(listOf(mapOf("test" to 123)))
+                }
+            }
+            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+                nextResult = Result.success(Unit)
+            }
+            sut = SendEvents(
+                flushManager,
+                repository,
+                parselyAPIConnection,
+                this
+            )
+
+            // when
+            sut.invoke(false)
+            runCurrent()
+
+            // then
+            assertThat(flushManager.stopped).isFalse
+        }
+
     private class FakeFlushManager(scope: CoroutineScope) : FlushManager(FakeTracker(), 10, scope) {
         var stopped = false
 
@@ -178,7 +206,7 @@ class SendEventsTest {
         }
     }
 
-    private class FakeLocalStorageRepository :
+    private open class FakeLocalStorageRepository :
         LocalStorageRepository(ApplicationProvider.getApplicationContext()) {
         private var storage = emptyList<Map<String, Any?>?>()
 

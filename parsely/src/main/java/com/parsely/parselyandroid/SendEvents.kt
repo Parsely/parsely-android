@@ -35,7 +35,9 @@ internal class SendEvents(
                             ParselyTracker.PLog("Pixel request success")
                             localStorageRepository.remove(eventsToSend)
                             ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-                            flushManager.stop()
+                            if (localStorageRepository.getStoredQueue().isEmpty()) {
+                                flushManager.stop()
+                            }
                         },
                         onFailure = {
                             ParselyTracker.PLog("Pixel request exception")
