@@ -187,6 +187,25 @@ class SendEventsTest {
             assertThat(flushManager.stopped).isFalse
         }
 
+    @Test
+    fun `given empty local storage, when invoked, then flush manager is stopped`() = runTest {
+        // given
+        val flushManager = FakeFlushManager(this)
+        sut = SendEvents(
+            flushManager,
+            FakeLocalStorageRepository(),
+            FakeParselyAPIConnection(),
+            this
+        )
+
+        // when
+        sut.invoke(false)
+        runCurrent()
+
+        // then
+        assertThat(flushManager.stopped).isTrue()
+    }
+
     private class FakeFlushManager(scope: CoroutineScope) : FlushManager(FakeTracker(), 10, scope) {
         var stopped = false
 

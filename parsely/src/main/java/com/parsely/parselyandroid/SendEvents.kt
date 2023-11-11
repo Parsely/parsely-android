@@ -21,6 +21,7 @@ internal class SendEvents(
                 val eventsToSend = localStorageRepository.getStoredQueue()
 
                 if (eventsToSend.isEmpty()) {
+                    flushManager.stop()
                     return@launch
                 }
                 ParselyTracker.PLog("Sending request with %d events", eventsToSend.size)

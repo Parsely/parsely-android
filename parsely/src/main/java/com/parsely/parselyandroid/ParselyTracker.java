@@ -501,29 +501,12 @@ public class ParselyTracker {
         return ar.size();
     }
 
-    private class FlushQueue extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected synchronized Void doInBackground(Void... params) {
-            ArrayList<Map<String, Object>> storedQueue = localStorageRepository.getStoredQueue();
-            PLog("%d events in stored queue", storedEventsCount());
-            // in case both queues have been flushed and app quits, don't crash
-            if (storedQueue.isEmpty()) {
-                stopFlushTimer();
-                return null;
-            }
-            if (!isReachable()) {
-                PLog("Network unreachable. Not flushing.");
-                return null;
-            }
-
-            PLog("Flushing queue");
-            sendBatchRequest(storedQueue);
-            return null;
-        }
-    }
-
     void flushEvents() {
-        new FlushQueue().execute();
+        if (!isReachable()) {
+            PLog("Network unreachable. Not flushing.");
+            return;
+        }
+        sendEvents.invoke(isDebug);
     }
 
 }
