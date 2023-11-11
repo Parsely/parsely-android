@@ -25,19 +25,6 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `when expelling stored event, then assert that it has no effect`() = runTest {
-        // given
-        sut.insertEvents(((1..100).map { mapOf("index" to it) }))
-        runCurrent()
-
-        // when
-        sut.expelStoredEvent()
-
-        // then
-        assertThat(sut.getStoredQueue()).hasSize(100)
-    }
-
-    @Test
     fun `given the list of events, when persisting the list, then querying the list returns the same result`() = runTest {
         // given
         val eventsList = (1..10).map { mapOf("index" to it) }

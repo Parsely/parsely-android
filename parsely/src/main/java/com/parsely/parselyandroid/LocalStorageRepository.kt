@@ -5,7 +5,6 @@ import java.io.EOFException
 import java.io.FileNotFoundException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -31,13 +30,6 @@ internal open class LocalStorageRepository(private val context: Context) {
         } catch (ex: Exception) {
             ParselyTracker.PLog("Exception thrown during queue serialization: %s", ex.toString())
         }
-    }
-
-    /**
-     * Delete the stored queue from persistent storage.
-     */
-    fun purgeStoredQueue() {
-        persistObject(ArrayList<Map<String, Any>>())
     }
 
     suspend fun remove(toRemove: List<Map<String, Any?>?>) = mutex.withLock {
@@ -69,14 +61,6 @@ internal open class LocalStorageRepository(private val context: Context) {
             )
         }
         return storedQueue
-    }
-
-    /**
-     * Delete an event from the stored queue.
-     */
-    open fun expelStoredEvent() {
-        val storedQueue = getStoredQueue()
-        storedQueue.removeAt(0)
     }
 
     /**
