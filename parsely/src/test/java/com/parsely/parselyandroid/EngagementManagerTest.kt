@@ -129,6 +129,45 @@ internal class EngagementManagerTest {
         })
     }
 
+    @Test
+    fun `when starting manager, then it should return true for isRunning`() = runTest {
+        // given
+        sut = EngagementManager(
+            tracker,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
+            baseEvent,
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler)
+        )
+
+        // when
+        sut.start()
+
+        // then
+        assertThat(sut.isRunning).isTrue
+    }
+
+    @Test
+    fun `given started manager, when stoping manager, then it should return false for isRunning`() = runTest {
+        // given
+        sut = EngagementManager(
+            tracker,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
+            baseEvent,
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler)
+        )
+        sut.start()
+
+        // when
+        sut.stop()
+
+        // then
+        assertThat(sut.isRunning).isFalse
+    }
+
     private fun MapAssert<String, Any>.isCorrectEvent(
         withIncrementalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
