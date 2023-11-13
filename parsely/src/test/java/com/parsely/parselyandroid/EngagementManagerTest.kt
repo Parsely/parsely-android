@@ -1,7 +1,6 @@
 package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
-import java.util.Calendar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -205,7 +204,7 @@ internal class EngagementManagerTest {
     }
 
     class FakeIntervalCalculator : HeartbeatIntervalCalculator(Clock()) {
-        override fun calculate(startTime: Calendar): Long {
+        override fun calculate(startTime: Duration): Long {
             return DEFAULT_INTERVAL.inWholeMilliseconds
         }
     }
