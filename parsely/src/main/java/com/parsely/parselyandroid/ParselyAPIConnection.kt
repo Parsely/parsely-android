@@ -21,28 +21,23 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal open class ParselyAPIConnection @JvmOverloads constructor(
-    private val url: String,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-) {
+internal open class ParselyAPIConnection(private val url: String) {
     open suspend fun send(payload: String): Result<Unit> {
-        return withContext(dispatcher) {
-            var connection: HttpURLConnection? = null
-            try {
-                connection = URL(url).openConnection() as HttpURLConnection
-                connection.doOutput = true
-                connection.setRequestProperty("Content-Type", "application/json")
-                val output = connection.outputStream
-                output.write(payload.toByteArray())
-                output.close()
-                connection.inputStream
-            } catch (ex: Exception) {
-                return@withContext Result.failure(ex)
-            } finally {
-                connection?.disconnect()
-            }
-
-            Result.success(Unit)
+        var connection: HttpURLConnection? = null
+        try {
+            connection = URL(url).openConnection() as HttpURLConnection
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/json")
+            val output = connection.outputStream
+            output.write(payload.toByteArray())
+            output.close()
+            connection.inputStream
+        } catch (ex: Exception) {
+            return Result.failure(ex)
+        } finally {
+            connection?.disconnect()
         }
+
+        return Result.success(Unit)
     }
 }
