@@ -28,6 +28,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -190,6 +191,96 @@ class FunctionalTests {
         }
     }
 
+    /**
+     * In this scenario consumer app starts an engagement session and after 27150 ms,
+     * it stops the session.
+     *
+     * Intervals:
+     * With current implementation of `HeartbeatIntervalCalculator`, the next intervals are:
+     * - 10500ms for the first interval
+     * - 13650ms for the second interval
+     *
+     * So after ~27,2s we should observe
+     *  - 2 `heartbeat` events from `startEngagement` + 1 `heartbeat` event caused by `stopEngagement` which is triggered during engagement interval
+     *
+     * Time off-differences in assertions are acceptable, because it's a time-sensitive test
+     */
+    @Test
+    fun engagementManagerTest() {
+        val engagementUrl = "engagementUrl"
+        var startTimestamp = Duration.ZERO
+        val firstInterval = 10500.milliseconds
+        val secondInterval = 13650.milliseconds
+        val pauseInterval = 3.seconds
+        ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
+            // given
+            scenario.onActivity { activity: Activity ->
+                beforeEach(activity)
+                server.enqueue(MockResponse().setResponseCode(200))
+                parselyTracker = initializeTracker(activity, flushInterval = 30.seconds)
+
+                // when
+                startTimestamp = System.currentTimeMillis().milliseconds
+                parselyTracker.startEngagement(engagementUrl, null)
+            }
+
+            Thread.sleep((firstInterval + secondInterval + pauseInterval).inWholeMilliseconds)
+            parselyTracker.stopEngagement()
+
+            // then
+            val request = server.takeRequest(35, TimeUnit.SECONDS)!!.toMap()["events"]!!
+
+            assertThat(
+                request.sortedBy { it.data.timestamp }
+                    .filter { it.action == "heartbeat" }
+            ).hasSize(3)
+                .satisfies({
+                    val firstEvent = it[0]
+                    val secondEvent = it[1]
+                    val thirdEvent = it[2]
+
+                    assertThat(firstEvent.data.timestamp).isCloseTo(
+                        (startTimestamp + firstInterval).inWholeMilliseconds,
+                        within(1.seconds.inWholeMilliseconds)
+                    )
+                    assertThat(firstEvent.totalTime).isCloseTo(
+                        firstInterval.inWholeMilliseconds,
+                        within(100L)
+                    )
+                    assertThat(firstEvent.incremental).isCloseTo(
+                        firstInterval.inWholeSeconds,
+                        within(1L)
+                    )
+
+                    assertThat(secondEvent.data.timestamp).isCloseTo(
+                        (startTimestamp + firstInterval + secondInterval).inWholeMilliseconds,
+                        within(1.seconds.inWholeMilliseconds)
+                    )
+                    assertThat(secondEvent.totalTime).isCloseTo(
+                        (firstInterval + secondInterval).inWholeMilliseconds,
+                        within(100L)
+                    )
+                    assertThat(secondEvent.incremental).isCloseTo(
+                        secondInterval.inWholeSeconds,
+                        within(1L)
+                    )
+
+                    assertThat(thirdEvent.data.timestamp).isCloseTo(
+                        (startTimestamp + firstInterval + secondInterval + pauseInterval).inWholeMilliseconds,
+                        within(1.seconds.inWholeMilliseconds)
+                    )
+                    assertThat(thirdEvent.totalTime).isCloseTo(
+                        (firstInterval + secondInterval + pauseInterval).inWholeMilliseconds,
+                        within(100L)
+                    )
+                    assertThat(thirdEvent.incremental).isCloseTo(
+                        (pauseInterval).inWholeSeconds,
+                        within(1L)
+                    )
+                })
+        }
+    }
+
     private fun RecordedRequest.toMap(): Map<String, List<Event>> {
         val listType: TypeReference<Map<String, List<Event>>> =
             object : TypeReference<Map<String, List<Event>>>() {}
@@ -200,6 +291,15 @@ class FunctionalTests {
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class Event(
         @JsonProperty("idsite") var idsite: String,
+        @JsonProperty("action") var action: String,
+        @JsonProperty("data") var data: ExtraData,
+        @JsonProperty("tt") var totalTime: Long,
+        @JsonProperty("inc") var incremental: Long,
+    )
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class ExtraData(
+        @JsonProperty("ts") var timestamp: Long,
     )
 
     private val locallyStoredEvents
