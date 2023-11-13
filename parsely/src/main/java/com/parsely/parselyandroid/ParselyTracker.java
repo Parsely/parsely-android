@@ -56,7 +56,9 @@ public class ParselyTracker {
     @NonNull
     private final EventsBuilder eventsBuilder;
     @NonNull
-    private final HeartbeatIntervalCalculator intervalCalculator = new HeartbeatIntervalCalculator(new Clock());
+    private final Clock clock;
+    @NonNull
+    private final HeartbeatIntervalCalculator intervalCalculator;
     @NonNull
     private final LocalStorageRepository localStorageRepository;
     @NonNull
@@ -81,6 +83,8 @@ public class ParselyTracker {
             return Unit.INSTANCE;
         });
         sendEvents = new SendEvents(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
+        clock = new Clock();
+        intervalCalculator = new HeartbeatIntervalCalculator(clock);
 
         // get the adkey straight away on instantiation
         timer = new Timer();
@@ -284,7 +288,7 @@ public class ParselyTracker {
 
         // Start a new EngagementTask
         Map<String, Object> event = eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
-        engagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event, intervalCalculator);
+        engagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock );
         engagementManager.start();
     }
 
@@ -360,7 +364,7 @@ public class ParselyTracker {
         // Start a new engagement manager for the video.
         @NonNull final Map<String, Object> hbEvent = eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
         // TODO: Can we remove some metadata fields from this request?
-        videoEngagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent, intervalCalculator);
+        videoEngagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock);
         videoEngagementManager.start();
     }
 

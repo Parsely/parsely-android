@@ -5,6 +5,14 @@ import java.util.Calendar
 import java.util.TimeZone
 import java.util.Timer
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.AbstractLongAssert
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
@@ -17,6 +25,7 @@ import org.robolectric.RobolectricTestRunner
 
 private typealias Event = MutableMap<String, Any>
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class EngagementManagerTest {
 
@@ -28,23 +37,23 @@ internal class EngagementManagerTest {
         "data" to testData
     )
 
-    @Before
-    fun setUp() {
+    @Test
+    fun `when starting manager, then record the correct event after interval millis`() = runTest {
+        // when
         sut = EngagementManager(
             tracker,
             parentTimer,
             DEFAULT_INTERVAL_MILLIS,
             baseEvent,
-            FakeIntervalCalculator()
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler),
         )
-    }
 
-    @Test
-    fun `when starting manager, then record the correct event after interval millis`() {
-        // when
         sut.start()
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val timestamp = now - THREAD_SLEEPING_THRESHOLD
+        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        runCurrent()
+        val timestamp = currentTime
 
         // then
         assertThat(tracker.events[0]).isCorrectEvent(
@@ -56,19 +65,29 @@ internal class EngagementManagerTest {
     }
 
     @Test
-    fun `when starting manager, then schedule task each interval period`() {
+    fun `when starting manager, then schedule task each interval period`() = runTest {
+        // when
+        sut = EngagementManager(
+            tracker,
+            parentTimer,
+            DEFAULT_INTERVAL_MILLIS,
+            baseEvent,
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler),
+        )
         sut.start()
 
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val firstTimestamp = now - THREAD_SLEEPING_THRESHOLD
+        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        val firstTimestamp = currentTime
 
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val secondTimestamp = now - 2 * THREAD_SLEEPING_THRESHOLD
+        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        val secondTimestamp = currentTime
 
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val thirdTimestamp = now - 3 * THREAD_SLEEPING_THRESHOLD
+        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        val thirdTimestamp = currentTime
 
-        sleep(THREAD_SLEEPING_THRESHOLD)
+        runCurrent()
 
         val firstEvent = tracker.events[0]
         assertThat(firstEvent).isCorrectEvent(
@@ -94,7 +113,7 @@ internal class EngagementManagerTest {
     }
 
     @Test
-    fun `given started manager, when stopping manager before interval ticks, then schedule an event`() {
+    fun `given started manager, when stopping manager before interval ticks, then schedule an event`() = runTest {
         // given
         sut = EngagementManager(
             tracker,
@@ -105,12 +124,14 @@ internal class EngagementManagerTest {
                 override fun calculate(startTime: Calendar): Long {
                     return 5.seconds.inWholeMilliseconds
                 }
-            }
+            },
+            this,
+            FakeClock(testScheduler)
         )
         sut.start()
 
         // when
-        sleep(12.seconds.inWholeMilliseconds)
+        advanceTimeBy(12.seconds.inWholeMilliseconds)
         sut.stop()
 
         // then
@@ -123,8 +144,6 @@ internal class EngagementManagerTest {
             assertThat(it[2]).containsEntry("inc", 2L)
         })
     }
-
-    private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
 
     private fun MapAssert<String, Any>.isCorrectEvent(
         withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
@@ -166,6 +185,11 @@ internal class EngagementManagerTest {
         override fun calculate(startTime: Calendar): Long {
             return DEFAULT_INTERVAL_MILLIS
         }
+    }
+
+    class FakeClock(private val scheduler: TestCoroutineScheduler) : Clock() {
+        override val now: Duration
+            get() = scheduler.currentTime.milliseconds
     }
 
     private companion object {

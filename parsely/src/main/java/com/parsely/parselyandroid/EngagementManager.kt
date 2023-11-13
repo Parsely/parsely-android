@@ -4,6 +4,11 @@ import java.util.Calendar
 import java.util.TimeZone
 import java.util.Timer
 import java.util.TimerTask
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Engagement manager for article and video engagement.
@@ -21,26 +26,42 @@ internal class EngagementManager(
     private val parentTimer: Timer,
     private var latestDelayMillis: Long,
     var baseEvent: Map<String, Any>,
-    private val intervalCalculator: HeartbeatIntervalCalculator
+    private val intervalCalculator: HeartbeatIntervalCalculator,
+    private val coroutineScope: CoroutineScope,
+    private val clock: Clock,
 ) {
     var isRunning = false
         private set
     private var waitingTimerTask: TimerTask? = null
+    private var job: Job? = null
     private var totalTime: Long = 0
     private var startTime: Calendar
+    private var nextScheduledExecution: Long = 0
 
     init {
         startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     }
 
     fun start() {
-        scheduleNextExecution(latestDelayMillis)
         isRunning = true
-        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = clock.now.inWholeMilliseconds
+        }
+        job = coroutineScope.launch {
+            while (isActive) {
+                latestDelayMillis = intervalCalculator.calculate(startTime)
+                nextScheduledExecution = clock.now.inWholeMilliseconds + latestDelayMillis
+                delay(latestDelayMillis)
+                doEnqueue(clock.now.inWholeMilliseconds)
+            }
+        }
     }
 
     fun stop() {
-        waitingTimerTask!!.cancel()
+        job?.let {
+            it.cancel()
+            doEnqueue(nextScheduledExecution)
+        }
         isRunning = false
     }
 
@@ -80,14 +101,13 @@ internal class EngagementManager(
         ParselyTracker.PLog(String.format("Enqueuing %s event.", event["action"]))
 
         // Update `ts` for the event since it's happening right now.
-        val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
         val baseEventData = (event["data"] as Map<String, Any>?)!!
         val data: MutableMap<String, Any> = HashMap(baseEventData)
-        data["ts"] = now.timeInMillis
+        data["ts"] = clock.now.inWholeMilliseconds
         event["data"] = data
 
         // Adjust inc by execution time in case we're late or early.
-        val executionDiff = System.currentTimeMillis() - scheduledExecutionTime
+        val executionDiff = clock.now.inWholeMilliseconds - scheduledExecutionTime
         val inc = latestDelayMillis + executionDiff
         totalTime += inc
         event["inc"] = inc / 1000
