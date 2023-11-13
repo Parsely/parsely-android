@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 internal class EngagementManager(
     private val parselyTracker: ParselyTracker,
     private var latestDelayMillis: Long,
-    var baseEvent: Map<String, Any>,
+    private val baseEvent: Map<String, Any>,
     private val intervalCalculator: HeartbeatIntervalCalculator,
     private val coroutineScope: CoroutineScope,
     private val clock: Clock,
