@@ -28,7 +28,6 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import java.util.Formatter;
 import java.util.Map;
-import java.util.Timer;
 import java.util.UUID;
 
 import kotlin.Unit;
@@ -48,7 +47,6 @@ public class ParselyTracker {
     static final String ROOT_URL = "https://p1.parsely.com/".intern();
     private boolean isDebug;
     private final Context context;
-    private final Timer timer;
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
     @Nullable
@@ -87,7 +85,6 @@ public class ParselyTracker {
         intervalCalculator = new HeartbeatIntervalCalculator(clock);
 
         // get the adkey straight away on instantiation
-        timer = new Timer();
         isDebug = false;
 
         final SdkInit sdkInit = new SdkInit(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, flushManager);
@@ -288,7 +285,7 @@ public class ParselyTracker {
 
         // Start a new EngagementTask
         Map<String, Object> event = eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
-        engagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock );
+        engagementManager = new EngagementManager(this, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock );
         engagementManager.start();
     }
 
@@ -364,7 +361,7 @@ public class ParselyTracker {
         // Start a new engagement manager for the video.
         @NonNull final Map<String, Object> hbEvent = eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
         // TODO: Can we remove some metadata fields from this request?
-        videoEngagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock);
+        videoEngagementManager = new EngagementManager(this, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock);
         videoEngagementManager.start();
     }
 
