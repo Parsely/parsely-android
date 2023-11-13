@@ -55,7 +55,6 @@ class ParselyAPIConnectionTest {
         runTest {
             // given
             mockServer.enqueue(MockResponse().setResponseCode(400))
-            val sampleEvents = mapOf("idsite" to "example.com")
 
             // when
             val result = sut.send(pixelPayload)
@@ -68,6 +67,8 @@ class ParselyAPIConnectionTest {
 
     companion object {
         val pixelPayload: String =
-            this::class.java.getResource("pixel_payload.json")?.readText().orEmpty()
+            ClassLoader.getSystemResource("pixel_payload.json").readText().apply {
+                assert(isNotBlank())
+            }
     }
 }
