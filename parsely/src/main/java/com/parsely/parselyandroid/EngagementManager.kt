@@ -1,120 +1,100 @@
-package com.parsely.parselyandroid;
+package com.parsely.parselyandroid
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Calendar
+import java.util.TimeZone
+import java.util.Timer
+import java.util.TimerTask
 
 /**
  * Engagement manager for article and video engagement.
- * <p>
+ *
+ *
  * Implemented to handle its own queuing of future executions to accomplish
  * two things:
- * <p>
+ *
+ *
  * 1. Flushing any engaged time before canceling.
  * 2. Progressive backoff for long engagements to save data.
  */
-class EngagementManager {
+internal class EngagementManager(
+    private val parselyTracker: ParselyTracker,
+    private val parentTimer: Timer,
+    private var latestDelayMillis: Long,
+    var baseEvent: Map<String, Any>,
+    private val intervalCalculator: HeartbeatIntervalCalculator
+) {
+    var isRunning = false
+        private set
+    private var waitingTimerTask: TimerTask? = null
+    private var totalTime: Long = 0
+    private var startTime: Calendar
 
-    private final ParselyTracker parselyTracker;
-    public Map<String, Object> baseEvent;
-    private boolean started;
-    private final Timer parentTimer;
-    private TimerTask waitingTimerTask;
-    private long latestDelayMillis, totalTime;
-    private Calendar startTime;
-    private final HeartbeatIntervalCalculator intervalCalculator;
-
-    public EngagementManager(
-            ParselyTracker parselyTracker,
-            Timer parentTimer,
-            long intervalMillis,
-            Map<String, Object> baseEvent,
-            HeartbeatIntervalCalculator intervalCalculator
-    ) {
-        this.parselyTracker = parselyTracker;
-        this.baseEvent = baseEvent;
-        this.parentTimer = parentTimer;
-        this.intervalCalculator = intervalCalculator;
-        latestDelayMillis = intervalMillis;
-        totalTime = 0;
-        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    init {
+        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     }
 
-    public boolean isRunning() {
-        return started;
+    fun start() {
+        scheduleNextExecution(latestDelayMillis)
+        isRunning = true
+        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     }
 
-    public void start() {
-        scheduleNextExecution(latestDelayMillis);
-        started = true;
-        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    fun stop() {
+        waitingTimerTask!!.cancel()
+        isRunning = false
     }
 
-    public void stop() {
-        waitingTimerTask.cancel();
-        started = false;
+    fun isSameVideo(url: String, urlRef: String, metadata: ParselyVideoMetadata): Boolean {
+        val baseMetadata = baseEvent["metadata"] as Map<String, Any>?
+        return baseEvent["url"] == url && baseEvent["urlref"] == urlRef && baseMetadata!!["link"] == metadata.link && baseMetadata["duration"] as Int == metadata.durationSeconds
     }
 
-    public boolean isSameVideo(String url, String urlRef, ParselyVideoMetadata metadata) {
-        Map<String, Object> baseMetadata = (Map<String, Object>) baseEvent.get("metadata");
-        return (baseEvent.get("url").equals(url) &&
-                baseEvent.get("urlref").equals(urlRef) &&
-                baseMetadata.get("link").equals(metadata.link) &&
-                (int) (baseMetadata.get("duration")) == metadata.durationSeconds);
-    }
-
-    private void scheduleNextExecution(long delay) {
-        TimerTask task = new TimerTask() {
-            public void run() {
-                doEnqueue(scheduledExecutionTime());
-                latestDelayMillis = intervalCalculator.calculate(startTime);
-                scheduleNextExecution(latestDelayMillis);
+    private fun scheduleNextExecution(delay: Long) {
+        val task: TimerTask = object : TimerTask() {
+            override fun run() {
+                doEnqueue(scheduledExecutionTime())
+                latestDelayMillis = intervalCalculator.calculate(startTime)
+                scheduleNextExecution(latestDelayMillis)
             }
 
-            public boolean cancel() {
-                boolean output = super.cancel();
+            override fun cancel(): Boolean {
+                val output = super.cancel()
                 // Only enqueue when we actually canceled something. If output is false then
                 // this has already been canceled.
                 if (output) {
-                    doEnqueue(scheduledExecutionTime());
+                    doEnqueue(scheduledExecutionTime())
                 }
-                return output;
+                return output
             }
-        };
-        latestDelayMillis = delay;
-        parentTimer.schedule(task, delay);
-        waitingTimerTask = task;
+        }
+        latestDelayMillis = delay
+        parentTimer.schedule(task, delay)
+        waitingTimerTask = task
     }
 
-    private void doEnqueue(long scheduledExecutionTime) {
+    private fun doEnqueue(scheduledExecutionTime: Long) {
         // Create a copy of the base event to enqueue
-        Map<String, Object> event = new HashMap<>(baseEvent);
-        ParselyTracker.PLog(String.format("Enqueuing %s event.", event.get("action")));
+        val event: MutableMap<String, Any> = HashMap(
+            baseEvent
+        )
+        ParselyTracker.PLog(String.format("Enqueuing %s event.", event["action"]))
 
         // Update `ts` for the event since it's happening right now.
-        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        @SuppressWarnings("unchecked")
-        Map<String, Object> baseEventData = (Map<String, Object>) event.get("data");
-        assert baseEventData != null;
-        Map<String, Object> data = new HashMap<>(baseEventData);
-        data.put("ts", now.getTimeInMillis());
-        event.put("data", data);
+        val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        val baseEventData = (event["data"] as Map<String, Any>?)!!
+        val data: MutableMap<String, Any> = HashMap(baseEventData)
+        data["ts"] = now.timeInMillis
+        event["data"] = data
 
         // Adjust inc by execution time in case we're late or early.
-        long executionDiff = (System.currentTimeMillis() - scheduledExecutionTime);
-        long inc = (latestDelayMillis + executionDiff);
-        totalTime += inc;
-        event.put("inc", inc / 1000);
-        event.put("tt", totalTime);
-
-        parselyTracker.enqueueEvent(event);
+        val executionDiff = System.currentTimeMillis() - scheduledExecutionTime
+        val inc = latestDelayMillis + executionDiff
+        totalTime += inc
+        event["inc"] = inc / 1000
+        event["tt"] = totalTime
+        parselyTracker.enqueueEvent(event)
     }
 
-
-    public double getIntervalMillis() {
-        return latestDelayMillis;
-    }
+    val intervalMillis: Double
+        get() = latestDelayMillis.toDouble()
 }
