@@ -4,6 +4,7 @@ import androidx.test.core.app.ApplicationProvider
 import java.util.Calendar
 import java.util.TimeZone
 import java.util.Timer
+import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.AbstractLongAssert
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
@@ -92,6 +93,37 @@ internal class EngagementManagerTest {
         )
     }
 
+    @Test
+    fun `given started manager, when stopping manager before interval ticks, then schedule an event`() {
+        // given
+        sut = EngagementManager(
+            tracker,
+            parentTimer,
+            5.seconds.inWholeMilliseconds,
+            baseEvent,
+            object : FakeIntervalCalculator() {
+                override fun calculate(startTime: Calendar): Long {
+                    return 5.seconds.inWholeMilliseconds
+                }
+            }
+        )
+        sut.start()
+
+        // when
+        sleep(12.seconds.inWholeMilliseconds)
+        sut.stop()
+
+        // then
+        // first tick: after initial delay 5s, incremental addition 5s
+        // second tick: after regular delay 5s, incremental addition 5s
+        // third tick: after cancellation after 2s, incremental addition 2s
+        assertThat(tracker.events).hasSize(3).satisfies({
+            assertThat(it[0]).containsEntry("inc", 5L)
+            assertThat(it[1]).containsEntry("inc", 5L)
+            assertThat(it[2]).containsEntry("inc", 2L)
+        })
+    }
+
     private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
 
     private fun MapAssert<String, Any>.isCorrectEvent(
@@ -130,7 +162,7 @@ internal class EngagementManagerTest {
         }
     }
 
-    class FakeIntervalCalculator : HeartbeatIntervalCalculator(Clock()) {
+    open class FakeIntervalCalculator : HeartbeatIntervalCalculator(Clock()) {
         override fun calculate(startTime: Calendar): Long {
             return DEFAULT_INTERVAL_MILLIS
         }
@@ -138,6 +170,7 @@ internal class EngagementManagerTest {
 
     private companion object {
         const val DEFAULT_INTERVAL_MILLIS = 100L
+
         // Additional time to wait to ensure that the timer has fired
         const val THREAD_SLEEPING_THRESHOLD = 50L
         val testData = mutableMapOf<String, Any>(
