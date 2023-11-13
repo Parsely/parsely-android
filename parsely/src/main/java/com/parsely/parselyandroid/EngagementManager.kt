@@ -1,7 +1,6 @@
 package com.parsely.parselyandroid
 
-import java.util.Calendar
-import java.util.TimeZone
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,20 +28,18 @@ internal class EngagementManager(
 ) {
     private var job: Job? = null
     private var totalTime: Long = 0
-    private var startTime: Calendar
+    private var startTime: Duration
     private var nextScheduledExecution: Long = 0
 
     init {
-        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        startTime =  clock.now
     }
 
     val isRunning: Boolean
         get() = job?.isActive ?: false
 
     fun start() {
-        startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
-            timeInMillis = clock.now.inWholeMilliseconds
-        }
+        startTime = clock.now
         job = coroutineScope.launch {
             while (isActive) {
                 latestDelayMillis = intervalCalculator.calculate(startTime)
