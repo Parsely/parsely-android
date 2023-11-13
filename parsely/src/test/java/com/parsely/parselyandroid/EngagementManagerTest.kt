@@ -2,7 +2,6 @@ package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
 import java.util.Calendar
-import java.util.TimeZone
 import java.util.Timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -40,7 +39,7 @@ internal class EngagementManagerTest {
         sut = EngagementManager(
             tracker,
             parentTimer,
-            DEFAULT_INTERVAL_MILLIS,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
             backgroundScope,
@@ -49,12 +48,13 @@ internal class EngagementManagerTest {
 
         // when
         sut.start()
-        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        advanceTimeBy(DEFAULT_INTERVAL)
         runCurrent()
 
         // then
         assertThat(tracker.events[0]).isCorrectEvent(
-            withTotalTime = { isEqualTo(DEFAULT_INTERVAL_MILLIS) },
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds)},
+            withTotalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeMilliseconds) },
             withTimestamp = { isEqualTo(currentTime) }
         )
     }
@@ -65,7 +65,7 @@ internal class EngagementManagerTest {
         sut = EngagementManager(
             tracker,
             parentTimer,
-            DEFAULT_INTERVAL_MILLIS,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
             backgroundScope,
@@ -74,30 +74,33 @@ internal class EngagementManagerTest {
         sut.start()
 
         // when
-        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        advanceTimeBy(DEFAULT_INTERVAL)
         val firstTimestamp = currentTime
 
-        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        advanceTimeBy(DEFAULT_INTERVAL)
         val secondTimestamp = currentTime
 
-        advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
+        advanceTimeBy(DEFAULT_INTERVAL)
         runCurrent()
         val thirdTimestamp = currentTime
 
         // then
         val firstEvent = tracker.events[0]
         assertThat(firstEvent).isCorrectEvent(
-            withTotalTime = { isEqualTo(DEFAULT_INTERVAL_MILLIS) },
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
+            withTotalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeMilliseconds) },
             withTimestamp = { isEqualTo(firstTimestamp) }
         )
         val secondEvent = tracker.events[1]
         assertThat(secondEvent).isCorrectEvent(
-            withTotalTime = { isEqualTo(DEFAULT_INTERVAL_MILLIS * 2) },
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
+            withTotalTime = { isEqualTo((DEFAULT_INTERVAL * 2).inWholeMilliseconds) },
             withTimestamp = { isEqualTo(secondTimestamp) }
         )
         val thirdEvent = tracker.events[2]
         assertThat(thirdEvent).isCorrectEvent(
-            withTotalTime = { isEqualTo(DEFAULT_INTERVAL_MILLIS * 3) },
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
+            withTotalTime = { isEqualTo((DEFAULT_INTERVAL * 3).inWholeMilliseconds) },
             withTimestamp = { isEqualTo(thirdTimestamp) }
         )
     }
@@ -108,40 +111,39 @@ internal class EngagementManagerTest {
         sut = EngagementManager(
             tracker,
             parentTimer,
-            5.seconds.inWholeMilliseconds,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
-            object : FakeIntervalCalculator() {
-                override fun calculate(startTime: Calendar): Long {
-                    return 5.seconds.inWholeMilliseconds
-                }
-            },
+            FakeIntervalCalculator(),
             this,
             FakeClock(testScheduler)
         )
         sut.start()
 
         // when
-        advanceTimeBy(12.seconds.inWholeMilliseconds)
+        advanceTimeBy(70.seconds.inWholeMilliseconds)
         sut.stop()
 
         // then
-        // first tick: after initial delay 5s, incremental addition 5s
-        // second tick: after regular delay 5s, incremental addition 5s
-        // third tick: after cancellation after 2s, incremental addition 2s
+        // first tick: after initial delay 30s, incremental addition 30s
+        // second tick: after regular delay 30s, incremental addition 30s
+        // third tick: after cancellation after 10s, incremental addition 10s
         assertThat(tracker.events).hasSize(3).satisfies({
-            assertThat(it[0]).containsEntry("inc", 5L)
-            assertThat(it[1]).containsEntry("inc", 5L)
-            assertThat(it[2]).containsEntry("inc", 2L)
+            assertThat(it[0]).containsEntry("inc", 30L)
+            assertThat(it[1]).containsEntry("inc", 30L)
+            assertThat(it[2]).containsEntry("inc", 10L)
         })
     }
 
     private fun MapAssert<String, Any>.isCorrectEvent(
+        withIncrementalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
     ): MapAssert<String, Any> {
         return containsEntry("action", "heartbeat")
-            // Incremental will be always 0 because the interval is lower than 1s
-            .containsEntry("inc", 0L)
+            .hasEntrySatisfying("inc") { incrementalTime ->
+                incrementalTime as Long
+                assertThat(incrementalTime).withIncrementalTime()
+            }
             .hasEntrySatisfying("tt") { totalTime ->
                 totalTime as Long
                 assertThat(totalTime).withTotalTime()
@@ -156,9 +158,6 @@ internal class EngagementManagerTest {
             }
     }
 
-    private val now: Long
-        get() = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-
     class FakeTracker : ParselyTracker(
         "",
         0,
@@ -171,9 +170,9 @@ internal class EngagementManagerTest {
         }
     }
 
-    open class FakeIntervalCalculator : HeartbeatIntervalCalculator(Clock()) {
+    class FakeIntervalCalculator : HeartbeatIntervalCalculator(Clock()) {
         override fun calculate(startTime: Calendar): Long {
-            return DEFAULT_INTERVAL_MILLIS
+            return DEFAULT_INTERVAL.inWholeMilliseconds
         }
     }
 
@@ -183,7 +182,7 @@ internal class EngagementManagerTest {
     }
 
     private companion object {
-        const val DEFAULT_INTERVAL_MILLIS = 100L
+        val DEFAULT_INTERVAL = 30.seconds
         val testData = mutableMapOf<String, Any>(
             "os" to "android",
             "parsely_site_uuid" to "e8857cbe-5ace-44f4-a85e-7e7475f675c5",
