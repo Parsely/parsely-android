@@ -27,8 +27,6 @@ internal class EngagementManager(
     private val coroutineScope: CoroutineScope,
     private val clock: Clock,
 ) {
-    var isRunning = false
-        private set
     private var job: Job? = null
     private var totalTime: Long = 0
     private var startTime: Calendar
@@ -38,8 +36,10 @@ internal class EngagementManager(
         startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     }
 
+    val isRunning: Boolean
+        get() = job?.isActive ?: false
+
     fun start() {
-        isRunning = true
         startTime = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             timeInMillis = clock.now.inWholeMilliseconds
         }
@@ -58,7 +58,6 @@ internal class EngagementManager(
             it.cancel()
             doEnqueue(nextScheduledExecution)
         }
-        isRunning = false
     }
 
     fun isSameVideo(url: String, urlRef: String, metadata: ParselyVideoMetadata): Boolean {
