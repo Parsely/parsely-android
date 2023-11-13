@@ -2,7 +2,6 @@ package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
 import java.util.Calendar
-import java.util.Timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -27,7 +26,6 @@ internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
     private val tracker = FakeTracker()
-    private val parentTimer = Timer()
     private val baseEvent: Event = mutableMapOf(
         "action" to "heartbeat",
         "data" to testData
@@ -38,7 +36,6 @@ internal class EngagementManagerTest {
         // given
         sut = EngagementManager(
             tracker,
-            parentTimer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
@@ -64,7 +61,6 @@ internal class EngagementManagerTest {
         // given
         sut = EngagementManager(
             tracker,
-            parentTimer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
@@ -110,7 +106,6 @@ internal class EngagementManagerTest {
         // given
         sut = EngagementManager(
             tracker,
-            parentTimer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
