@@ -1,7 +1,6 @@
 package com.parsely.parselyandroid
 
 import android.content.Context
-import android.provider.Settings
 import androidx.test.core.app.ApplicationProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.MapAssert
@@ -11,14 +10,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class EventsBuilderTest {
+internal class EventsBuilderTest {
     private lateinit var sut: EventsBuilder
 
     @Before
     fun setUp() {
-        val applicationContext = ApplicationProvider.getApplicationContext<Context>()
         sut = EventsBuilder(
-            DeviceInfoRepository(applicationContext),
+            FakeDeviceInfoRepository(),
             TEST_SITE_ID,
         )
     }
@@ -116,7 +114,7 @@ class EventsBuilderTest {
 
         // then
         @Suppress("UNCHECKED_CAST")
-        assertThat(event["data"] as Map<String, Any>).hasSize(5)
+        assertThat(event["data"] as Map<String, Any>).hasSize(2)
     }
 
     @Test
@@ -139,7 +137,7 @@ class EventsBuilderTest {
 
         // then
         @Suppress("UNCHECKED_CAST")
-        assertThat(event["data"] as Map<String, Any>).hasSize(7)
+        assertThat(event["data"] as Map<String, Any>).hasSize(4)
             .containsAllEntriesOf(extraData)
     }
 
@@ -192,19 +190,22 @@ class EventsBuilderTest {
                 @Suppress("UNCHECKED_CAST")
                 it as Map<String, Any>
                 assertThat(it)
-                    .hasSize(5)
-                    .containsEntry("os", "android")
+                    .hasSize(2)
+                    .containsAllEntriesOf(FAKE_DEVICE_INFO)
                     .hasEntrySatisfying("ts") { timestamp ->
                         assertThat(timestamp as Long).isBetween(1111111111111, 9999999999999)
                     }
-                    .containsEntry("manufacturer", "robolectric")
-                    .containsEntry("os_version", "33")
-                    .containsEntry("parsely_site_uuid", null)
             }
 
     companion object {
         const val TEST_SITE_ID = "Example"
         const val TEST_URL = "http://example.com/some-old/article.html"
         const val TEST_UUID = "123e4567-e89b-12d3-a456-426614174000"
+
+        val FAKE_DEVICE_INFO = mapOf("device" to "info")
+    }
+
+    class FakeDeviceInfoRepository: DeviceInfoRepository {
+        override fun collectDeviceInfo(): Map<String, String> = FAKE_DEVICE_INFO
     }
 }
