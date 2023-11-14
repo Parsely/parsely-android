@@ -4,9 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import android.provider.Settings
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 internal interface DeviceInfoRepository{
     fun collectDeviceInfo(): Map<String, String>
@@ -14,14 +11,9 @@ internal interface DeviceInfoRepository{
 
 internal open class AndroidDeviceInfoRepository(
     private val context: Context,
-    private val coroutineScope: CoroutineScope
+    private val advertisementIdProvider: IdProvider
 ): DeviceInfoRepository {
-    private var adKey: String? = null
     private val settings: SharedPreferences = context.getSharedPreferences("parsely-prefs", 0)
-
-    init {
-        retrieveAdKey()
-    }
 
     /**
      * Collect device-specific info.
@@ -43,8 +35,16 @@ internal open class AndroidDeviceInfoRepository(
 
     private val parselySiteUuid: String
         get() {
+            val adKey = advertisementIdProvider.provide()
+
             ParselyTracker.PLog("adkey is: %s, uuid is %s", adKey, siteUuid)
-            return if (adKey != null) adKey!! else siteUuid!!
+
+            return if (adKey != null) {
+                adKey
+            } else {
+                ParselyTracker.PLog("falling back to device uuid")
+                siteUuid .orEmpty()
+            }
         }
 
     private val siteUuid: String?
@@ -79,18 +79,6 @@ internal open class AndroidDeviceInfoRepository(
         )
         ParselyTracker.PLog(String.format("Generated UUID: %s", uuid))
         return uuid
-    }
-
-    private fun retrieveAdKey() {
-        coroutineScope.launch {
-            adKey = try {
-                val idInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
-                idInfo.id
-            } catch (e: Exception) {
-                ParselyTracker.PLog("No Google play services or error! falling back to device uuid")
-                siteUuid
-            }
-        }
     }
 
     companion object {
