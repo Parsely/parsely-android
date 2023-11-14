@@ -8,7 +8,7 @@ internal interface DeviceInfoRepository{
 
 internal open class AndroidDeviceInfoRepository(
     private val advertisementIdProvider: IdProvider,
-    private val uuidProvider: IdProvider,
+    private val androidIdProvider: IdProvider,
 ): DeviceInfoRepository {
 
     /**
@@ -32,15 +32,15 @@ internal open class AndroidDeviceInfoRepository(
     private val parselySiteUuid: String
         get() {
             val adKey = advertisementIdProvider.provide()
-            val siteUuid = uuidProvider.provide()
+            val androidId = androidIdProvider.provide()
 
-            ParselyTracker.PLog("adkey is: %s, uuid is %s", adKey, siteUuid)
+            ParselyTracker.PLog("adkey is: %s, uuid is %s", adKey, androidId)
 
             return if (adKey != null) {
                 adKey
             } else {
                 ParselyTracker.PLog("falling back to device uuid")
-                siteUuid .orEmpty()
+                androidId .orEmpty()
             }
         }
 }
