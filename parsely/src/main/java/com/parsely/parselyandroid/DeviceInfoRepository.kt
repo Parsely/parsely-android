@@ -41,9 +41,6 @@ internal open class AndroidDeviceInfoRepository(
         dInfo["os"] = "android"
         dInfo["os_version"] = String.format("%d", Build.VERSION.SDK_INT)
 
-        // FIXME: Not passed in event or used anywhere else.
-        val txt = context.packageManager.getApplicationLabel(context.applicationInfo)
-        dInfo["appname"] = txt.toString()
         return dInfo
     }
 
