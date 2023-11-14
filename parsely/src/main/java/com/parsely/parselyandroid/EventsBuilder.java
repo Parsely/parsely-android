@@ -62,11 +62,9 @@ class EventsBuilder {
         }
 
         final Map<String, String> deviceInfo = deviceInfoRepository.collectDeviceInfo();
-        data.put("manufacturer", deviceInfo.get("manufacturer"));
-        data.put("os", deviceInfo.get("os"));
-        data.put("os_version", deviceInfo.get("os_version"));
         data.put("ts", now.getTimeInMillis());
-        data.put("parsely_site_uuid", deviceInfo.get("parsely_site_uuid"));
+        data.putAll(deviceInfo);
+
         event.put("data", data);
 
         if (metadata != null) {

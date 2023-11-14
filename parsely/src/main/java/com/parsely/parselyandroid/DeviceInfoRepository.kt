@@ -9,8 +9,13 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import java.io.IOException
+import kotlinx.coroutines.launch
 
-internal class DeviceInfoRepository(private val context: Context) {
+internal interface DeviceInfoRepository{
+    fun collectDeviceInfo(): Map<String, String>
+}
+
+internal open class AndroidDeviceInfoRepository(private val context: Context): DeviceInfoRepository {
     private var adKey: String? = null
     private val settings: SharedPreferences = context.getSharedPreferences("parsely-prefs", 0)
 
@@ -24,7 +29,7 @@ internal class DeviceInfoRepository(private val context: Context) {
      *
      * Collects info about the device and user to use in Parsely events.
      */
-    fun collectDeviceInfo(): Map<String, String> {
+    override fun collectDeviceInfo(): Map<String, String> {
         val dInfo: MutableMap<String, String> = HashMap()
 
         // TODO: screen dimensions (maybe?)
