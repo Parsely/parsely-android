@@ -2,25 +2,28 @@ package com.parsely.parselyandroid
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.AsyncTask
 import android.os.Build
 import android.provider.Settings
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import java.io.IOException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 internal interface DeviceInfoRepository{
     fun collectDeviceInfo(): Map<String, String>
 }
 
-internal open class AndroidDeviceInfoRepository(private val context: Context): DeviceInfoRepository {
+internal open class AndroidDeviceInfoRepository(
+    private val context: Context,
+    private val coroutineScope: CoroutineScope
+): DeviceInfoRepository {
     private var adKey: String? = null
     private val settings: SharedPreferences = context.getSharedPreferences("parsely-prefs", 0)
 
     init {
-        GetAdKey(context).execute()
+        retrieveAdKey()
     }
 
     /**
@@ -84,16 +87,12 @@ internal open class AndroidDeviceInfoRepository(private val context: Context): D
         return uuid
     }
 
-    /**
-     * Async task to get adKey for this device.
-     */
-    private inner class GetAdKey(private val mContext: Context) :
-        AsyncTask<Void?, Void?, String?>() {
-        protected override fun doInBackground(vararg params: Void?): String? {
+    private fun retrieveAdKey() {
+        coroutineScope.launch {
             var idInfo: AdvertisingIdClient.Info? = null
             var advertId: String? = null
             try {
-                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(mContext)
+                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
             } catch (e: GooglePlayServicesRepairableException) {
                 ParselyTracker.PLog("No Google play services or error! falling back to device uuid")
                 // fall back to device uuid on google play errors
@@ -113,10 +112,7 @@ internal open class AndroidDeviceInfoRepository(private val context: Context): D
             } catch (e: NullPointerException) {
                 advertId = siteUuid
             }
-            return advertId
-        }
 
-        override fun onPostExecute(advertId: String?) {
             adKey = advertId
         }
     }
