@@ -18,7 +18,7 @@ class EventsBuilderTest {
     fun setUp() {
         val applicationContext = ApplicationProvider.getApplicationContext<Context>()
         sut = EventsBuilder(
-            applicationContext,
+            DeviceInfoRepository(applicationContext),
             TEST_SITE_ID,
         )
     }
