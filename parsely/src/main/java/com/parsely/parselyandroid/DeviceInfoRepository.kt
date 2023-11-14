@@ -89,31 +89,13 @@ internal open class AndroidDeviceInfoRepository(
 
     private fun retrieveAdKey() {
         coroutineScope.launch {
-            var idInfo: AdvertisingIdClient.Info? = null
-            var advertId: String? = null
-            try {
-                idInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
-            } catch (e: GooglePlayServicesRepairableException) {
+            adKey = try {
+                val idInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
+                idInfo.id
+            } catch (e: Exception) {
                 ParselyTracker.PLog("No Google play services or error! falling back to device uuid")
-                // fall back to device uuid on google play errors
-                advertId = siteUuid
-            } catch (e: IOException) {
-                ParselyTracker.PLog("No Google play services or error! falling back to device uuid")
-                advertId = siteUuid
-            } catch (e: GooglePlayServicesNotAvailableException) {
-                ParselyTracker.PLog("No Google play services or error! falling back to device uuid")
-                advertId = siteUuid
-            } catch (e: IllegalArgumentException) {
-                ParselyTracker.PLog("No Google play services or error! falling back to device uuid")
-                advertId = siteUuid
+                siteUuid
             }
-            try {
-                advertId = idInfo!!.id
-            } catch (e: NullPointerException) {
-                advertId = siteUuid
-            }
-
-            adKey = advertId
         }
     }
 
