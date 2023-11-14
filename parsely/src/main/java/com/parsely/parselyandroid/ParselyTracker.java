@@ -69,7 +69,7 @@ public class ParselyTracker {
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
         context = c.getApplicationContext();
-        eventsBuilder = new EventsBuilder(context, siteId);
+        eventsBuilder = new EventsBuilder(new DeviceInfoRepository(context), siteId);
         localStorageRepository = new LocalStorageRepository(context);
         flushManager = new FlushManager(this, flushInterval * 1000L,
                 ParselyCoroutineScopeKt.getSdkScope());
