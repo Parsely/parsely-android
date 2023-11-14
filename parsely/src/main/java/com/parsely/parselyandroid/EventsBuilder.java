@@ -30,13 +30,12 @@ class EventsBuilder {
     private final SharedPreferences settings;
     private final String siteId;
 
-    private Map<String, String> deviceInfo;
+    private String adKey = null;
 
     public EventsBuilder(@NonNull final Context context, @NonNull final String siteId) {
         this.context = context;
         this.siteId = siteId;
         settings = context.getSharedPreferences("parsely-prefs", 0);
-        deviceInfo = collectDeviceInfo(null);
         new GetAdKey(context).execute();
     }
 
@@ -74,6 +73,8 @@ class EventsBuilder {
         if (extraData != null) {
             data.putAll(extraData);
         }
+
+        final Map<String, String> deviceInfo = collectDeviceInfo();
         data.put("manufacturer", deviceInfo.get("manufacturer"));
         data.put("os", deviceInfo.get("os"));
         data.put("os_version", deviceInfo.get("os_version"));
@@ -101,13 +102,11 @@ class EventsBuilder {
      * <p>
      * Collects info about the device and user to use in Parsely events.
      */
-    private Map<String, String> collectDeviceInfo(@Nullable final String adKey) {
+    private Map<String, String> collectDeviceInfo() {
         Map<String, String> dInfo = new HashMap<>();
 
         // TODO: screen dimensions (maybe?)
-        PLog("adkey is: %s, uuid is %s", adKey, getSiteUuid());
-        final String uuid = (adKey != null) ? adKey : getSiteUuid();
-        dInfo.put("parsely_site_uuid", uuid);
+        dInfo.put("parsely_site_uuid", getParselySiteUuid());
         dInfo.put("manufacturer", android.os.Build.MANUFACTURER);
         dInfo.put("os", "android");
         dInfo.put("os_version", String.format("%d", android.os.Build.VERSION.SDK_INT));
@@ -117,6 +116,12 @@ class EventsBuilder {
         dInfo.put("appname", txt.toString());
 
         return dInfo;
+    }
+
+    private String getParselySiteUuid() {
+        PLog("adkey is: %s, uuid is %s", adKey, getSiteUuid());
+        final String uuid = (adKey != null) ? adKey : getSiteUuid();
+        return uuid;
     }
 
     /**
@@ -179,7 +184,7 @@ class EventsBuilder {
 
         @Override
         protected void onPostExecute(String advertId) {
-            deviceInfo = collectDeviceInfo(advertId);
+            adKey = advertId;
         }
     }
 }
