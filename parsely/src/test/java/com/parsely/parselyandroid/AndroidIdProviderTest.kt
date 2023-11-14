@@ -10,13 +10,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class UuidProviderTest {
+internal class AndroidIdProviderTest {
 
-    lateinit var sut: UuidProvider
+    lateinit var sut: AndroidIdProvider
 
     @Before
     fun setUp() {
-        sut = UuidProvider(ApplicationProvider.getApplicationContext())
+        sut = AndroidIdProvider(ApplicationProvider.getApplicationContext())
     }
 
     @Test

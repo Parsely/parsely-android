@@ -72,7 +72,7 @@ public class ParselyTracker {
         eventsBuilder = new EventsBuilder(
                 new AndroidDeviceInfoRepository(
                         new AdvertisementIdProvider(context, ParselyCoroutineScopeKt.getSdkScope()),
-                        new UuidProvider(context)
+                        new AndroidIdProvider(context)
                 ), siteId);
         localStorageRepository = new LocalStorageRepository(context);
         flushManager = new FlushManager(this, flushInterval * 1000L,
