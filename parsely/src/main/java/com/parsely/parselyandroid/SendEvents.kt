@@ -8,7 +8,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class SendEvents(
     private val flushManager: FlushManager,
-    private val localStorageRepository: QueueRepository,
+    private val repository: QueueRepository,
     private val parselyAPIConnection: ParselyAPIConnection,
     private val scope: CoroutineScope
 ) {
@@ -18,7 +18,7 @@ internal class SendEvents(
     operator fun invoke(isDebug: Boolean) {
         scope.launch {
             mutex.withLock {
-                val eventsToSend = localStorageRepository.getStoredQueue()
+                val eventsToSend = repository.getStoredQueue()
 
                 if (eventsToSend.isEmpty()) {
                     flushManager.stop()
@@ -32,16 +32,16 @@ internal class SendEvents(
 
                 if (isDebug) {
                     ParselyTracker.PLog("Debug mode on. Not sending to Parse.ly")
-                    localStorageRepository.remove(eventsToSend)
+                    repository.remove(eventsToSend)
                 } else {
                     ParselyTracker.PLog("Requested %s", ParselyTracker.ROOT_URL)
                     parselyAPIConnection.send(jsonPayload)
                         .fold(
                             onSuccess = {
                                 ParselyTracker.PLog("Pixel request success")
-                                localStorageRepository.remove(eventsToSend)
+                                repository.remove(eventsToSend)
                                 ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-                                if (localStorageRepository.getStoredQueue().isEmpty()) {
+                                if (repository.getStoredQueue().isEmpty()) {
                                     flushManager.stop()
                                 }
                             },
