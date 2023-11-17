@@ -8,7 +8,7 @@ import java.io.ObjectOutputStream
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-interface QueueRepository {
+internal interface QueueRepository {
     suspend fun remove(toRemove: List<Map<String, Any?>?>)
     suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?>
     suspend fun insertEvents(toInsert: List<Map<String, Any?>?>)

@@ -1,7 +1,5 @@
 package com.parsely.parselyandroid
 
-import androidx.test.core.app.ApplicationProvider
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -22,7 +20,7 @@ class SendEventsTest {
             // given
             sut = SendEvents(
                 FakeFlushManager(),
-                FakeLocalStorageRepository(),
+                FakeRepository(),
                 FakeParselyAPIConnection(),
                 this
             )
@@ -32,14 +30,14 @@ class SendEventsTest {
             runCurrent()
 
             // then
-            assertThat(FakeLocalStorageRepository().getStoredQueue()).isEmpty()
+            assertThat(FakeRepository().getStoredQueue()).isEmpty()
         }
 
     @Test
     fun `given non-empty local storage and debug mode off, when sending events, then events are sent and removed from local storage`() =
         runTest {
             // given
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
             val parselyAPIConnection = FakeParselyAPIConnection().apply {
@@ -64,7 +62,7 @@ class SendEventsTest {
     fun `given non-empty local storage and debug mode on, when sending events, then events are not sent and removed from local storage`() =
         runTest {
             // given
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
             sut = SendEvents(
@@ -86,7 +84,7 @@ class SendEventsTest {
     fun `given non-empty local storage and debug mode off, when sending events fails, then events are not removed from local storage`() =
         runTest {
             // given
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
             val parselyAPIConnection = FakeParselyAPIConnection().apply {
@@ -112,7 +110,7 @@ class SendEventsTest {
         runTest {
             // given
             val flushManager = FakeFlushManager()
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
             val parselyAPIConnection = FakeParselyAPIConnection().apply {
@@ -138,7 +136,7 @@ class SendEventsTest {
         runTest {
             // given
             val flushManager = FakeFlushManager()
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
             val parselyAPIConnection = FakeParselyAPIConnection().apply {
@@ -164,7 +162,7 @@ class SendEventsTest {
         runTest {
             // given
             val flushManager = FakeFlushManager()
-            val repository = object : FakeLocalStorageRepository() {
+            val repository = object : FakeRepository() {
                 override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
                     return ArrayList(listOf(mapOf("test" to 123)))
                 }
@@ -193,7 +191,7 @@ class SendEventsTest {
         val flushManager = FakeFlushManager()
         sut = SendEvents(
             flushManager,
-            FakeLocalStorageRepository(),
+            FakeRepository(),
             FakeParselyAPIConnection(),
             this
         )
@@ -222,7 +220,7 @@ class SendEventsTest {
             get() = TODO("Not implemented")
     }
 
-    private class FakeLocalStorageRepository : QueueRepository {
+    private open class FakeRepository : QueueRepository {
         private var storage = emptyList<Map<String, Any?>?>()
 
         override suspend fun insertEvents(toInsert: List<Map<String, Any?>?>) {
