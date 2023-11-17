@@ -32,6 +32,7 @@ import java.util.Timer;
 import java.util.UUID;
 
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 /**
  * Tracks Parse.ly app views in Android apps
@@ -71,7 +72,13 @@ public class ParselyTracker {
         context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(context, siteId);
         localStorageRepository = new LocalStorageRepository(context);
-        flushManager = new ParselyFlushManager(this, flushInterval * 1000L,
+        flushManager = new ParselyFlushManager(new Function0<Unit>() {
+            @Override
+            public Unit invoke() {
+                flushEvents();
+                return Unit.INSTANCE;
+            }
+        },  flushInterval * 1000L,
                 ParselyCoroutineScopeKt.getSdkScope());
         inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, () -> {
             if (!flushTimerIsActive()) {
@@ -466,5 +473,4 @@ public class ParselyTracker {
         }
         sendEvents.invoke(isDebug);
     }
-
 }

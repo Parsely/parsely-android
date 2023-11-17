@@ -21,7 +21,7 @@ internal interface FlushManager {
 }
 
 internal class ParselyFlushManager(
-    private val parselyTracker: ParselyTracker,
+    private val onFlush: () -> Unit,
     override val intervalMillis: Long,
     private val coroutineScope: CoroutineScope
 ) : FlushManager {
@@ -33,7 +33,7 @@ internal class ParselyFlushManager(
         job = coroutineScope.launch {
             while (isActive) {
                 delay(intervalMillis)
-                parselyTracker.flushEvents()
+                onFlush.invoke()
             }
         }
     }
