@@ -63,7 +63,7 @@ public class ParselyTracker {
     @NonNull
     private final InMemoryBuffer inMemoryBuffer;
     @NonNull
-    private final SendEvents sendEvents;
+    private final FlushQueue flushQueue;
 
     /**
      * Create a new ParselyTracker instance.
@@ -91,9 +91,7 @@ public class ParselyTracker {
             }
             return Unit.INSTANCE;
         });
-        sendEvents = new SendEvents(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
-        clock = new Clock();
-        intervalCalculator = new HeartbeatIntervalCalculator(clock);
+        flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
 
         // get the adkey straight away on instantiation
         isDebug = false;
@@ -476,6 +474,6 @@ public class ParselyTracker {
             PLog("Network unreachable. Not flushing.");
             return;
         }
-        sendEvents.invoke(isDebug);
+        flushQueue.invoke(isDebug);
     }
 }

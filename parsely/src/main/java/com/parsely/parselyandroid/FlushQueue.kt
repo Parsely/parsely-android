@@ -6,7 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-internal class SendEvents(
+internal class FlushQueue(
     private val flushManager: FlushManager,
     private val repository: QueueRepository,
     private val restClient: RestClient,
@@ -15,7 +15,7 @@ internal class SendEvents(
 
     private val mutex = Mutex()
 
-    operator fun invoke(isDebug: Boolean) {
+    operator fun invoke(skipSendingEvents: Boolean) {
         scope.launch {
             mutex.withLock {
                 val eventsToSend = repository.getStoredQueue()
@@ -30,7 +30,7 @@ internal class SendEvents(
 
                 ParselyTracker.PLog("POST Data %s", jsonPayload)
 
-                if (isDebug) {
+                if (skipSendingEvents) {
                     ParselyTracker.PLog("Debug mode on. Not sending to Parse.ly")
                     repository.remove(eventsToSend)
                 } else {
