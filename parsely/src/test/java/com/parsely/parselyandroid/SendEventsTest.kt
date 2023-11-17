@@ -222,8 +222,7 @@ class SendEventsTest {
             get() = TODO("Not implemented")
     }
 
-    private open class FakeLocalStorageRepository :
-        LocalStorageRepository(ApplicationProvider.getApplicationContext()) {
+    private class FakeLocalStorageRepository : QueueRepository {
         private var storage = emptyList<Map<String, Any?>?>()
 
         override suspend fun insertEvents(toInsert: List<Map<String, Any?>?>) {

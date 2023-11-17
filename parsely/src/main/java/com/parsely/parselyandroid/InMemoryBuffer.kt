@@ -10,7 +10,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class InMemoryBuffer(
     private val coroutineScope: CoroutineScope,
-    private val localStorageRepository: LocalStorageRepository,
+    private val localStorageRepository: QueueRepository,
     private val onEventAddedListener: () -> Unit,
 ) {
 

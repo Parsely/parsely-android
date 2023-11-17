@@ -8,7 +8,13 @@ import java.io.ObjectOutputStream
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-internal open class LocalStorageRepository(private val context: Context) {
+interface QueueRepository {
+    suspend fun remove(toRemove: List<Map<String, Any?>?>)
+    suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?>
+    suspend fun insertEvents(toInsert: List<Map<String, Any?>?>)
+}
+
+internal class LocalStorageRepository(private val context: Context): QueueRepository {
 
     private val mutex = Mutex()
 
@@ -32,7 +38,7 @@ internal open class LocalStorageRepository(private val context: Context) {
         }
     }
 
-    open suspend fun remove(toRemove: List<Map<String, Any?>?>) {
+    override suspend fun remove(toRemove: List<Map<String, Any?>?>) {
         val storedEvents = getStoredQueue()
 
         mutex.withLock {
@@ -45,7 +51,7 @@ internal open class LocalStorageRepository(private val context: Context) {
      *
      * @return The stored queue of events.
      */
-    open suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> = mutex.withLock {
+    override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> = mutex.withLock {
 
         var storedQueue: ArrayList<Map<String, Any?>?> = ArrayList()
         try {
@@ -71,7 +77,7 @@ internal open class LocalStorageRepository(private val context: Context) {
     /**
      * Save the event queue to persistent storage.
      */
-    open suspend fun insertEvents(toInsert: List<Map<String, Any?>?>){
+    override suspend fun insertEvents(toInsert: List<Map<String, Any?>?>){
         val storedEvents = getStoredQueue()
 
         mutex.withLock {
