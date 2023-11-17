@@ -91,11 +91,7 @@ public class ParselyTracker {
         // get the adkey straight away on instantiation
         isDebug = false;
 
-        SdkInitKt.initialize(
-                ParselyCoroutineScopeKt.getSdkScope(),
-                localStorageRepository,
-                flushManager
-        );
+        flushManager.start();
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(
                 (LifecycleEventObserver) (lifecycleOwner, event) -> {
