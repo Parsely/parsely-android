@@ -13,14 +13,21 @@ import kotlinx.coroutines.launch
  * Handles stopping and starting the flush timer. The flush timer
  * controls how often we send events to Parse.ly servers.
  */
-internal open class FlushManager(
+internal interface FlushManager {
+    fun start()
+    fun stop()
+    val isRunning: Boolean
+    val intervalMillis: Long
+}
+
+internal class ParselyFlushManager(
     private val parselyTracker: ParselyTracker,
-    val intervalMillis: Long,
+    override val intervalMillis: Long,
     private val coroutineScope: CoroutineScope
-) {
+) : FlushManager {
     private var job: Job? = null
 
-    open fun start() {
+    override fun start() {
         if (job?.isActive == true) return
 
         job = coroutineScope.launch {
@@ -31,8 +38,10 @@ internal open class FlushManager(
         }
     }
 
-    open fun stop() = job?.cancel()
+    override fun stop() {
+        job?.cancel()
+    }
 
-    open val isRunning: Boolean
+    override val isRunning: Boolean
         get() = job?.isActive ?: false
 }
