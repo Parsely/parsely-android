@@ -75,7 +75,7 @@ public class ParselyTracker {
                         new AndroidIdProvider(context)
                 ), siteId);
         localStorageRepository = new LocalStorageRepository(context);
-        flushManager = new FlushManager(this, flushInterval * 1000L,
+        flushManager = new ParselyFlushManager(this, flushInterval * 1000L,
                 ParselyCoroutineScopeKt.getSdkScope());
         inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, () -> {
             if (!flushTimerIsActive()) {
