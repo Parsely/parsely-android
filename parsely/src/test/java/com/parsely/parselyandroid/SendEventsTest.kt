@@ -21,7 +21,7 @@ class SendEventsTest {
             sut = SendEvents(
                 FakeFlushManager(),
                 FakeRepository(),
-                FakeParselyAPIConnection(),
+                FakeRestClient(),
                 this
             )
 
@@ -40,7 +40,7 @@ class SendEventsTest {
             val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
             sut = SendEvents(
@@ -68,7 +68,7 @@ class SendEventsTest {
             sut = SendEvents(
                 FakeFlushManager(),
                 repository,
-                FakeParselyAPIConnection(),
+                FakeRestClient(),
                 this
             )
 
@@ -87,7 +87,7 @@ class SendEventsTest {
             val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
             }
             sut = SendEvents(
@@ -113,7 +113,7 @@ class SendEventsTest {
             val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
             sut = SendEvents(
@@ -139,7 +139,7 @@ class SendEventsTest {
             val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
             }
             sut = SendEvents(
@@ -167,7 +167,7 @@ class SendEventsTest {
                     return ArrayList(listOf(mapOf("test" to 123)))
                 }
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
             sut = SendEvents(
@@ -192,7 +192,7 @@ class SendEventsTest {
         sut = SendEvents(
             flushManager,
             FakeRepository(),
-            FakeParselyAPIConnection(),
+            FakeRestClient(),
             this
         )
 
@@ -236,7 +236,7 @@ class SendEventsTest {
         }
     }
 
-    private class FakeParselyAPIConnection : ParselyAPIConnection("") {
+    private class FakeRestClient : RestClient {
 
         var nextResult: Result<Unit>? = null
 

@@ -17,12 +17,13 @@ package com.parsely.parselyandroid
 
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
-internal open class ParselyAPIConnection(private val url: String) {
-    open suspend fun send(payload: String): Result<Unit> {
+internal interface RestClient {
+    suspend fun send(payload: String): Result<Unit>
+}
+
+internal class ParselyAPIConnection(private val url: String) : RestClient {
+    override suspend fun send(payload: String): Result<Unit> {
         var connection: HttpURLConnection? = null
         try {
             connection = URL(url).openConnection() as HttpURLConnection
