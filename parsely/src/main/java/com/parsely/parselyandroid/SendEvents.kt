@@ -8,7 +8,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class SendEvents(
     private val flushManager: FlushManager,
-    private val localStorageRepository: LocalStorageRepository,
+    private val localStorageRepository: QueueRepository,
     private val parselyAPIConnection: ParselyAPIConnection,
     private val scope: CoroutineScope
 ) {
