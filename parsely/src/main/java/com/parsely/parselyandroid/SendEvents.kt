@@ -9,7 +9,7 @@ import kotlinx.coroutines.sync.withLock
 internal class SendEvents(
     private val flushManager: FlushManager,
     private val repository: QueueRepository,
-    private val parselyAPIConnection: ParselyAPIConnection,
+    private val restClient: RestClient,
     private val scope: CoroutineScope
 ) {
 
@@ -35,7 +35,7 @@ internal class SendEvents(
                     repository.remove(eventsToSend)
                 } else {
                     ParselyTracker.PLog("Requested %s", ParselyTracker.ROOT_URL)
-                    parselyAPIConnection.send(jsonPayload)
+                    restClient.send(jsonPayload)
                         .fold(
                             onSuccess = {
                                 ParselyTracker.PLog("Pixel request success")
