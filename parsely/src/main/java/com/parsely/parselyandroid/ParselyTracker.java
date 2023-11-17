@@ -86,11 +86,7 @@ public class ParselyTracker {
         timer = new Timer();
         isDebug = false;
 
-        SdkInitKt.initialize(
-                ParselyCoroutineScopeKt.getSdkScope(),
-                localStorageRepository,
-                flushManager
-        );
+        flushManager.start();
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(
                 (LifecycleEventObserver) (lifecycleOwner, event) -> {
