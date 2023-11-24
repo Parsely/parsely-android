@@ -29,27 +29,26 @@ internal class FlushQueue(
                     ParselyTracker.PLog("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events")
                     repository.remove(eventsToSend)
                     return@launch
-                } else {
-                    ParselyTracker.PLog("Sending request with %d events", eventsToSend.size)
-                    val jsonPayload = toParselyEventsPayload(eventsToSend)
-                    ParselyTracker.PLog("POST Data %s", jsonPayload)
-                    ParselyTracker.PLog("Requested %s", ParselyTracker.ROOT_URL)
-                    restClient.send(jsonPayload)
-                        .fold(
-                            onSuccess = {
-                                ParselyTracker.PLog("Pixel request success")
-                                repository.remove(eventsToSend)
-                                ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-                                if (repository.getStoredQueue().isEmpty()) {
-                                    flushManager.stop()
-                                }
-                            },
-                            onFailure = {
-                                ParselyTracker.PLog("Pixel request exception")
-                                ParselyTracker.PLog(it.toString())
-                            }
-                        )
                 }
+                ParselyTracker.PLog("Sending request with %d events", eventsToSend.size)
+                val jsonPayload = toParselyEventsPayload(eventsToSend)
+                ParselyTracker.PLog("POST Data %s", jsonPayload)
+                ParselyTracker.PLog("Requested %s", ParselyTracker.ROOT_URL)
+                restClient.send(jsonPayload)
+                    .fold(
+                        onSuccess = {
+                            ParselyTracker.PLog("Pixel request success")
+                            repository.remove(eventsToSend)
+                            ParselyTracker.PLog("Event queue empty, flush timer cleared.")
+                            if (repository.getStoredQueue().isEmpty()) {
+                                flushManager.stop()
+                            }
+                        },
+                        onFailure = {
+                            ParselyTracker.PLog("Pixel request exception")
+                            ParselyTracker.PLog(it.toString())
+                        }
+                    )
             }
         }
     }
