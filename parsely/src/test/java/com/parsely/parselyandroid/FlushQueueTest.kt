@@ -12,13 +12,11 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class FlushQueueTest {
 
-    private lateinit var sut: FlushQueue
-
     @Test
     fun `given empty local storage, when sending events, then do nothing`() =
         runTest {
             // given
-            sut = FlushQueue(
+            val sut = FlushQueue(
                 FakeFlushManager(),
                 FakeRepository(),
                 FakeRestClient(),
@@ -43,7 +41,7 @@ class FlushQueueTest {
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
-            sut = FlushQueue(
+            val sut = FlushQueue(
                 FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
@@ -65,7 +63,7 @@ class FlushQueueTest {
             val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            sut = FlushQueue(
+            val sut = FlushQueue(
                 FakeFlushManager(),
                 repository,
                 FakeRestClient(),
@@ -90,7 +88,7 @@ class FlushQueueTest {
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
             }
-            sut = FlushQueue(
+            val sut = FlushQueue(
                 FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
@@ -116,7 +114,7 @@ class FlushQueueTest {
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
-            sut = FlushQueue(
+            val sut = FlushQueue(
                 flushManager,
                 repository,
                 parselyAPIConnection,
@@ -142,7 +140,7 @@ class FlushQueueTest {
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
             }
-            sut = FlushQueue(
+            val sut = FlushQueue(
                 flushManager,
                 repository,
                 parselyAPIConnection,
@@ -170,7 +168,7 @@ class FlushQueueTest {
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
-            sut = FlushQueue(
+            val sut = FlushQueue(
                 flushManager,
                 repository,
                 parselyAPIConnection,
@@ -189,7 +187,7 @@ class FlushQueueTest {
     fun `given empty local storage, when invoked, then flush manager is stopped`() = runTest {
         // given
         val flushManager = FakeFlushManager()
-        sut = FlushQueue(
+        val sut = FlushQueue(
             flushManager,
             FakeRepository(),
             FakeRestClient(),
