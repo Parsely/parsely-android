@@ -11,12 +11,10 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class FlushManagerTest {
 
-    private lateinit var sut: FlushManager
-    private var flushEventsCounter = 0
-
     @Test
     fun `when timer starts and interval time passes, then flush queue`() = runTest {
-        sut =
+        var flushEventsCounter = 0
+        val sut =
             ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
 
         sut.start()
@@ -28,7 +26,8 @@ class FlushManagerTest {
 
     @Test
     fun `when timer starts and three interval time passes, then flush queue 3 times`() = runTest {
-        sut =
+        var flushEventsCounter = 0
+        val sut =
             ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
 
         sut.start()
@@ -41,7 +40,8 @@ class FlushManagerTest {
     @Test
     fun `when timer starts and is stopped after 2 intervals passes, then flush queue 2 times`() =
         runTest {
-            sut =
+            var flushEventsCounter = 0
+            val sut =
                 ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
 
             sut.start()
@@ -57,7 +57,8 @@ class FlushManagerTest {
     @Test
     fun `when timer starts, is stopped before end of interval and then time of interval passes, then do not flush queue`() =
         runTest {
-            sut =
+            var flushEventsCounter = 0
+            val sut =
                 ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
 
             sut.start()
@@ -73,7 +74,8 @@ class FlushManagerTest {
     @Test
     fun `when timer starts, and another timer starts after some time, then flush queue according to the first start`() =
         runTest {
-            sut =
+            var flushEventsCounter = 0
+            val sut =
                 ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
 
             sut.start()
