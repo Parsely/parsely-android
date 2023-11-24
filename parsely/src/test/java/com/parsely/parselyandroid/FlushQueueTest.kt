@@ -104,32 +104,6 @@ class FlushQueueTest {
         }
 
     @Test
-    fun `given non-empty local storage, when flushing queue with not skipping sending events, then flush manager is stopped`() =
-        runTest {
-            // given
-            val flushManager = FakeFlushManager()
-            val repository = FakeRepository().apply {
-                insertEvents(listOf(mapOf("test" to 123)))
-            }
-            val parselyAPIConnection = FakeRestClient().apply {
-                nextResult = Result.success(Unit)
-            }
-            val sut = FlushQueue(
-                flushManager,
-                repository,
-                parselyAPIConnection,
-                this
-            )
-
-            // when
-            sut.invoke(false)
-            runCurrent()
-
-            // then
-            assertThat(flushManager.stopped).isTrue
-        }
-
-    @Test
     fun `given non-empty local storage, when flushing queue with not skipping sending events fails, then flush manager is not stopped`() =
         runTest {
             // given

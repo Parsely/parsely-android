@@ -39,10 +39,6 @@ internal class FlushQueue(
                         onSuccess = {
                             ParselyTracker.PLog("Pixel request success")
                             repository.remove(eventsToSend)
-                            ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-                            if (repository.getStoredQueue().isEmpty()) {
-                                flushManager.stop()
-                            }
                         },
                         onFailure = {
                             ParselyTracker.PLog("Pixel request exception")
