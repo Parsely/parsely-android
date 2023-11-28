@@ -13,50 +13,32 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-@file:Suppress("DEPRECATION")
 package com.parsely.parselyandroid
 
-import android.os.AsyncTask
 import java.net.HttpURLConnection
 import java.net.URL
 
-internal class ParselyAPIConnection(private val tracker: ParselyTracker) : AsyncTask<String?, Exception?, Void?>() {
-    private var exception: Exception? = null
+internal interface RestClient {
+    suspend fun send(payload: String): Result<Unit>
+}
 
-    @Deprecated("Deprecated in Java")
-    override fun doInBackground(vararg data: String?): Void? {
+internal class ParselyAPIConnection(private val url: String) : RestClient {
+    override suspend fun send(payload: String): Result<Unit> {
         var connection: HttpURLConnection? = null
         try {
-            if (data.size == 1) {  // non-batched (since no post data is included)
-                connection = URL(data[0]).openConnection() as HttpURLConnection
-                connection.inputStream
-            } else if (data.size == 2) {  // batched (post data included)
-                connection = URL(data[0]).openConnection() as HttpURLConnection
-                connection.doOutput = true // Triggers POST (aka silliest interface ever)
-                connection.setRequestProperty("Content-Type", "application/json")
-                val output = connection.outputStream
-                output.write(data[1]?.toByteArray())
-                output.close()
-                connection.inputStream
-            }
+            connection = URL(url).openConnection() as HttpURLConnection
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/json")
+            val output = connection.outputStream
+            output.write(payload.toByteArray())
+            output.close()
+            connection.inputStream
         } catch (ex: Exception) {
-            exception = ex
+            return Result.failure(ex)
+        } finally {
+            connection?.disconnect()
         }
-        return null
-    }
 
-    @Deprecated("Deprecated in Java")
-    override fun onPostExecute(result: Void?) {
-        if (exception != null) {
-            ParselyTracker.PLog("Pixel request exception")
-            ParselyTracker.PLog(exception.toString())
-        } else {
-            ParselyTracker.PLog("Pixel request success")
-
-            // only purge the queue if the request was successful
-            tracker.purgeEventsQueue()
-            ParselyTracker.PLog("Event queue empty, flush timer cleared.")
-            tracker.stopFlushTimer()
-        }
+        return Result.success(Unit)
     }
 }

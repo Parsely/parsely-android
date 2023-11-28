@@ -1,6 +1,5 @@
 package com.parsely.parselyandroid
 
-import androidx.test.core.app.ApplicationProvider
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -78,8 +77,7 @@ internal class InMemoryBufferTest {
             assertThat(repository.getStoredQueue()).containsOnlyOnceElementsOf(events)
         }
 
-    class FakeLocalStorageRepository :
-        LocalStorageRepository(ApplicationProvider.getApplicationContext()) {
+    class FakeLocalStorageRepository : QueueRepository {
 
         private val events = mutableListOf<Map<String, Any?>?>()
 
@@ -87,7 +85,11 @@ internal class InMemoryBufferTest {
             events.addAll(toInsert)
         }
 
-        override fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
+        override suspend fun remove(toRemove: List<Map<String, Any?>?>) {
+            TODO("Not implemented")
+        }
+
+        override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
             return ArrayList(events)
         }
     }

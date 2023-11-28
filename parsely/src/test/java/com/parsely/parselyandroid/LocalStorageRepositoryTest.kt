@@ -25,19 +25,6 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `when expelling stored event, then assert that it has no effect`() = runTest {
-        // given
-        sut.insertEvents(((1..100).map { mapOf("index" to it) }))
-        runCurrent()
-
-        // when
-        sut.expelStoredEvent()
-
-        // then
-        assertThat(sut.getStoredQueue()).hasSize(100)
-    }
-
-    @Test
     fun `given the list of events, when persisting the list, then querying the list returns the same result`() = runTest {
         // given
         val eventsList = (1..10).map { mapOf("index" to it) }
@@ -51,7 +38,7 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given no locally stored list, when requesting stored queue, then return an empty list`() {
+    fun `given no locally stored list, when requesting stored queue, then return an empty list`() = runTest {
         assertThat(sut.getStoredQueue()).isEmpty()
     }
 
@@ -92,7 +79,7 @@ class LocalStorageRepositoryTest {
     }
 
     @Test
-    fun `given stored file with serialized events, when querying the queue, then list has expected events`() {
+    fun `given stored file with serialized events, when querying the queue, then list has expected events`() = runTest {
         // given
         val file = File(context.filesDir.path + "/parsely-events.ser")
         File(ClassLoader.getSystemResource("valid-java-parsely-events.ser")?.path!!).copyTo(file)

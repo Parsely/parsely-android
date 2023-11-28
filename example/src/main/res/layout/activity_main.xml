@@ -68,26 +68,11 @@
         android:onClick="trackReset"
         android:text="@string/button_reset_video" />
 
-    <TextView
-        android:id="@+id/queue_size"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/reset_video_button"
-        android:layout_centerHorizontal="true"
-        android:text="Queued events: 0" />
-
-    <TextView android:id="@+id/stored_size"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/queue_size" 
-        android:text="Stored events: 0"/>
-        
     <TextView android:id="@+id/interval"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/stored_size" 
+        android:layout_below="@id/reset_video_button"
         android:text="Flush timer inactive"/>
 
     <TextView

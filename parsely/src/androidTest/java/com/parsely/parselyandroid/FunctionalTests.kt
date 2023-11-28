@@ -214,13 +214,12 @@ class FunctionalTests {
         activity: Activity,
         flushInterval: Duration = defaultFlushInterval
     ): ParselyTracker {
+        val field: Field = ParselyTracker::class.java.getDeclaredField("ROOT_URL")
+        field.isAccessible = true
+        field.set(this, url)
         return ParselyTracker.sharedInstance(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
-        ).apply {
-            val f: Field = this::class.java.getDeclaredField("ROOT_URL")
-            f.isAccessible = true
-            f.set(this, url)
-        }
+        )
     }
 
     private companion object {
