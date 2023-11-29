@@ -166,7 +166,7 @@ class EventsBuilderTest {
     fun `given metadata is not null, when creating a pixel, include metadata`() {
         // given
         val metadata = ParselyMetadata(
-            ArrayList<String>(), "link", "section", null, null, null, null
+            ArrayList<String>(), "link", "section", null, null, null, 0
         )
 
         // when

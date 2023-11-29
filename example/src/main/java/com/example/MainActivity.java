@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
                 new ArrayList<String>(),
                 "http://example.com/thumbs/video-1234",
                 "Awesome Video #1234",
-                Calendar.getInstance(),
+                System.currentTimeMillis(),
                 90
         );
         // NOTE: For videos embedded in an article, "url" should be the URL for that article.

@@ -23,7 +23,7 @@ public class ParselyVideoMetadata extends ParselyMetadata {
      * @param tags            User-defined tags for the video. Up to 20 are allowed.
      * @param thumbUrl        URL at which the main image for this video is located.
      * @param title           The title of the video.
-     * @param pubDate         The date this video was published.
+     * @param publicationDateMilliseconds         The timestamp in milliseconds this video was published.
      * @param durationSeconds Duration of the video in seconds. Required.
      */
     public ParselyVideoMetadata(
@@ -33,10 +33,10 @@ public class ParselyVideoMetadata extends ParselyMetadata {
             @Nullable ArrayList<String> tags,
             @Nullable String thumbUrl,
             @Nullable String title,
-            @Nullable Calendar pubDate,
+            long publicationDateMilliseconds,
             int durationSeconds
     ) {
-        super(authors, videoId, section, tags, thumbUrl, title, pubDate);
+        super(authors, videoId, section, tags, thumbUrl, title, publicationDateMilliseconds);
         this.durationSeconds = durationSeconds;
     }
 
