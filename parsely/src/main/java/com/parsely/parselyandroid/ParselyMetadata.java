@@ -3,7 +3,6 @@ package com.parsely.parselyandroid;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +17,7 @@ import java.util.Map;
 public class ParselyMetadata {
     ArrayList<String> authors, tags;
     String link, section, thumbUrl, title;
-    Calendar pubDate;
+    long publicationDateMilliseconds;
 
     /**
      * Create a new ParselyMetadata object.
@@ -29,7 +28,7 @@ public class ParselyMetadata {
      * @param tags     User-defined tags for the content. Up to 20 are allowed.
      * @param thumbUrl URL at which the main image for this content is located.
      * @param title    The title of the content.
-     * @param pubDate  The date this piece of content was published.
+     * @param publicationDateMilliseconds  The date this piece of content was published.
      */
     public ParselyMetadata(
             @Nullable ArrayList<String> authors,
@@ -38,7 +37,7 @@ public class ParselyMetadata {
             @Nullable ArrayList<String> tags,
             @Nullable String thumbUrl,
             @Nullable String title,
-            @Nullable Calendar pubDate
+            long publicationDateMilliseconds
     ) {
         this.authors = authors;
         this.link = link;
@@ -46,7 +45,7 @@ public class ParselyMetadata {
         this.tags = tags;
         this.thumbUrl = thumbUrl;
         this.title = title;
-        this.pubDate = pubDate;
+        this.publicationDateMilliseconds = publicationDateMilliseconds;
     }
 
     /**
@@ -74,9 +73,7 @@ public class ParselyMetadata {
         if (this.title != null) {
             output.put("title", this.title);
         }
-        if (this.pubDate != null) {
-            output.put("pub_date_tmsp", this.pubDate.getTimeInMillis() / 1000);
-        }
+        output.put("pub_date_tmsp", publicationDateMilliseconds / 1000);
         return output;
     }
 }

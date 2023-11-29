@@ -1,6 +1,7 @@
 package com.parsely.parselyandroid
 
 import java.util.Calendar
+import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
@@ -16,7 +17,7 @@ class ParselyMetadataTest {
             tags,
             thumbUrl,
             title,
-            pubDate
+            publicationDate.inWholeMilliseconds
         )
 
         // when
@@ -37,7 +38,7 @@ class ParselyMetadataTest {
             tags,
             thumbUrl,
             title,
-            pubDate,
+            publicationDate.inWholeMilliseconds,
             duration
         )
 
@@ -55,7 +56,7 @@ class ParselyMetadataTest {
         val tags = arrayListOf("first tag", "second tag")
         val thumbUrl = "sample thumb url"
         val title = "sample title"
-        val pubDate = Calendar.getInstance().apply { set(2023, 0, 1) }
+        val publicationDate = 100.seconds
 
         val expectedParselyMetadataMap = mapOf(
             "authors" to authors,
@@ -64,7 +65,7 @@ class ParselyMetadataTest {
             "tags" to tags,
             "thumb_url" to thumbUrl,
             "title" to title,
-            "pub_date_tmsp" to pubDate.timeInMillis / 1000
+            "pub_date_tmsp" to publicationDate.inWholeSeconds
         )
     }
 }
