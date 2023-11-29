@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 /**
  * Tracks Parse.ly app views in Android apps
@@ -62,7 +63,7 @@ public class ParselyTracker {
     @NonNull
     private final InMemoryBuffer inMemoryBuffer;
     @NonNull
-    private final SendEvents sendEvents;
+    private final FlushQueue flushQueue;
 
     /**
      * Create a new ParselyTracker instance.
@@ -75,7 +76,13 @@ public class ParselyTracker {
                         new AndroidIdProvider(context)
                 ), siteId);
         localStorageRepository = new LocalStorageRepository(context);
-        flushManager = new FlushManager(this, flushInterval * 1000L,
+        flushManager = new ParselyFlushManager(new Function0<Unit>() {
+            @Override
+            public Unit invoke() {
+                flushEvents();
+                return Unit.INSTANCE;
+            }
+        },  flushInterval * 1000L,
                 ParselyCoroutineScopeKt.getSdkScope());
         inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, () -> {
             if (!flushTimerIsActive()) {
@@ -84,15 +91,14 @@ public class ParselyTracker {
             }
             return Unit.INSTANCE;
         });
-        sendEvents = new SendEvents(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
+        flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
         clock = new Clock();
         intervalCalculator = new HeartbeatIntervalCalculator(clock);
 
         // get the adkey straight away on instantiation
         isDebug = false;
 
-        final SdkInit sdkInit = new SdkInit(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, flushManager);
-        sdkInit.initialize();
+        flushManager.start();
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(
                 (LifecycleEventObserver) (lifecycleOwner, event) -> {
@@ -470,7 +476,6 @@ public class ParselyTracker {
             PLog("Network unreachable. Not flushing.");
             return;
         }
-        sendEvents.invoke(isDebug);
+        flushQueue.invoke(isDebug);
     }
-
 }

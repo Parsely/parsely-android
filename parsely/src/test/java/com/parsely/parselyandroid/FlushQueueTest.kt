@@ -1,7 +1,5 @@
 package com.parsely.parselyandroid
 
-import androidx.test.core.app.ApplicationProvider
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -12,18 +10,16 @@ import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-class SendEventsTest {
-
-    private lateinit var sut: SendEvents
+class FlushQueueTest {
 
     @Test
     fun `given empty local storage, when sending events, then do nothing`() =
         runTest {
             // given
-            sut = SendEvents(
-                FakeFlushManager(this),
-                FakeLocalStorageRepository(),
-                FakeParselyAPIConnection(),
+            val sut = FlushQueue(
+                FakeFlushManager(),
+                FakeRepository(),
+                FakeRestClient(),
                 this
             )
 
@@ -32,21 +28,21 @@ class SendEventsTest {
             runCurrent()
 
             // then
-            assertThat(FakeLocalStorageRepository().getStoredQueue()).isEmpty()
+            assertThat(FakeRepository().getStoredQueue()).isEmpty()
         }
 
     @Test
-    fun `given non-empty local storage and debug mode off, when sending events, then events are sent and removed from local storage`() =
+    fun `given non-empty local storage, when flushing queue with not skipping sending events, then events are sent and removed from local storage`() =
         runTest {
             // given
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
-            sut = SendEvents(
-                FakeFlushManager(this),
+            val sut = FlushQueue(
+                FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
                 this
@@ -61,16 +57,16 @@ class SendEventsTest {
         }
 
     @Test
-    fun `given non-empty local storage and debug mode on, when sending events, then events are not sent and removed from local storage`() =
+    fun `given non-empty local storage, when flushing queue with skipping sending events, then events are not sent and removed from local storage`() =
         runTest {
             // given
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            sut = SendEvents(
-                FakeFlushManager(this),
+            val sut = FlushQueue(
+                FakeFlushManager(),
                 repository,
-                FakeParselyAPIConnection(),
+                FakeRestClient(),
                 this
             )
 
@@ -83,17 +79,17 @@ class SendEventsTest {
         }
 
     @Test
-    fun `given non-empty local storage and debug mode off, when sending events fails, then events are not removed from local storage`() =
+    fun `given non-empty local storage, when flushing queue with not skipping sending events fails, then events are not removed from local storage`() =
         runTest {
             // given
-            val repository = FakeLocalStorageRepository().apply {
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
             }
-            sut = SendEvents(
-                FakeFlushManager(this),
+            val sut = FlushQueue(
+                FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
                 this
@@ -108,43 +104,17 @@ class SendEventsTest {
         }
 
     @Test
-    fun `given non-empty local storage and debug mode off, when sending events, then flush manager is stopped`() =
+    fun `given non-empty local storage, when flushing queue with not skipping sending events fails, then flush manager is not stopped`() =
         runTest {
             // given
-            val flushManager = FakeFlushManager(this)
-            val repository = FakeLocalStorageRepository().apply {
+            val flushManager = FakeFlushManager()
+            val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
-                nextResult = Result.success(Unit)
-            }
-            sut = SendEvents(
-                flushManager,
-                repository,
-                parselyAPIConnection,
-                this
-            )
-
-            // when
-            sut.invoke(false)
-            runCurrent()
-
-            // then
-            assertThat(flushManager.stopped).isTrue
-        }
-
-    @Test
-    fun `given non-empty local storage and debug mode off, when sending events fails, then flush manager is not stopped`() =
-        runTest {
-            // given
-            val flushManager = FakeFlushManager(this)
-            val repository = FakeLocalStorageRepository().apply {
-                insertEvents(listOf(mapOf("test" to 123)))
-            }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
             }
-            sut = SendEvents(
+            val sut = FlushQueue(
                 flushManager,
                 repository,
                 parselyAPIConnection,
@@ -160,19 +130,19 @@ class SendEventsTest {
         }
 
     @Test
-    fun `given non-empty local storage and debug mode off, when storage is not empty after successful event, then flush manager is not stopped`() =
+    fun `given non-empty local storage, when storage is not empty after successful flushing queue with not skipping sending events, then flush manager is not stopped`() =
         runTest {
             // given
-            val flushManager = FakeFlushManager(this)
-            val repository = object : FakeLocalStorageRepository() {
+            val flushManager = FakeFlushManager()
+            val repository = object : FakeRepository() {
                 override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
                     return ArrayList(listOf(mapOf("test" to 123)))
                 }
             }
-            val parselyAPIConnection = FakeParselyAPIConnection().apply {
+            val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
             }
-            sut = SendEvents(
+            val sut = FlushQueue(
                 flushManager,
                 repository,
                 parselyAPIConnection,
@@ -190,11 +160,11 @@ class SendEventsTest {
     @Test
     fun `given empty local storage, when invoked, then flush manager is stopped`() = runTest {
         // given
-        val flushManager = FakeFlushManager(this)
-        sut = SendEvents(
+        val flushManager = FakeFlushManager()
+        val sut = FlushQueue(
             flushManager,
-            FakeLocalStorageRepository(),
-            FakeParselyAPIConnection(),
+            FakeRepository(),
+            FakeRestClient(),
             this
         )
 
@@ -206,21 +176,23 @@ class SendEventsTest {
         assertThat(flushManager.stopped).isTrue()
     }
 
-    private class FakeFlushManager(scope: CoroutineScope) : FlushManager(FakeTracker(), 10, scope) {
+    private class FakeFlushManager : FlushManager {
         var stopped = false
+        override fun start() {
+            TODO("Not implemented")
+        }
 
         override fun stop() {
             stopped = true
         }
+
+        override val isRunning
+            get() = TODO("Not implemented")
+        override val intervalMillis
+            get() = TODO("Not implemented")
     }
 
-    private class FakeTracker : ParselyTracker(
-        "siteId", 10, ApplicationProvider.getApplicationContext()
-    ) {
-    }
-
-    private open class FakeLocalStorageRepository :
-        LocalStorageRepository(ApplicationProvider.getApplicationContext()) {
+    private open class FakeRepository : QueueRepository {
         private var storage = emptyList<Map<String, Any?>?>()
 
         override suspend fun insertEvents(toInsert: List<Map<String, Any?>?>) {
@@ -236,7 +208,7 @@ class SendEventsTest {
         }
     }
 
-    private class FakeParselyAPIConnection : ParselyAPIConnection("") {
+    private class FakeRestClient : RestClient {
 
         var nextResult: Result<Unit>? = null
 
