@@ -16,9 +16,9 @@ import java.util.Map;
  * Otherwise, metadata will be gathered by Parse.ly's crawling infrastructure.
  */
 public class ParselyMetadata {
-    public ArrayList<String> authors, tags;
-    public String link, section, thumbUrl, title;
-    public Calendar pubDate;
+    ArrayList<String> authors, tags;
+    String link, section, thumbUrl, title;
+    Calendar pubDate;
 
     /**
      * Create a new ParselyMetadata object.
@@ -54,7 +54,7 @@ public class ParselyMetadata {
      *
      * @return a Map object representing the metadata.
      */
-    public Map<String, Object> toMap() {
+    Map<String, Object> toMap() {
         Map<String, Object> output = new HashMap<>();
         if (this.authors != null) {
             output.put("authors", this.authors);
