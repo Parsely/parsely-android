@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class ParselyVideoMetadata extends ParselyMetadata {
 
-    public int durationSeconds;
+    int durationSeconds;
 
     /**
      * Create a new ParselyVideoMetadata object.
@@ -48,7 +48,7 @@ public class ParselyVideoMetadata extends ParselyMetadata {
      *
      * @return a Map object representing the metadata.
      */
-    public Map<String, Object> toMap() {
+    Map<String, Object> toMap() {
         Map<String, Object> output = super.toMap();
         output.put("duration", this.durationSeconds);
         return output;
