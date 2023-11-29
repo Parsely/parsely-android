@@ -34,12 +34,9 @@ public class ParselyVideoMetadata extends ParselyMetadata {
             @Nullable String thumbUrl,
             @Nullable String title,
             @Nullable Calendar pubDate,
-            @NonNull int durationSeconds
+            int durationSeconds
     ) {
         super(authors, videoId, section, tags, thumbUrl, title, pubDate);
-        if (videoId == null) {
-            throw new NullPointerException("videoId cannot be null");
-        }
         this.durationSeconds = durationSeconds;
     }
 
