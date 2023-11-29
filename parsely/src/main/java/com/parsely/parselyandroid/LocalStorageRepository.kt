@@ -8,7 +8,13 @@ import java.io.ObjectOutputStream
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-internal open class LocalStorageRepository(private val context: Context) {
+internal interface QueueRepository {
+    suspend fun remove(toRemove: List<Map<String, Any?>?>)
+    suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?>
+    suspend fun insertEvents(toInsert: List<Map<String, Any?>?>)
+}
+
+internal class LocalStorageRepository(private val context: Context) : QueueRepository {
 
     private val mutex = Mutex()
 
@@ -32,21 +38,7 @@ internal open class LocalStorageRepository(private val context: Context) {
         }
     }
 
-    open suspend fun remove(toRemove: List<Map<String, Any?>?>) {
-        val storedEvents = getStoredQueue()
-
-        mutex.withLock {
-            persistObject(storedEvents - toRemove.toSet())
-        }
-    }
-
-    /**
-     * Get the stored event queue from persistent storage.
-     *
-     * @return The stored queue of events.
-     */
-    open suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> = mutex.withLock {
-
+    private fun getInternalStoredQueue(): ArrayList<Map<String, Any?>?> {
         var storedQueue: ArrayList<Map<String, Any?>?> = ArrayList()
         try {
             val fis = context.applicationContext.openFileInput(STORAGE_KEY)
@@ -68,15 +60,26 @@ internal open class LocalStorageRepository(private val context: Context) {
         return storedQueue
     }
 
+    override suspend fun remove(toRemove: List<Map<String, Any?>?>) = mutex.withLock {
+        val storedEvents = getInternalStoredQueue()
+        persistObject(storedEvents - toRemove.toSet())
+    }
+
+    /**
+     * Get the stored event queue from persistent storage.
+     *
+     * @return The stored queue of events.
+     */
+    override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> = mutex.withLock {
+        getInternalStoredQueue()
+    }
+
     /**
      * Save the event queue to persistent storage.
      */
-    open suspend fun insertEvents(toInsert: List<Map<String, Any?>?>){
-        val storedEvents = getStoredQueue()
-
-        mutex.withLock {
-            persistObject(ArrayList((toInsert + storedEvents).distinct()))
-        }
+    override suspend fun insertEvents(toInsert: List<Map<String, Any?>?>) = mutex.withLock {
+        val storedEvents = getInternalStoredQueue()
+        persistObject(ArrayList((toInsert + storedEvents).distinct()))
     }
 
     companion object {
