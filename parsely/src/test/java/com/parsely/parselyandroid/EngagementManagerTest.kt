@@ -1,106 +1,182 @@
 package com.parsely.parselyandroid
 
 import androidx.test.core.app.ApplicationProvider
-import java.util.Calendar
-import java.util.TimeZone
-import java.util.Timer
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.AbstractLongAssert
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
-import org.assertj.core.api.Assertions.withinPercentage
 import org.assertj.core.api.MapAssert
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 private typealias Event = MutableMap<String, Any>
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
     private val tracker = FakeTracker()
-    private val parentTimer = Timer()
     private val baseEvent: Event = mutableMapOf(
         "action" to "heartbeat",
         "data" to testData
     )
 
-    @Before
-    fun setUp() {
+    @Test
+    fun `when starting manager, then record the correct event after interval millis`() = runTest {
+        // given
         sut = EngagementManager(
             tracker,
-            parentTimer,
-            DEFAULT_INTERVAL_MILLIS,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
-            FakeIntervalCalculator()
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler),
         )
-    }
 
-    @Test
-    fun `when starting manager, then record the correct event after interval millis`() {
         // when
         sut.start()
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val timestamp = now - THREAD_SLEEPING_THRESHOLD
+        advanceTimeBy(DEFAULT_INTERVAL)
+        runCurrent()
 
         // then
         assertThat(tracker.events[0]).isCorrectEvent(
-            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
-            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10)) },
-            // Ideally: timestamp should be equal to System.currentTimeMillis() at the time of recording the event
-            withTimestamp = { isCloseTo(timestamp, within(20L)) }
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds)},
+            withTotalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeMilliseconds) },
+            withTimestamp = { isEqualTo(currentTime) }
         )
     }
 
     @Test
-    fun `when starting manager, then schedule task each interval period`() {
+    fun `when starting manager, then schedule task each interval period`() = runTest {
+        // given
+        sut = EngagementManager(
+            tracker,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
+            baseEvent,
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler),
+        )
         sut.start()
 
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val firstTimestamp = now - THREAD_SLEEPING_THRESHOLD
+        // when
+        advanceTimeBy(DEFAULT_INTERVAL)
+        val firstTimestamp = currentTime
 
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val secondTimestamp = now - 2 * THREAD_SLEEPING_THRESHOLD
+        advanceTimeBy(DEFAULT_INTERVAL)
+        val secondTimestamp = currentTime
 
-        sleep(DEFAULT_INTERVAL_MILLIS)
-        val thirdTimestamp = now - 3 * THREAD_SLEEPING_THRESHOLD
+        advanceTimeBy(DEFAULT_INTERVAL)
+        runCurrent()
+        val thirdTimestamp = currentTime
 
-        sleep(THREAD_SLEEPING_THRESHOLD)
-
+        // then
         val firstEvent = tracker.events[0]
         assertThat(firstEvent).isCorrectEvent(
-            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS
-            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS, withinPercentage(10)) },
-            // Ideally: timestamp should be equal to `now` at the time of recording the event
-            withTimestamp = { isCloseTo(firstTimestamp, within(20L)) }
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
+            withTotalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeMilliseconds) },
+            withTimestamp = { isEqualTo(firstTimestamp) }
         )
         val secondEvent = tracker.events[1]
         assertThat(secondEvent).isCorrectEvent(
-            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS * 2
-            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS * 2, withinPercentage(10)) },
-            // Ideally: timestamp should be equal to `now` at the time of recording the event
-            withTimestamp = { isCloseTo(secondTimestamp, within(20L)) }
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
+            withTotalTime = { isEqualTo((DEFAULT_INTERVAL * 2).inWholeMilliseconds) },
+            withTimestamp = { isEqualTo(secondTimestamp) }
         )
         val thirdEvent = tracker.events[2]
         assertThat(thirdEvent).isCorrectEvent(
-            // Ideally: totalTime should be equal to DEFAULT_INTERVAL_MILLIS * 3
-            withTotalTime = { isCloseTo(DEFAULT_INTERVAL_MILLIS * 3, withinPercentage(10)) },
-            // Ideally: timestamp should be equal to `now` at the time of recording the event
-            withTimestamp = { isCloseTo(thirdTimestamp, within(20L)) }
+            withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
+            withTotalTime = { isEqualTo((DEFAULT_INTERVAL * 3).inWholeMilliseconds) },
+            withTimestamp = { isEqualTo(thirdTimestamp) }
         )
     }
 
-    private fun sleep(millis: Long) = Thread.sleep(millis + THREAD_SLEEPING_THRESHOLD)
+    @Test
+    fun `given started manager, when stopping manager before interval ticks, then schedule an event`() = runTest {
+        // given
+        sut = EngagementManager(
+            tracker,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
+            baseEvent,
+            FakeIntervalCalculator(),
+            this,
+            FakeClock(testScheduler)
+        )
+        sut.start()
+
+        // when
+        advanceTimeBy(70.seconds.inWholeMilliseconds)
+        sut.stop()
+
+        // then
+        // first tick: after initial delay 30s, incremental addition 30s
+        // second tick: after regular delay 30s, incremental addition 30s
+        // third tick: after cancellation after 10s, incremental addition 10s
+        assertThat(tracker.events).hasSize(3).satisfies({
+            assertThat(it[0]).containsEntry("inc", 30L)
+            assertThat(it[1]).containsEntry("inc", 30L)
+            assertThat(it[2]).containsEntry("inc", 10L)
+        })
+    }
+
+    @Test
+    fun `when starting manager, then it should return true for isRunning`() = runTest {
+        // given
+        sut = EngagementManager(
+            tracker,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
+            baseEvent,
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler)
+        )
+
+        // when
+        sut.start()
+
+        // then
+        assertThat(sut.isRunning).isTrue
+    }
+
+    @Test
+    fun `given started manager, when stoping manager, then it should return false for isRunning`() = runTest {
+        // given
+        sut = EngagementManager(
+            tracker,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
+            baseEvent,
+            FakeIntervalCalculator(),
+            backgroundScope,
+            FakeClock(testScheduler)
+        )
+        sut.start()
+
+        // when
+        sut.stop()
+
+        // then
+        assertThat(sut.isRunning).isFalse
+    }
 
     private fun MapAssert<String, Any>.isCorrectEvent(
+        withIncrementalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTotalTime: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
         withTimestamp: AbstractLongAssert<*>.() -> AbstractLongAssert<*>,
     ): MapAssert<String, Any> {
         return containsEntry("action", "heartbeat")
-            // Incremental will be always 0 because the interval is lower than 1s
-            .containsEntry("inc", 0L)
+            .hasEntrySatisfying("inc") { incrementalTime ->
+                incrementalTime as Long
+                assertThat(incrementalTime).withIncrementalTime()
+            }
             .hasEntrySatisfying("tt") { totalTime ->
                 totalTime as Long
                 assertThat(totalTime).withTotalTime()
@@ -115,9 +191,6 @@ internal class EngagementManagerTest {
             }
     }
 
-    private val now: Long
-        get() = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-
     class FakeTracker : ParselyTracker(
         "",
         0,
@@ -131,15 +204,18 @@ internal class EngagementManagerTest {
     }
 
     class FakeIntervalCalculator : HeartbeatIntervalCalculator(Clock()) {
-        override fun calculate(startTime: Calendar): Long {
-            return DEFAULT_INTERVAL_MILLIS
+        override fun calculate(startTime: Duration): Long {
+            return DEFAULT_INTERVAL.inWholeMilliseconds
         }
     }
 
+    class FakeClock(private val scheduler: TestCoroutineScheduler) : Clock() {
+        override val now: Duration
+            get() = scheduler.currentTime.milliseconds
+    }
+
     private companion object {
-        const val DEFAULT_INTERVAL_MILLIS = 100L
-        // Additional time to wait to ensure that the timer has fired
-        const val THREAD_SLEEPING_THRESHOLD = 50L
+        val DEFAULT_INTERVAL = 30.seconds
         val testData = mutableMapOf<String, Any>(
             "os" to "android",
             "parsely_site_uuid" to "e8857cbe-5ace-44f4-a85e-7e7475f675c5",
