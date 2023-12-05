@@ -15,8 +15,6 @@ private const val MANUFACTURER = "test manufacturer"
 @Config(sdk = [SDK_VERSION])
 internal class AndroidDeviceInfoRepositoryTest {
 
-    private lateinit var sut: AndroidDeviceInfoRepository
-
     @Before
     fun setUp() {
         ShadowBuild.setManufacturer(MANUFACTURER)
@@ -26,7 +24,7 @@ internal class AndroidDeviceInfoRepositoryTest {
     fun `given the advertisement id exists, when collecting device info, then parsely site uuid is advertisement id`() {
         // given
         val advertisementId = "ad id"
-        sut = AndroidDeviceInfoRepository(
+        val sut = AndroidDeviceInfoRepository(
             advertisementIdProvider = { advertisementId },
             androidIdProvider = { "android id" })
 
@@ -41,7 +39,7 @@ internal class AndroidDeviceInfoRepositoryTest {
     fun `given the advertisement is null and android id is not, when collecting device info, then parsely id is android id`() {
         // given
         val androidId = "android id"
-        sut = AndroidDeviceInfoRepository(
+        val sut = AndroidDeviceInfoRepository(
             advertisementIdProvider = { null },
             androidIdProvider = { androidId }
         )
@@ -56,7 +54,7 @@ internal class AndroidDeviceInfoRepositoryTest {
     @Test
     fun `given both advertisement id and android id are null, when collecting device info, then parsely id is empty`() {
         // given
-        sut = AndroidDeviceInfoRepository(
+        val sut = AndroidDeviceInfoRepository(
             advertisementIdProvider = { null },
             androidIdProvider = { null }
         )
