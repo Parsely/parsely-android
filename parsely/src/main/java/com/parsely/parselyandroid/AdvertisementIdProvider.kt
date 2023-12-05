@@ -16,8 +16,7 @@ internal class AdvertisementIdProvider(
     init {
         coroutineScope.launch {
             try {
-                val idInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
-                idInfo.id
+                adKey = AdvertisingIdClient.getAdvertisingIdInfo(context).id
             } catch (e: Exception) {
                 ParselyTracker.PLog("No Google play services or error!")
             }
