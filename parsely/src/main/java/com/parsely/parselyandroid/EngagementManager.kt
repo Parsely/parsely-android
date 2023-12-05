@@ -28,18 +28,13 @@ internal class EngagementManager(
 ) {
     private var job: Job? = null
     private var totalTime: Long = 0
-    private var startTime: Duration
     private var nextScheduledExecution: Long = 0
-
-    init {
-        startTime =  clock.now
-    }
 
     val isRunning: Boolean
         get() = job?.isActive ?: false
 
     fun start() {
-        startTime = clock.now
+        val startTime = clock.now
         job = coroutineScope.launch {
             while (isActive) {
                 latestDelayMillis = intervalCalculator.calculate(startTime)
