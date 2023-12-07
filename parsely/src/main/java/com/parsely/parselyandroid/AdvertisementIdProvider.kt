@@ -23,6 +23,10 @@ internal class AdvertisementIdProvider(
         }
     }
 
+    /**
+     * @return advertisement id if the coroutine in the constructor finished executing AdvertisingIdClient#getAdvertisingIdInfo
+     * null otherwise
+     */
     override fun provide(): String? = adKey
 }
 
