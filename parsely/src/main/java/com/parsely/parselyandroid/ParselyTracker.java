@@ -19,7 +19,6 @@ package com.parsely.parselyandroid;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,19 +26,12 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Formatter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
+
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 /**
  * Tracks Parse.ly app views in Android apps
@@ -52,12 +44,10 @@ public class ParselyTracker {
     private static final int DEFAULT_FLUSH_INTERVAL_SECS = 60;
     private static final int DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500;
     @SuppressWarnings("StringOperationCanBeSimplified")
-//    private static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
-    private static final String ROOT_URL = "https://p1.parsely.com/".intern();
-    private final ArrayList<Map<String, Object>> eventQueue;
+//    static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
+    static final String ROOT_URL = "https://p1.parsely.com/".intern();
     private boolean isDebug;
     private final Context context;
-    private final Timer timer;
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
     @Nullable
@@ -65,29 +55,50 @@ public class ParselyTracker {
     @NonNull
     private final EventsBuilder eventsBuilder;
     @NonNull
-    private final HeartbeatIntervalCalculator intervalCalculator = new HeartbeatIntervalCalculator(new Clock());
+    private final Clock clock;
+    @NonNull
+    private final HeartbeatIntervalCalculator intervalCalculator;
     @NonNull
     private final LocalStorageRepository localStorageRepository;
+    @NonNull
+    private final InMemoryBuffer inMemoryBuffer;
+    @NonNull
+    private final FlushQueue flushQueue;
 
     /**
      * Create a new ParselyTracker instance.
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
         context = c.getApplicationContext();
-        eventsBuilder = new EventsBuilder(context, siteId);
+        eventsBuilder = new EventsBuilder(
+                new AndroidDeviceInfoRepository(
+                        new AdvertisementIdProvider(context, ParselyCoroutineScopeKt.getSdkScope()),
+                        new AndroidIdProvider(context)
+                ), siteId);
         localStorageRepository = new LocalStorageRepository(context);
+        flushManager = new ParselyFlushManager(new Function0<Unit>() {
+            @Override
+            public Unit invoke() {
+                flushEvents();
+                return Unit.INSTANCE;
+            }
+        },  flushInterval * 1000L,
+                ParselyCoroutineScopeKt.getSdkScope());
+        inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, () -> {
+            if (!flushTimerIsActive()) {
+                startFlushTimer();
+                PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
+            }
+            return Unit.INSTANCE;
+        });
+        flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
+        clock = new Clock();
+        intervalCalculator = new HeartbeatIntervalCalculator(clock);
 
         // get the adkey straight away on instantiation
-        timer = new Timer();
         isDebug = false;
 
-        eventQueue = new ArrayList<>();
-
-        flushManager = new FlushManager(timer, flushInterval * 1000L);
-
-        if (localStorageRepository.getStoredQueue().size() > 0) {
-            startFlushTimer();
-        }
+        flushManager.start();
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(
                 (LifecycleEventObserver) (lifecycleOwner, event) -> {
@@ -96,10 +107,6 @@ public class ParselyTracker {
                     }
                 }
         );
-    }
-
-    List<Map<String, Object>> getInMemoryQueue() {
-        return eventQueue;
     }
 
     /**
@@ -288,7 +295,7 @@ public class ParselyTracker {
 
         // Start a new EngagementTask
         Map<String, Object> event = eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid);
-        engagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event, intervalCalculator);
+        engagementManager = new EngagementManager(this, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, event, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock );
         engagementManager.start();
     }
 
@@ -364,7 +371,7 @@ public class ParselyTracker {
         // Start a new engagement manager for the video.
         @NonNull final Map<String, Object> hbEvent = eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid);
         // TODO: Can we remove some metadata fields from this request?
-        videoEngagementManager = new EngagementManager(this, timer, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent, intervalCalculator);
+        videoEngagementManager = new EngagementManager(this, DEFAULT_ENGAGEMENT_INTERVAL_MILLIS, hbEvent, intervalCalculator, ParselyCoroutineScopeKt.getSdkScope(), clock);
         videoEngagementManager.start();
     }
 
@@ -410,19 +417,12 @@ public class ParselyTracker {
      * <p>
      * Place a data structure representing the event into the in-memory queue for later use.
      * <p>
-     * **Note**: Events placed into this queue will be discarded if the size of the persistent queue
-     * store exceeds {@link QueueManager#STORAGE_SIZE_LIMIT}.
      *
      * @param event The event Map to enqueue.
      */
     void enqueueEvent(Map<String, Object> event) {
         // Push it onto the queue
-        eventQueue.add(event);
-        new QueueManager(this, localStorageRepository).execute();
-        if (!flushTimerIsActive()) {
-            startFlushTimer();
-            PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
-        }
+        inMemoryBuffer.add(event);
     }
 
     /**
@@ -435,34 +435,6 @@ public class ParselyTracker {
     }
 
     /**
-     * Send the batched event request to Parsely.
-     * <p>
-     * Creates a POST request containing the JSON encoding of the event queue.
-     * Sends this request to Parse.ly servers.
-     *
-     * @param events The list of event dictionaries to serialize
-     */
-    private void sendBatchRequest(ArrayList<Map<String, Object>> events) {
-        if (events == null || events.size() == 0) {
-            return;
-        }
-        PLog("Sending request with %d events", events.size());
-
-        // Put in a Map for the proxy server
-        Map<String, Object> batchMap = new HashMap<>();
-        batchMap.put("events", events);
-
-        if (isDebug) {
-            PLog("Debug mode on. Not sending to Parse.ly");
-            purgeEventsQueue();
-        } else {
-            new ParselyAPIConnection(this).execute(ROOT_URL + "mobileproxy", JsonEncode(batchMap));
-            PLog("Requested %s", ROOT_URL);
-        }
-        PLog("POST Data %s", JsonEncode(batchMap));
-    }
-
-    /**
      * Returns whether the network is accessible and Parsely is reachable.
      *
      * @return Whether the network is accessible and Parsely is reachable.
@@ -472,30 +444,6 @@ public class ParselyTracker {
                 Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
-    }
-
-    void purgeEventsQueue() {
-        eventQueue.clear();
-        localStorageRepository.purgeStoredQueue();
-    }
-
-    /**
-     * Encode an event Map as JSON.
-     *
-     * @param map The Map object to encode as JSON.
-     * @return The JSON-encoded value of `map`.
-     */
-    private String JsonEncode(Map<String, Object> map) {
-        ObjectMapper mapper = new ObjectMapper();
-        String ret = null;
-        try {
-            StringWriter strWriter = new StringWriter();
-            mapper.writeValue(strWriter, map);
-            ret = strWriter.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return ret;
     }
 
     /**
@@ -518,114 +466,16 @@ public class ParselyTracker {
         return flushManager.isRunning();
     }
 
-    /**
-     * Stop the event queue flush timer.
-     */
-    public void stopFlushTimer() {
-        flushManager.stop();
-    }
-
     @NonNull
     private String generatePixelId() {
         return UUID.randomUUID().toString();
     }
 
-    /**
-     * Get the number of events waiting to be flushed to Parsely.
-     *
-     * @return The number of events waiting to be flushed to Parsely.
-     */
-    public int queueSize() {
-        return eventQueue.size();
+    void flushEvents() {
+        if (!isReachable()) {
+            PLog("Network unreachable. Not flushing.");
+            return;
+        }
+        flushQueue.invoke(isDebug);
     }
-
-    /**
-     * Get the number of events stored in persistent storage.
-     *
-     * @return The number of events stored in persistent storage.
-     */
-    public int storedEventsCount() {
-        ArrayList<Map<String, Object>> ar = localStorageRepository.getStoredQueue();
-        return ar.size();
-    }
-
-    private class FlushQueue extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected synchronized Void doInBackground(Void... params) {
-            ArrayList<Map<String, Object>> storedQueue = localStorageRepository.getStoredQueue();
-            PLog("%d events in queue, %d stored events", eventQueue.size(), storedEventsCount());
-            // in case both queues have been flushed and app quits, don't crash
-            if ((eventQueue == null || eventQueue.size() == 0) && storedQueue.size() == 0) {
-                stopFlushTimer();
-                return null;
-            }
-            if (!isReachable()) {
-                PLog("Network unreachable. Not flushing.");
-                return null;
-            }
-            HashSet<Map<String, Object>> hs = new HashSet<>();
-            ArrayList<Map<String, Object>> newQueue = new ArrayList<>();
-
-            hs.addAll(eventQueue);
-            hs.addAll(storedQueue);
-            newQueue.addAll(hs);
-            PLog("Flushing queue");
-            sendBatchRequest(newQueue);
-            return null;
-        }
-    }
-
-    /**
-     * Manager for the event flush timer.
-     * <p>
-     * Handles stopping and starting the flush timer. The flush timer
-     * controls how often we send events to Parse.ly servers.
-     */
-    private class FlushManager {
-
-        private final Timer parentTimer;
-        private final long intervalMillis;
-        private TimerTask runningTask;
-
-        public FlushManager(Timer parentTimer, long intervalMillis) {
-            this.parentTimer = parentTimer;
-            this.intervalMillis = intervalMillis;
-        }
-
-        public void start() {
-            if (runningTask != null) {
-                return;
-            }
-
-            runningTask = new TimerTask() {
-                public void run() {
-                    flushEvents();
-                }
-            };
-            parentTimer.scheduleAtFixedRate(runningTask, intervalMillis, intervalMillis);
-        }
-
-        public boolean stop() {
-            if (runningTask == null) {
-                return false;
-            } else {
-                boolean output = runningTask.cancel();
-                runningTask = null;
-                return output;
-            }
-        }
-
-        public boolean isRunning() {
-            return runningTask != null;
-        }
-
-        public long getIntervalMillis() {
-            return intervalMillis;
-        }
-    }
-
-    private void flushEvents() {
-        new FlushQueue().execute();
-    }
-
 }

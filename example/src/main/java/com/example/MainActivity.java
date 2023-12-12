@@ -30,33 +30,18 @@ public class MainActivity extends Activity {
         // Set debugging to true so we don't actually send things to Parse.ly
         ParselyTracker.sharedInstance().setDebug(true);
 
-        final TextView queueView = (TextView) findViewById(R.id.queue_size);
-        queueView.setText(String.format("Queued events: %d", ParselyTracker.sharedInstance().queueSize()));
-
-        final TextView storedView = (TextView) findViewById(R.id.stored_size);
-        storedView.setText(String.format("Stored events: %d", ParselyTracker.sharedInstance().storedEventsCount()));
-
         final TextView intervalView = (TextView) findViewById(R.id.interval);
-        storedView.setText(String.format("Flush interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
 
         updateEngagementStrings();
 
-        final TextView views[] = new TextView[3];
-        views[0] = queueView;
-        views[1] = storedView;
-        views[2] = intervalView;
+        final TextView views[] = new TextView[1];
+        views[0] = intervalView;
 
         final Handler mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 TextView[] v = (TextView[]) msg.obj;
-                TextView qView = v[0];
-                qView.setText(String.format("Queued events: %d", ParselyTracker.sharedInstance().queueSize()));
-
-                TextView sView = v[1];
-                sView.setText(String.format("Stored events: %d", ParselyTracker.sharedInstance().storedEventsCount()));
-
-                TextView iView = v[2];
+                TextView iView = v[0];
                 if (ParselyTracker.sharedInstance().flushTimerIsActive()) {
                     iView.setText(String.format("Flush Interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
                 } else {

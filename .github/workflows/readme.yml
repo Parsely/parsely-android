@@ -72,4 +72,6 @@ jobs:
         if: always()
         with:
           name: artifact
-          path: ./parsely/build/reports/*
+          path: |
+            ./parsely/build/reports/*
+            ./parsely/build/outputs/androidTest-results
