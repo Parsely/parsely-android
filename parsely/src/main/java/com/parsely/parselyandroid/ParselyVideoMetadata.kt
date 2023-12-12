@@ -16,13 +16,13 @@ class ParselyVideoMetadata
  * @param publicationDateMilliseconds         The timestamp in milliseconds this video was published.
  * @param durationSeconds Duration of the video in seconds. Required.
  */(
-    authors: List<String>?,
+    authors: List<String>? = null,
     videoId: String,
-    section: String?,
-    tags: List<String>?,
-    thumbUrl: String?,
-    title: String?,
-    publicationDateMilliseconds: Long?,
+    section: String? = null,
+    tags: List<String>? = null,
+    thumbUrl: String? = null,
+    title: String? = null,
+    publicationDateMilliseconds: Long? = null,
     @JvmField internal val durationSeconds: Int
 ) : ParselyMetadata(authors, videoId, section, tags, thumbUrl, title, publicationDateMilliseconds) {
     /**
