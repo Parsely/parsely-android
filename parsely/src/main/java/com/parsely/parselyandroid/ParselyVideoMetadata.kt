@@ -22,7 +22,7 @@ class ParselyVideoMetadata
     tags: List<String>?,
     thumbUrl: String?,
     title: String?,
-    publicationDateMilliseconds: Long,
+    publicationDateMilliseconds: Long?,
     @JvmField internal val durationSeconds: Int
 ) : ParselyMetadata(authors, videoId, section, tags, thumbUrl, title, publicationDateMilliseconds) {
     /**
