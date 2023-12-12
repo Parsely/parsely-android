@@ -27,7 +27,7 @@ open class ParselyMetadata
     private val tags: List<String>?,
     private val thumbUrl: String?,
     private val title: String?,
-    private val publicationDateMilliseconds: Long
+    private val publicationDateMilliseconds: Long?
 ) {
     /**
      * Turn this object into a Map
@@ -54,7 +54,9 @@ open class ParselyMetadata
         if (title != null) {
             output["title"] = title
         }
-        output["pub_date_tmsp"] = publicationDateMilliseconds / 1000
+        if (publicationDateMilliseconds != null) {
+            output["pub_date_tmsp"] = publicationDateMilliseconds / 1000
+        }
         return output
     }
 }
