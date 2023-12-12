@@ -22,9 +22,7 @@ internal class HeartbeatIntervalCalculatorTest {
     fun `given the same time of start and current time, when calculating interval, return offset times backoff proportion`() {
         // given
         fakeClock.fakeNow = Duration.ZERO
-        val startTime = Calendar.getInstance().apply {
-            timeInMillis = 0
-        }
+        val startTime = Duration.ZERO
 
         // when
         val result = sut.calculate(startTime)
@@ -45,9 +43,7 @@ internal class HeartbeatIntervalCalculatorTest {
         // (15 minutes / 0.3) - 35 seconds = 2965 seconds. Add 1 second to be over the limit
         val excessiveTime = 2965.seconds + 1.seconds
         fakeClock.fakeNow = excessiveTime
-        val startTime = Calendar.getInstance().apply {
-            timeInMillis = 0
-        }
+        val startTime = Duration.ZERO
 
         // when
         val result = sut.calculate(startTime)
@@ -59,9 +55,7 @@ internal class HeartbeatIntervalCalculatorTest {
     @Test
     fun `given a specific time point, when updating latest interval, it correctly calculates the interval`() {
         // given
-        val startTime = Calendar.getInstance().apply {
-            timeInMillis = 0
-        }
+        val startTime = Duration.ZERO
         fakeClock.fakeNow = 2.seconds
 
         // when
