@@ -21,13 +21,13 @@ open class ParselyMetadata
  * @param title    The title of the content.
  * @param publicationDateMilliseconds  The date this piece of content was published.
  */(
-    private val authors: List<String>?,
-    @JvmField internal val link: String?,
-    private val section: String?,
-    private val tags: List<String>?,
-    private val thumbUrl: String?,
-    private val title: String?,
-    private val publicationDateMilliseconds: Long?
+    private val authors: List<String>? = null,
+    @JvmField internal val link: String? = null,
+    private val section: String? = null,
+    private val tags: List<String>? = null,
+    private val thumbUrl: String? = null,
+    private val title: String? = null,
+    private val publicationDateMilliseconds: Long? = null
 ) {
     /**
      * Turn this object into a Map
