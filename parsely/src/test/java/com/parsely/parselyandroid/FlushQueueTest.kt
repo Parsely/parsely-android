@@ -20,7 +20,8 @@ class FlushQueueTest {
                 FakeFlushManager(),
                 FakeRepository(),
                 FakeRestClient(),
-                this
+                this,
+                FakeConnectivityStatusProvider()
             )
 
             // when
@@ -45,7 +46,8 @@ class FlushQueueTest {
                 FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
-                this
+                this,
+                FakeConnectivityStatusProvider()
             )
 
             // when
@@ -59,7 +61,7 @@ class FlushQueueTest {
     @Test
     fun `given non-empty local storage, when flushing queue with skipping sending events, then events are not sent and removed from local storage`() =
         runTest {
-            // given
+            // give
             val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
@@ -67,7 +69,8 @@ class FlushQueueTest {
                 FakeFlushManager(),
                 repository,
                 FakeRestClient(),
-                this
+                this,
+                FakeConnectivityStatusProvider()
             )
 
             // when
@@ -92,7 +95,8 @@ class FlushQueueTest {
                 FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
-                this
+                this,
+                FakeConnectivityStatusProvider()
             )
 
             // when
@@ -118,7 +122,8 @@ class FlushQueueTest {
                 flushManager,
                 repository,
                 parselyAPIConnection,
-                this
+                this,
+                FakeConnectivityStatusProvider()
             )
 
             // when
@@ -146,7 +151,8 @@ class FlushQueueTest {
                 flushManager,
                 repository,
                 parselyAPIConnection,
-                this
+                this,
+                FakeConnectivityStatusProvider()
             )
 
             // when
@@ -165,7 +171,8 @@ class FlushQueueTest {
             flushManager,
             FakeRepository(),
             FakeRestClient(),
-            this
+            this,
+            FakeConnectivityStatusProvider()
         )
 
         // when
@@ -175,6 +182,30 @@ class FlushQueueTest {
         // then
         assertThat(flushManager.stopped).isTrue()
     }
+
+    @Test
+    fun `given non-empty local storage, when flushing queue with no internet connection, then events are not sent and not removed from local storage`() =
+        runTest {
+            // given
+            val repository = FakeRepository().apply {
+                insertEvents(listOf(mapOf("test" to 123)))
+            }
+            val sut = FlushQueue(
+                FakeFlushManager(),
+                repository,
+                FakeRestClient(),
+                this,
+                FakeConnectivityStatusProvider().apply { reachable = false }
+            )
+
+            // when
+            sut.invoke(false)
+            runCurrent()
+
+            // then
+            assertThat(repository.getStoredQueue()).isNotEmpty
+        }
+
 
     private class FakeFlushManager : FlushManager {
         var stopped = false
@@ -215,5 +246,10 @@ class FlushQueueTest {
         override suspend fun send(payload: String): Result<Unit> {
             return nextResult!!
         }
+    }
+
+    private class FakeConnectivityStatusProvider : ConnectivityStatusProvider {
+        var reachable = true
+        override fun isReachable() = reachable
     }
 }
