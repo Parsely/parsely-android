@@ -4,8 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.MapAssert
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 internal class EventsBuilderTest {
     private lateinit var sut: EventsBuilder
