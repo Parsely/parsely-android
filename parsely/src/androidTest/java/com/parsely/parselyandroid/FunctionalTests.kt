@@ -183,6 +183,7 @@ class FunctionalTests {
 
                 // when
                 startTimestamp = System.currentTimeMillis().milliseconds
+                parselyTracker.trackPageview("url", null, null, null)
                 parselyTracker.startEngagement(engagementUrl, null)
             }
 
