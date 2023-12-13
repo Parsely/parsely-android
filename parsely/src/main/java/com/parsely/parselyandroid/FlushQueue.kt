@@ -1,7 +1,7 @@
 package com.parsely.parselyandroid
 
 import com.parsely.parselyandroid.JsonSerializer.toParselyEventsPayload
-import com.parsely.parselyandroid.Logging.PLog
+import com.parsely.parselyandroid.Logging.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -19,7 +19,7 @@ internal class FlushQueue(
 
     operator fun invoke(skipSendingEvents: Boolean) {
         if (!connectivityStatusProvider.isReachable()) {
-            PLog("Network unreachable. Not flushing.")
+            log("Network unreachable. Not flushing.")
             return
         }
         scope.launch {
@@ -32,23 +32,23 @@ internal class FlushQueue(
                 }
 
                 if (skipSendingEvents) {
-                    PLog("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events")
+                    log("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events")
                     repository.remove(eventsToSend)
                     return@launch
                 }
-                PLog("Sending request with %d events", eventsToSend.size)
+                log("Sending request with %d events", eventsToSend.size)
                 val jsonPayload = toParselyEventsPayload(eventsToSend)
-                PLog("POST Data %s", jsonPayload)
-                PLog("Requested %s", ParselyTracker.ROOT_URL)
+                log("POST Data %s", jsonPayload)
+                log("Requested %s", ParselyTracker.ROOT_URL)
                 restClient.send(jsonPayload)
                     .fold(
                         onSuccess = {
-                            PLog("Pixel request success")
+                            log("Pixel request success")
                             repository.remove(eventsToSend)
                         },
                         onFailure = {
-                            PLog("Pixel request exception")
-                            PLog(it.toString())
+                            log("Pixel request exception")
+                            log(it.toString())
                         }
                     )
             }

@@ -1,8 +1,6 @@
 package com.parsely.parselyandroid;
 
-import static com.parsely.parselyandroid.Logging.PLog;
-
-import android.content.Context;
+import static com.parsely.parselyandroid.Logging.log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -44,7 +42,7 @@ class EventsBuilder {
             Map<String, Object> extraData,
             @Nullable String uuid
     ) {
-        PLog("buildEvent called for %s/%s", action, url);
+        log("buildEvent called for %s/%s", action, url);
 
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 

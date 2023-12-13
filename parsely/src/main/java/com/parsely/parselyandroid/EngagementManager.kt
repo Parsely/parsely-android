@@ -1,7 +1,6 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.Logging.PLog
-import kotlin.time.Duration
+import com.parsely.parselyandroid.Logging.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -63,7 +62,7 @@ internal class EngagementManager(
         val event: MutableMap<String, Any> = HashMap(
             baseEvent
         )
-        PLog(String.format("Enqueuing %s event.", event["action"]))
+        log(String.format("Enqueuing %s event.", event["action"]))
 
         // Update `ts` for the event since it's happening right now.
         val baseEventData = (event["data"] as Map<String, Any>?)!!

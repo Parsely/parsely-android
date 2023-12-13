@@ -1,7 +1,7 @@
 package com.parsely.parselyandroid
 
 import android.content.Context
-import com.parsely.parselyandroid.Logging.PLog
+import com.parsely.parselyandroid.Logging.log
 import java.io.EOFException
 import java.io.FileNotFoundException
 import java.io.ObjectInputStream
@@ -35,7 +35,7 @@ internal class LocalStorageRepository(private val context: Context) : QueueRepos
             oos.close()
             fos.close()
         } catch (ex: Exception) {
-            PLog("Exception thrown during queue serialization: %s", ex.toString())
+            log("Exception thrown during queue serialization: %s", ex.toString())
         }
     }
 
@@ -53,7 +53,7 @@ internal class LocalStorageRepository(private val context: Context) : QueueRepos
         } catch (ex: FileNotFoundException) {
             // Nothing to do here. Means there was no saved queue.
         } catch (ex: Exception) {
-            PLog(
+            log(
                 "Exception thrown during queue deserialization: %s",
                 ex.toString()
             )

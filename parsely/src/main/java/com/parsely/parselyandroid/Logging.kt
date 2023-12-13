@@ -8,7 +8,7 @@ object Logging {
      * Log a message to the console.
      */
     @JvmStatic
-    fun PLog(logString: String, vararg objects: Any?) {
+    fun log(logString: String, vararg objects: Any?) {
         if (logString == "") {
             return
         }
