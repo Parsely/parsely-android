@@ -46,7 +46,6 @@ public class ParselyTracker {
 //    static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
     static final String ROOT_URL = "https://p1.parsely.com/".intern();
     private boolean isDebug;
-    private final Context context;
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
     @Nullable
@@ -68,7 +67,7 @@ public class ParselyTracker {
      * Create a new ParselyTracker instance.
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
-        context = c.getApplicationContext();
+        Context context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(
                 new AndroidDeviceInfoRepository(
                         new AdvertisementIdProvider(context, ParselyCoroutineScopeKt.getSdkScope()),
