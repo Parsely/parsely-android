@@ -16,7 +16,7 @@
 
 package com.parsely.parselyandroid;
 
-import static com.parsely.parselyandroid.Logging.PLog;
+import static com.parsely.parselyandroid.Logging.log;
 
 import android.content.Context;
 
@@ -83,7 +83,7 @@ public class ParselyTracker {
         inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, () -> {
             if (!flushTimerIsActive()) {
                 startFlushTimer();
-                PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
+                log("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
             }
             return Unit.INSTANCE;
         });
@@ -201,7 +201,7 @@ public class ParselyTracker {
      */
     public void setDebug(boolean debug) {
         isDebug = debug;
-        PLog("Debugging is now set to " + isDebug);
+        log("Debugging is now set to " + isDebug);
     }
 
     /**
