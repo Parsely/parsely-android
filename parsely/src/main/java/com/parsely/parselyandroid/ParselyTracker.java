@@ -222,7 +222,8 @@ public class ParselyTracker {
             @Nullable ParselyMetadata urlMetadata,
             @Nullable Map<String, Object> extraData) {
         if (url.equals("")) {
-            throw new IllegalArgumentException("url cannot be null or empty.");
+            log("url cannot be empty");
+            return;
         }
 
         // Blank urlref is better than null
@@ -262,7 +263,8 @@ public class ParselyTracker {
             final @Nullable Map<String, Object> extraData
     ) {
         if (url.equals("")) {
-            throw new IllegalArgumentException("url cannot be null or empty.");
+            log("url cannot be empty");
+            return;
         }
 
         // Blank urlref is better than null
@@ -320,7 +322,8 @@ public class ParselyTracker {
             @NonNull ParselyVideoMetadata videoMetadata,
             @Nullable Map<String, Object> extraData) {
         if (url.equals("")) {
-            throw new IllegalArgumentException("url cannot be null or empty.");
+            log("url cannot be empty");
+            return;
         }
 
         // Blank urlref is better than null
