@@ -266,6 +266,10 @@ public class ParselyTracker {
             log("url cannot be empty");
             return;
         }
+        if (lastPageviewUuid == null) {
+            log("engagement session cannot start without calling trackPageview first");
+            return;
+        }
 
         // Blank urlref is better than null
         if (urlRef == null) {
