@@ -195,13 +195,18 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
             log("url cannot be empty")
             return
         }
+        val pageViewUuid = lastPageviewUuid
+        if (pageViewUuid == null) {
+            log("engagement session cannot start without calling trackPageview first")
+            return
+        }
 
         // Cancel anything running
         stopEngagement()
 
         // Start a new EngagementTask
         val event =
-            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "heartbeat", null, extraData, lastPageviewUuid)
+            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "heartbeat", null, extraData, pageViewUuid)
         engagementManager = EngagementManager(
             this,
             DEFAULT_ENGAGEMENT_INTERVAL_MILLIS.toLong(),
