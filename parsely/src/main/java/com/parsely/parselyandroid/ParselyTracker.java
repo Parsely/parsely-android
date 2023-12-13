@@ -16,9 +16,9 @@
 
 package com.parsely.parselyandroid;
 
+import static com.parsely.parselyandroid.Logging.log;
+
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,7 +26,6 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import java.util.Formatter;
 import java.util.Map;
 import java.util.UUID;
 
@@ -47,7 +46,6 @@ public class ParselyTracker {
 //    static final String ROOT_URL = "http://10.0.2.2:5001/".intern(); // emulator localhost
     static final String ROOT_URL = "https://p1.parsely.com/".intern();
     private boolean isDebug;
-    private final Context context;
     private final FlushManager flushManager;
     private EngagementManager engagementManager, videoEngagementManager;
     @Nullable
@@ -59,8 +57,6 @@ public class ParselyTracker {
     @NonNull
     private final HeartbeatIntervalCalculator intervalCalculator;
     @NonNull
-    private final LocalStorageRepository localStorageRepository;
-    @NonNull
     private final InMemoryBuffer inMemoryBuffer;
     @NonNull
     private final FlushQueue flushQueue;
@@ -69,13 +65,13 @@ public class ParselyTracker {
      * Create a new ParselyTracker instance.
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
-        context = c.getApplicationContext();
+        Context context = c.getApplicationContext();
         eventsBuilder = new EventsBuilder(
                 new AndroidDeviceInfoRepository(
                         new AdvertisementIdProvider(context, ParselyCoroutineScopeKt.getSdkScope()),
                         new AndroidIdProvider(context)
                 ), siteId);
-        localStorageRepository = new LocalStorageRepository(context);
+        LocalStorageRepository localStorageRepository = new LocalStorageRepository(context);
         flushManager = new ParselyFlushManager(new Function0<Unit>() {
             @Override
             public Unit invoke() {
@@ -87,11 +83,11 @@ public class ParselyTracker {
         inMemoryBuffer = new InMemoryBuffer(ParselyCoroutineScopeKt.getSdkScope(), localStorageRepository, () -> {
             if (!flushTimerIsActive()) {
                 startFlushTimer();
-                PLog("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
+                log("Flush flushTimer set to %ds", (flushManager.getIntervalMillis() / 1000));
             }
             return Unit.INSTANCE;
         });
-        flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
+        flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope(), new AndroidConnectivityStatusProvider(context));
         clock = new Clock();
         intervalCalculator = new HeartbeatIntervalCalculator(clock);
 
@@ -148,30 +144,22 @@ public class ParselyTracker {
     }
 
     /**
-     * Log a message to the console.
-     */
-    static void PLog(String logString, Object... objects) {
-        if (logString.equals("")) {
-            return;
-        }
-        System.out.println(new Formatter().format("[Parsely] " + logString, objects).toString());
-    }
-
-    /**
      * Get the heartbeat interval
      *
      * @return The base engagement tracking interval.
      */
-    public double getEngagementInterval() {
+    @Nullable
+    public Double getEngagementInterval() {
         if (engagementManager == null) {
-            return -1;
+            return null;
         }
         return engagementManager.getIntervalMillis();
     }
 
-    public double getVideoEngagementInterval() {
+    @Nullable
+    public Double getVideoEngagementInterval() {
         if (videoEngagementManager == null) {
-            return -1;
+            return null;
         }
         return videoEngagementManager.getIntervalMillis();
     }
@@ -204,15 +192,6 @@ public class ParselyTracker {
     }
 
     /**
-     * Getter for isDebug
-     *
-     * @return Whether debug mode is active.
-     */
-    public boolean getDebug() {
-        return isDebug;
-    }
-
-    /**
      * Set a debug flag which will prevent data from being sent to Parse.ly
      * <p>
      * Use this flag when developing to prevent the SDK from actually sending requests
@@ -222,7 +201,7 @@ public class ParselyTracker {
      */
     public void setDebug(boolean debug) {
         isDebug = debug;
-        PLog("Debugging is now set to " + isDebug);
+        log("Debugging is now set to " + isDebug);
     }
 
     /**
@@ -243,7 +222,8 @@ public class ParselyTracker {
             @Nullable ParselyMetadata urlMetadata,
             @Nullable Map<String, Object> extraData) {
         if (url.equals("")) {
-            throw new IllegalArgumentException("url cannot be null or empty.");
+            log("url cannot be empty");
+            return;
         }
 
         // Blank urlref is better than null
@@ -283,7 +263,8 @@ public class ParselyTracker {
             final @Nullable Map<String, Object> extraData
     ) {
         if (url.equals("")) {
-            throw new IllegalArgumentException("url cannot be null or empty.");
+            log("url cannot be empty");
+            return;
         }
 
         // Blank urlref is better than null
@@ -341,7 +322,8 @@ public class ParselyTracker {
             @NonNull ParselyVideoMetadata videoMetadata,
             @Nullable Map<String, Object> extraData) {
         if (url.equals("")) {
-            throw new IllegalArgumentException("url cannot be null or empty.");
+            log("url cannot be empty");
+            return;
         }
 
         // Blank urlref is better than null
@@ -435,18 +417,6 @@ public class ParselyTracker {
     }
 
     /**
-     * Returns whether the network is accessible and Parsely is reachable.
-     *
-     * @return Whether the network is accessible and Parsely is reachable.
-     */
-    private boolean isReachable() {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnectedOrConnecting();
-    }
-
-    /**
      * Start the timer to flush events to Parsely.
      * <p>
      * Instantiates the callback timer responsible for flushing the events queue.
@@ -472,10 +442,6 @@ public class ParselyTracker {
     }
 
     void flushEvents() {
-        if (!isReachable()) {
-            PLog("Network unreachable. Not flushing.");
-            return;
-        }
         flushQueue.invoke(isDebug);
     }
 }
