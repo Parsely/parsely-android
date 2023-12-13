@@ -30,7 +30,7 @@ import java.util.UUID
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-open class ParselyTracker protected constructor(siteId: String?, flushInterval: Int, c: Context) {
+open class ParselyTracker protected constructor(siteId: String, flushInterval: Int, c: Context) {
     private var isDebug: Boolean
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
@@ -51,7 +51,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
             AndroidDeviceInfoRepository(
                 AdvertisementIdProvider(context, sdkScope),
                 AndroidIdProvider(context)
-            ), siteId!!
+            ), siteId
         )
         val localStorageRepository = LocalStorageRepository(context)
         flushManager = ParselyFlushManager(
@@ -420,7 +420,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
          * @return The singleton instance
          */
         @JvmStatic
-        fun sharedInstance(siteId: String?, c: Context): ParselyTracker? {
+        fun sharedInstance(siteId: String, c: Context): ParselyTracker? {
             return sharedInstance(siteId, DEFAULT_FLUSH_INTERVAL_SECS, c)
         }
 
@@ -433,7 +433,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
          * @return The singleton instance
          */
         @JvmStatic
-        fun sharedInstance(siteId: String?, flushInterval: Int, c: Context): ParselyTracker? {
+        fun sharedInstance(siteId: String, flushInterval: Int, c: Context): ParselyTracker? {
             if (instance == null) {
                 instance = ParselyTracker(siteId, flushInterval, c)
             }
