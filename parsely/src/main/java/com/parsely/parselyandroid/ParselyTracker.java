@@ -162,16 +162,18 @@ public class ParselyTracker {
      *
      * @return The base engagement tracking interval.
      */
-    public double getEngagementInterval() {
+    @Nullable
+    public Double getEngagementInterval() {
         if (engagementManager == null) {
-            return -1;
+            return null;
         }
         return engagementManager.getIntervalMillis();
     }
 
-    public double getVideoEngagementInterval() {
+    @Nullable
+    public Double getVideoEngagementInterval() {
         if (videoEngagementManager == null) {
-            return -1;
+            return null;
         }
         return videoEngagementManager.getIntervalMillis();
     }
