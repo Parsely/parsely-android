@@ -319,7 +319,7 @@ class FunctionalTests {
         field.set(this, url)
         return ParselyTracker.sharedInstance(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
-        )!!
+        )
     }
 
     private companion object {

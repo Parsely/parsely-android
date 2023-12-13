@@ -407,9 +407,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
          */
         @JvmStatic
         fun sharedInstance(): ParselyTracker? {
-            return if (instance == null) {
-                null
-            } else instance
+            return instance
         }
 
         /**
@@ -417,16 +415,21 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
          *
          * @param siteId        The Parsely public site id (eg "example.com")
          * @param flushInterval The interval at which the events queue should flush, in seconds
-         * @param c             The current Android application context
+         * @param context             The current Android application context
          * @return The singleton instance
          */
         @JvmStatic
         @JvmOverloads
-        fun sharedInstance(siteId: String, flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS, c: Context): ParselyTracker? {
-            if (instance == null) {
-                instance = ParselyTracker(siteId, flushInterval, c)
+        fun sharedInstance(
+            siteId: String,
+            flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
+            context: Context
+        ): ParselyTracker {
+            return instance ?: run {
+                val newInstance = ParselyTracker(siteId, flushInterval, context)
+                instance = newInstance
+                return newInstance
             }
-            return instance
         }
     }
 }
