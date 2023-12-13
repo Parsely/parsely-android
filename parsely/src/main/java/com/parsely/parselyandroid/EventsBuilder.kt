@@ -18,18 +18,18 @@ internal class EventsBuilder(
      * @return A Map object representing the event to be sent to Parse.ly.
      */
     fun buildEvent(
-        url: String?,
-        urlRef: String?,
+        url: String,
+        urlRef: String,
         action: String,
         metadata: ParselyMetadata?,
         extraData: Map<String, Any>?,
-        uuid: String?
-    ): Map<String, Any?> {
+        uuid: String
+    ): Map<String, Any> {
         log("buildEvent called for %s/%s", action, url)
         val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
         // Main event info
-        val event: MutableMap<String, Any?> = HashMap()
+        val event: MutableMap<String, Any> = HashMap()
         event["url"] = url
         event["urlref"] = urlRef
         event["idsite"] = siteId
@@ -44,8 +44,8 @@ internal class EventsBuilder(
         data["ts"] = now.timeInMillis
         data.putAll(deviceInfo)
         event["data"] = data
-        if (metadata != null) {
-            event["metadata"] = metadata.toMap()
+        metadata?.let {
+            event["metadata"] = it.toMap()
         }
         if (action == "videostart" || action == "vheartbeat") {
             event[VIDEO_START_ID_KEY] = uuid
