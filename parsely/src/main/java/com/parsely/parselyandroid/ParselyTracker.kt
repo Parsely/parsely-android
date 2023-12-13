@@ -153,9 +153,9 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      */
     fun trackPageview(
         url: String,
-        urlRef: String?,
-        urlMetadata: ParselyMetadata?,
-        extraData: Map<String?, Any?>?
+        urlRef: String? = null,
+        urlMetadata: ParselyMetadata? = null,
+        extraData: Map<String?, Any?>? = null,
     ) {
         if (url.isBlank()) {
             log("url cannot be empty");
@@ -189,7 +189,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
     @JvmOverloads
     fun startEngagement(
         url: String,
-        urlRef: String?,
+        urlRef: String? = null,
         extraData: Map<String?, Any?>? = null
     ) {
         if (url.isBlank()) {
@@ -253,11 +253,12 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * @param videoMetadata Metadata about the video being tracked.
      * @param extraData     A Map of additional information to send with the event.
     </CUSTOMERDOMAIN></CUSTOMERDOMAIN> */
+    @JvmOverloads
     fun trackPlay(
         url: String,
-        urlRef: String?,
+        urlRef: String? = null,
         videoMetadata: ParselyVideoMetadata,
-        extraData: Map<String?, Any?>?
+        extraData: Map<String?, Any?>? = null,
     ) {
         if (url.isBlank()) {
             log("url cannot be empty");
