@@ -419,6 +419,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
          * @param c      The current Android application context
          * @return The singleton instance
          */
+        @JvmStatic
         fun sharedInstance(siteId: String?, c: Context): ParselyTracker? {
             return sharedInstance(siteId, DEFAULT_FLUSH_INTERVAL_SECS, c)
         }
