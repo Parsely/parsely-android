@@ -91,7 +91,9 @@ public class ParselyTracker {
             }
             return Unit.INSTANCE;
         });
-        flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope());
+        flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope(), new AndroidConnectivityStatusProvider(context));
+        clock = new Clock();
+        intervalCalculator = new HeartbeatIntervalCalculator(clock);
 
         // get the adkey straight away on instantiation
         isDebug = false;
@@ -433,18 +435,6 @@ public class ParselyTracker {
     }
 
     /**
-     * Returns whether the network is accessible and Parsely is reachable.
-     *
-     * @return Whether the network is accessible and Parsely is reachable.
-     */
-    private boolean isReachable() {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnectedOrConnecting();
-    }
-
-    /**
      * Start the timer to flush events to Parsely.
      * <p>
      * Instantiates the callback timer responsible for flushing the events queue.
@@ -470,10 +460,6 @@ public class ParselyTracker {
     }
 
     void flushEvents() {
-        if (!isReachable()) {
-            PLog("Network unreachable. Not flushing.");
-            return;
-        }
         flushQueue.invoke(isDebug);
     }
 }

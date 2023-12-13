@@ -10,12 +10,17 @@ internal class FlushQueue(
     private val flushManager: FlushManager,
     private val repository: QueueRepository,
     private val restClient: RestClient,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val connectivityStatusProvider: ConnectivityStatusProvider
 ) {
 
     private val mutex = Mutex()
 
     operator fun invoke(skipSendingEvents: Boolean) {
+        if (!connectivityStatusProvider.isReachable()) {
+            ParselyTracker.PLog("Network unreachable. Not flushing.")
+            return
+        }
         scope.launch {
             mutex.withLock {
                 val eventsToSend = repository.getStoredQueue()
