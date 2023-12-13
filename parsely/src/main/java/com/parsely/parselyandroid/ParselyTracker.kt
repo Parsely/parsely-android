@@ -162,21 +162,16 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         urlMetadata: ParselyMetadata?,
         extraData: Map<String?, Any?>?
     ) {
-        var urlRef = urlRef
-        if (url.equals("")) {
+        if (url.isBlank()) {
             log("url cannot be empty");
             return;
         }
 
-        // Blank urlref is better than null
-        if (urlRef == null) {
-            urlRef = ""
-        }
         lastPageviewUuid = generatePixelId()
         enqueueEvent(
             eventsBuilder.buildEvent(
                 url,
-                urlRef,
+                urlRef.orEmpty(),
                 "pageview",
                 urlMetadata,
                 extraData,
@@ -208,22 +203,17 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         urlRef: String?,
         extraData: Map<String?, Any?>? = null
     ) {
-        var urlRef = urlRef
-        if (url.equals("")) {
+        if (url.isBlank()) {
             log("url cannot be empty");
             return;
         }
 
-        // Blank urlref is better than null
-        if (urlRef == null) {
-            urlRef = ""
-        }
         // Cancel anything running
         stopEngagement()
 
         // Start a new EngagementTask
         val event =
-            eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, lastPageviewUuid)
+            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "heartbeat", null, extraData, lastPageviewUuid)
         engagementManager = EngagementManager(
             this,
             DEFAULT_ENGAGEMENT_INTERVAL_MILLIS.toLong(),
@@ -280,20 +270,15 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         videoMetadata: ParselyVideoMetadata,
         extraData: Map<String?, Any?>?
     ) {
-        var urlRef = urlRef
-        if (url.equals("")) {
+        if (url.isBlank()) {
             log("url cannot be empty");
             return;
-        }
-        // Blank urlref is better than null
-        if (urlRef == null) {
-            urlRef = ""
         }
 
         // If there is already an engagement manager for this video make sure it is started.
         if (videoEngagementManager != null) {
             videoEngagementManager =
-                if (videoEngagementManager!!.isSameVideo(url, urlRef, videoMetadata)) {
+                if (videoEngagementManager!!.isSameVideo(url, urlRef.orEmpty(), videoMetadata)) {
                     if (!videoEngagementManager!!.isRunning) {
                         videoEngagementManager!!.start()
                     }
