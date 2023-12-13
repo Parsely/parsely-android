@@ -1,29 +1,13 @@
-package com.parsely.parselyandroid;
+package com.parsely.parselyandroid
 
-import static com.parsely.parselyandroid.Logging.log;
+import com.parsely.parselyandroid.Logging.log
+import java.util.Calendar
+import java.util.TimeZone
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
-
-class EventsBuilder {
-    private static final String VIDEO_START_ID_KEY = "vsid";
-    private static final String PAGE_VIEW_ID_KEY = "pvid";
-
-    private final String siteId;
-
-    @NonNull
-    private final DeviceInfoRepository deviceInfoRepository;
-
-    public EventsBuilder(@NonNull final DeviceInfoRepository deviceInfoRepository, @NonNull final String siteId) {
-        this.siteId = siteId;
-        this.deviceInfoRepository = deviceInfoRepository;
-    }
-
+internal class EventsBuilder(
+    private val deviceInfoRepository: DeviceInfoRepository,
+    private val siteId: String
+) {
     /**
      * Create an event Map
      *
@@ -33,51 +17,47 @@ class EventsBuilder {
      * @param extraData A Map of additional information to send with the event.
      * @return A Map object representing the event to be sent to Parse.ly.
      */
-    @NonNull
-    Map<String, Object> buildEvent(
-            String url,
-            String urlRef,
-            String action,
-            ParselyMetadata metadata,
-            Map<String, Object> extraData,
-            @Nullable String uuid
-    ) {
-        log("buildEvent called for %s/%s", action, url);
-
-        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    fun buildEvent(
+        url: String?,
+        urlRef: String?,
+        action: String,
+        metadata: ParselyMetadata?,
+        extraData: Map<String, Any>?,
+        uuid: String?
+    ): Map<String, Any?> {
+        log("buildEvent called for %s/%s", action, url)
+        val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
         // Main event info
-        Map<String, Object> event = new HashMap<>();
-        event.put("url", url);
-        event.put("urlref", urlRef);
-        event.put("idsite", siteId);
-        event.put("action", action);
+        val event: MutableMap<String, Any?> = HashMap()
+        event["url"] = url
+        event["urlref"] = urlRef
+        event["idsite"] = siteId
+        event["action"] = action
 
         // Make a copy of extraData and add some things.
-        Map<String, Object> data = new HashMap<>();
+        val data: MutableMap<String, Any> = HashMap()
         if (extraData != null) {
-            data.putAll(extraData);
+            data.putAll(extraData)
         }
-
-        final Map<String, String> deviceInfo = deviceInfoRepository.collectDeviceInfo();
-        data.put("ts", now.getTimeInMillis());
-        data.putAll(deviceInfo);
-
-        event.put("data", data);
-
+        val deviceInfo = deviceInfoRepository.collectDeviceInfo()
+        data["ts"] = now.timeInMillis
+        data.putAll(deviceInfo)
+        event["data"] = data
         if (metadata != null) {
-            event.put("metadata", metadata.toMap());
+            event["metadata"] = metadata.toMap()
         }
-
-        if (action.equals("videostart") || action.equals("vheartbeat")) {
-            event.put(VIDEO_START_ID_KEY, uuid);
+        if (action == "videostart" || action == "vheartbeat") {
+            event[VIDEO_START_ID_KEY] = uuid
         }
-
-        if (action.equals("pageview") || action.equals("heartbeat")) {
-            event.put(PAGE_VIEW_ID_KEY, uuid);
+        if (action == "pageview" || action == "heartbeat") {
+            event[PAGE_VIEW_ID_KEY] = uuid
         }
-
-        return event;
+        return event
     }
 
+    companion object {
+        private const val VIDEO_START_ID_KEY = "vsid"
+        private const val PAGE_VIEW_ID_KEY = "pvid"
+    }
 }
