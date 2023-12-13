@@ -377,7 +377,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
      *
      * @param event The event Map to enqueue.
      */
-    open fun enqueueEvent(event: Map<String?, Any?>?) {
+    internal open fun enqueueEvent(event: Map<String, Any>) {
         // Push it onto the queue
         inMemoryBuffer.add(event)
     }
