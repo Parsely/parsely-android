@@ -60,7 +60,7 @@ android {
     }
 
     kotlin {
-        explicitApi(ExplicitApiMode.Warning)
+        explicitApi(ExplicitApiMode.Strict)
     }
 }
 

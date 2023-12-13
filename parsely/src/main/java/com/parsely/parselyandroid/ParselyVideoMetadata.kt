@@ -5,7 +5,7 @@ import java.util.Calendar
 /**
  * ParselyMetadata for video content.
  */
-class ParselyVideoMetadata
+public class ParselyVideoMetadata
 /**
  * Create a new ParselyVideoMetadata object.
  *
