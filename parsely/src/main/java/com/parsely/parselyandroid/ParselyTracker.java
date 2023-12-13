@@ -57,8 +57,6 @@ public class ParselyTracker {
     @NonNull
     private final HeartbeatIntervalCalculator intervalCalculator;
     @NonNull
-    private final LocalStorageRepository localStorageRepository;
-    @NonNull
     private final InMemoryBuffer inMemoryBuffer;
     @NonNull
     private final FlushQueue flushQueue;
@@ -73,7 +71,7 @@ public class ParselyTracker {
                         new AdvertisementIdProvider(context, ParselyCoroutineScopeKt.getSdkScope()),
                         new AndroidIdProvider(context)
                 ), siteId);
-        localStorageRepository = new LocalStorageRepository(context);
+        LocalStorageRepository localStorageRepository = new LocalStorageRepository(context);
         flushManager = new ParselyFlushManager(new Function0<Unit>() {
             @Override
             public Unit invoke() {
