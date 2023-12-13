@@ -154,14 +154,16 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
         url: String,
         urlRef: String? = null,
         urlMetadata: ParselyMetadata? = null,
-        extraData: Map<String?, Any?>? = null,
+        extraData: Map<String, Any>? = null,
     ) {
         if (url.isBlank()) {
             log("url cannot be empty")
             return
         }
 
-        lastPageviewUuid = generatePixelId()
+        val pageViewUuid = generatePixelId()
+        lastPageviewUuid = pageViewUuid
+
         enqueueEvent(
             eventsBuilder.buildEvent(
                 url,
@@ -169,7 +171,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
                 "pageview",
                 urlMetadata,
                 extraData,
-                lastPageviewUuid
+                pageViewUuid
             )
         )
     }
@@ -189,7 +191,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
     public fun startEngagement(
         url: String,
         urlRef: String? = null,
-        extraData: Map<String?, Any?>? = null
+        extraData: Map<String, Any>? = null
     ) {
         if (url.isBlank()) {
             log("url cannot be empty")
@@ -262,7 +264,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
         url: String,
         urlRef: String? = null,
         videoMetadata: ParselyVideoMetadata,
-        extraData: Map<String?, Any?>? = null,
+        extraData: Map<String, Any>? = null,
     ) {
         if (url.isBlank()) {
             log("url cannot be empty")
@@ -287,12 +289,12 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
 
         // Enqueue the videostart
         val videostartEvent =
-            eventsBuilder.buildEvent(url, urlRef, "videostart", videoMetadata, extraData, uuid)
+            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "videostart", videoMetadata, extraData, uuid)
         enqueueEvent(videostartEvent)
 
         // Start a new engagement manager for the video.
         val hbEvent =
-            eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid)
+            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "vheartbeat", videoMetadata, extraData, uuid)
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = EngagementManager(
             this,
