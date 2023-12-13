@@ -17,7 +17,7 @@ class ParselyMetadataTest {
             tags,
             thumbUrl,
             title,
-            publicationDate.inWholeMilliseconds
+            pubDate
         )
 
         // when
@@ -38,7 +38,7 @@ class ParselyMetadataTest {
             tags,
             thumbUrl,
             title,
-            publicationDate.inWholeMilliseconds,
+            pubDate,
             duration
         )
 
@@ -56,7 +56,7 @@ class ParselyMetadataTest {
         val tags = arrayListOf("first tag", "second tag")
         val thumbUrl = "sample thumb url"
         val title = "sample title"
-        val publicationDate = 100.seconds
+        val pubDate = Calendar.getInstance().apply { set(2023, 0, 1) }
 
         val expectedParselyMetadataMap = mapOf(
             "authors" to authors,
@@ -65,7 +65,7 @@ class ParselyMetadataTest {
             "tags" to tags,
             "thumb_url" to thumbUrl,
             "title" to title,
-            "pub_date_tmsp" to publicationDate.inWholeSeconds
+            "pub_date_tmsp" to pubDate.timeInMillis / 1000
         )
     }
 }

@@ -1,5 +1,7 @@
 package com.parsely.parselyandroid
 
+import java.util.Calendar
+
 /**
  * Represents post metadata to be passed to Parsely tracking.
  *
@@ -19,7 +21,7 @@ open class ParselyMetadata
  * @param tags     User-defined tags for the content. Up to 20 are allowed.
  * @param thumbUrl URL at which the main image for this content is located.
  * @param title    The title of the content.
- * @param publicationDateMilliseconds  The date this piece of content was published.
+ * @param pubDate  The date this piece of content was published.
  */(
     private val authors: List<String>? = null,
     @JvmField internal val link: String? = null,
@@ -27,7 +29,7 @@ open class ParselyMetadata
     private val tags: List<String>? = null,
     private val thumbUrl: String? = null,
     private val title: String? = null,
-    private val publicationDateMilliseconds: Long? = null
+    private val pubDate: Calendar? = null
 ) {
     /**
      * Turn this object into a Map
@@ -54,8 +56,8 @@ open class ParselyMetadata
         if (title != null) {
             output["title"] = title
         }
-        if (publicationDateMilliseconds != null) {
-            output["pub_date_tmsp"] = publicationDateMilliseconds / 1000
+        if (pubDate != null) {
+            output["pub_date_tmsp"] = pubDate.timeInMillis / 1000
         }
         return output
     }

@@ -4,8 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.MapAssert
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 internal class EventsBuilderTest {
     private lateinit var sut: EventsBuilder
@@ -161,7 +159,7 @@ internal class EventsBuilderTest {
     fun `given metadata is not null, when creating a pixel, include metadata`() {
         // given
         val metadata = ParselyMetadata(
-            ArrayList<String>(), "link", "section", null, null, null, 0
+            ArrayList<String>(), "link", "section", null, null, null, null
         )
 
         // when
