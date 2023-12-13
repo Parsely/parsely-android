@@ -415,25 +415,14 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
         /**
          * Singleton instance factory Note: this must be called before [.sharedInstance]
          *
-         * @param siteId The Parsely public site id (eg "example.com")
-         * @param c      The current Android application context
-         * @return The singleton instance
-         */
-        @JvmStatic
-        fun sharedInstance(siteId: String, c: Context): ParselyTracker? {
-            return sharedInstance(siteId, DEFAULT_FLUSH_INTERVAL_SECS, c)
-        }
-
-        /**
-         * Singleton instance factory Note: this must be called before [.sharedInstance]
-         *
          * @param siteId        The Parsely public site id (eg "example.com")
          * @param flushInterval The interval at which the events queue should flush, in seconds
          * @param c             The current Android application context
          * @return The singleton instance
          */
         @JvmStatic
-        fun sharedInstance(siteId: String, flushInterval: Int, c: Context): ParselyTracker? {
+        @JvmOverloads
+        fun sharedInstance(siteId: String, flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS, c: Context): ParselyTracker? {
             if (instance == null) {
                 instance = ParselyTracker(siteId, flushInterval, c)
             }
