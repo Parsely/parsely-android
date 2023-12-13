@@ -36,7 +36,7 @@ open class ParselyMetadata
      *
      * @return a Map object representing the metadata.
      */
-    open fun toMap(): Map<String, Any?>? {
+    open fun toMap(): Map<String, Any?> {
         val output: MutableMap<String, Any?> = HashMap()
         if (authors != null) {
             output["authors"] = authors
