@@ -1,5 +1,6 @@
 package com.parsely.parselyandroid
 
+import com.parsely.parselyandroid.Logging.PLog
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -22,7 +23,7 @@ internal class InMemoryBuffer(
             while (isActive) {
                 mutex.withLock {
                     if (buffer.isNotEmpty()) {
-                        ParselyTracker.PLog("Persisting ${buffer.size} events")
+                        PLog("Persisting ${buffer.size} events")
                         localStorageRepository.insertEvents(buffer)
                         buffer.clear()
                     }
@@ -35,7 +36,7 @@ internal class InMemoryBuffer(
     fun add(event: Map<String, Any>) {
         coroutineScope.launch {
             mutex.withLock {
-                ParselyTracker.PLog("Event added to buffer")
+                PLog("Event added to buffer")
                 buffer.add(event)
                 onEventAddedListener()
             }

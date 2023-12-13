@@ -16,9 +16,9 @@
 
 package com.parsely.parselyandroid;
 
+import static com.parsely.parselyandroid.Logging.PLog;
+
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,7 +26,6 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import java.util.Formatter;
 import java.util.Map;
 import java.util.UUID;
 
@@ -145,16 +144,6 @@ public class ParselyTracker {
             instance = new ParselyTracker(siteId, flushInterval, c);
         }
         return instance;
-    }
-
-    /**
-     * Log a message to the console.
-     */
-    static void PLog(String logString, Object... objects) {
-        if (logString.equals("")) {
-            return;
-        }
-        System.out.println(new Formatter().format("[Parsely] " + logString, objects).toString());
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.parsely.parselyandroid;
 
-import static com.parsely.parselyandroid.ParselyTracker.PLog;
+import static com.parsely.parselyandroid.Logging.PLog;
 
 import android.content.Context;
 
