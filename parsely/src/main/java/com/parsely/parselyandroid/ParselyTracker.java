@@ -206,15 +206,6 @@ public class ParselyTracker {
     }
 
     /**
-     * Getter for isDebug
-     *
-     * @return Whether debug mode is active.
-     */
-    public boolean getDebug() {
-        return isDebug;
-    }
-
-    /**
      * Set a debug flag which will prevent data from being sent to Parse.ly
      * <p>
      * Use this flag when developing to prevent the SDK from actually sending requests
