@@ -424,7 +424,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         private var instance: ParselyTracker? = null
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private const val DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500
-        val ROOT_URL = "https://p1.parsely.com/".intern()
+        @JvmField val ROOT_URL = "https://p1.parsely.com/".intern()
 
         /**
          * Singleton instance accessor. Note: This must be called after [.sharedInstance]
