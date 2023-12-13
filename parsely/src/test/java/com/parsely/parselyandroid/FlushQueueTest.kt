@@ -61,7 +61,7 @@ class FlushQueueTest {
     @Test
     fun `given non-empty local storage, when flushing queue with skipping sending events, then events are not sent and removed from local storage`() =
         runTest {
-            // give
+            // given
             val repository = FakeRepository().apply {
                 insertEvents(listOf(mapOf("test" to 123)))
             }
