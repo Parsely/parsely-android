@@ -2,7 +2,7 @@ package com.parsely.parselyandroid
 
 import java.util.Formatter
 
-object Logging {
+internal object Logging {
 
     /**
      * Log a message to the console.
