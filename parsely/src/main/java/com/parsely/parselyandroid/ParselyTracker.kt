@@ -66,7 +66,6 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
                 startFlushTimer()
                 log("Flush flushTimer set to %ds", flushManager.intervalMillis / 1000)
             }
-            Unit
         }
         flushQueue = FlushQueue(
             flushManager,
@@ -78,11 +77,10 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         clock = Clock()
         intervalCalculator = HeartbeatIntervalCalculator(clock)
 
-        // get the adkey straight away on instantiation
         isDebug = false
         flushManager.start()
         ProcessLifecycleOwner.get().lifecycle.addObserver(
-            LifecycleEventObserver { lifecycleOwner: LifecycleOwner?, event: Event ->
+            LifecycleEventObserver { _: LifecycleOwner?, event: Lifecycle.Event ->
                 if (event == Lifecycle.Event.ON_STOP) {
                     flushEvents()
                 }
@@ -90,19 +88,16 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         )
     }
 
+    /**
+     * Get the heartbeat interval
+     *
+     * @return The base engagement tracking interval.
+     */
     val engagementInterval: Double?
-        /**
-         * Get the heartbeat interval
-         *
-         * @return The base engagement tracking interval.
-         */
-        get() = if (engagementManager == null) {
-            null
-        } else engagementManager!!.intervalMillis
+        get() = engagementManager?.intervalMillis
+
     val videoEngagementInterval: Double?
-        get() = if (videoEngagementManager == null) {
-            null
-        } else videoEngagementManager!!.intervalMillis
+        get() = videoEngagementManager?.intervalMillis
 
     /**
      * Returns whether the engagement tracker is running.
@@ -122,12 +117,12 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         return videoEngagementManager != null && videoEngagementManager!!.isRunning
     }
 
+    /**
+     * Returns the interval at which the event queue is flushed to Parse.ly.
+     *
+     * @return The interval at which the event queue is flushed to Parse.ly.
+     */
     val flushInterval: Long
-        /**
-         * Returns the interval at which the event queue is flushed to Parse.ly.
-         *
-         * @return The interval at which the event queue is flushed to Parse.ly.
-         */
         get() = flushManager.intervalMillis / 1000
 
     /**
@@ -179,13 +174,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
             )
         )
     }
-    /**
-     * Same as [.startEngagement] but with extra data.
-     *
-     * @param url       The URL to track engaged time for.
-     * @param urlRef    Referrer URL associated with this video view.
-     * @param extraData A Map of additional information to send with the event.
-     */
+
     /**
      * Start engaged time tracking for the given URL.
      *
@@ -371,7 +360,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
      * Deprecated since 3.1.1. The SDK now automatically flushes the queue on app lifecycle events.
      * Any usage of this method is safe to remove and will have no effect. Keeping for backwards compatibility.
      */
-    @Deprecated("")
+    @Deprecated("The SDK now automatically flushes the queue on app lifecycle events. Any usage of this method is safe to remove and will have no effect")
     fun flushEventQueue() {
         // no-op
     }
@@ -384,7 +373,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
      * Can be called before of after `stop`, but has no effect if used before instantiating the
      * singleton
      */
-    fun startFlushTimer() {
+    private fun startFlushTimer() {
         flushManager.start()
     }
 
@@ -401,7 +390,7 @@ open class ParselyTracker protected constructor(siteId: String?, flushInterval: 
         return UUID.randomUUID().toString()
     }
 
-    fun flushEvents() {
+    private fun flushEvents() {
         flushQueue.invoke(isDebug)
     }
 
