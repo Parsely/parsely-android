@@ -1,6 +1,7 @@
 package com.parsely.parselyandroid
 
 import com.parsely.parselyandroid.JsonSerializer.toParselyEventsPayload
+import com.parsely.parselyandroid.Logging.PLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -18,7 +19,7 @@ internal class FlushQueue(
 
     operator fun invoke(skipSendingEvents: Boolean) {
         if (!connectivityStatusProvider.isReachable()) {
-            ParselyTracker.PLog("Network unreachable. Not flushing.")
+            PLog("Network unreachable. Not flushing.")
             return
         }
         scope.launch {
@@ -31,23 +32,23 @@ internal class FlushQueue(
                 }
 
                 if (skipSendingEvents) {
-                    ParselyTracker.PLog("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events")
+                    PLog("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events")
                     repository.remove(eventsToSend)
                     return@launch
                 }
-                ParselyTracker.PLog("Sending request with %d events", eventsToSend.size)
+                PLog("Sending request with %d events", eventsToSend.size)
                 val jsonPayload = toParselyEventsPayload(eventsToSend)
-                ParselyTracker.PLog("POST Data %s", jsonPayload)
-                ParselyTracker.PLog("Requested %s", ParselyTracker.ROOT_URL)
+                PLog("POST Data %s", jsonPayload)
+                PLog("Requested %s", ParselyTracker.ROOT_URL)
                 restClient.send(jsonPayload)
                     .fold(
                         onSuccess = {
-                            ParselyTracker.PLog("Pixel request success")
+                            PLog("Pixel request success")
                             repository.remove(eventsToSend)
                         },
                         onFailure = {
-                            ParselyTracker.PLog("Pixel request exception")
-                            ParselyTracker.PLog(it.toString())
+                            PLog("Pixel request exception")
+                            PLog(it.toString())
                         }
                     )
             }
