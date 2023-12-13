@@ -30,7 +30,7 @@ import java.util.UUID
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-open class ParselyTracker protected constructor(siteId: String, flushInterval: Int, c: Context) {
+public open class ParselyTracker protected constructor(siteId: String, flushInterval: Int, c: Context) {
     private var isDebug: Boolean
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
@@ -57,7 +57,6 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
         flushManager = ParselyFlushManager(
             {
                 flushEvents()
-                Unit
             }, flushInterval * 1000L,
             sdkScope
         )
@@ -93,10 +92,10 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      *
      * @return The base engagement tracking interval.
      */
-    val engagementInterval: Double?
+    public val engagementInterval: Double?
         get() = engagementManager?.intervalMillis
 
-    val videoEngagementInterval: Double?
+    public val videoEngagementInterval: Double?
         get() = videoEngagementManager?.intervalMillis
 
     /**
@@ -104,7 +103,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      *
      * @return Whether the engagement tracker is running.
      */
-    fun engagementIsActive(): Boolean {
+    public fun engagementIsActive(): Boolean {
         return engagementManager != null && engagementManager!!.isRunning
     }
 
@@ -113,7 +112,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      *
      * @return Whether video tracking is active.
      */
-    fun videoIsActive(): Boolean {
+    public fun videoIsActive(): Boolean {
         return videoEngagementManager != null && videoEngagementManager!!.isRunning
     }
 
@@ -122,7 +121,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      *
      * @return The interval at which the event queue is flushed to Parse.ly.
      */
-    val flushInterval: Long
+    public val flushInterval: Long
         get() = flushManager.intervalMillis / 1000
 
     /**
@@ -134,7 +133,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      *
      * @param debug Value to use for debug flag.
      */
-    fun setDebug(debug: Boolean) {
+    public fun setDebug(debug: Boolean) {
         isDebug = debug
         log("Debugging is now set to $isDebug")
     }
@@ -151,15 +150,15 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * would normally crawl.
      * @param extraData   A Map of additional information to send with the event.
      */
-    fun trackPageview(
+    public fun trackPageview(
         url: String,
         urlRef: String? = null,
         urlMetadata: ParselyMetadata? = null,
         extraData: Map<String?, Any?>? = null,
     ) {
         if (url.isBlank()) {
-            log("url cannot be empty");
-            return;
+            log("url cannot be empty")
+            return
         }
 
         lastPageviewUuid = generatePixelId()
@@ -187,14 +186,14 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * @param urlRef Referrer URL associated with this video view.
      */
     @JvmOverloads
-    fun startEngagement(
+    public fun startEngagement(
         url: String,
         urlRef: String? = null,
         extraData: Map<String?, Any?>? = null
     ) {
         if (url.isBlank()) {
-            log("url cannot be empty");
-            return;
+            log("url cannot be empty")
+            return
         }
 
         // Cancel anything running
@@ -223,7 +222,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
-    fun stopEngagement() {
+    public fun stopEngagement() {
         if (engagementManager == null) {
             return
         }
@@ -254,15 +253,15 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * @param extraData     A Map of additional information to send with the event.
     </CUSTOMERDOMAIN></CUSTOMERDOMAIN> */
     @JvmOverloads
-    fun trackPlay(
+    public fun trackPlay(
         url: String,
         urlRef: String? = null,
         videoMetadata: ParselyVideoMetadata,
         extraData: Map<String?, Any?>? = null,
     ) {
         if (url.isBlank()) {
-            log("url cannot be empty");
-            return;
+            log("url cannot be empty")
+            return
         }
 
         // If there is already an engagement manager for this video make sure it is started.
@@ -314,7 +313,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
-    fun trackPause() {
+    public fun trackPause() {
         if (videoEngagementManager == null) {
             return
         }
@@ -334,7 +333,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
-    fun resetVideo() {
+    public fun resetVideo() {
         if (videoEngagementManager == null) {
             return
         }
@@ -362,7 +361,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      * Any usage of this method is safe to remove and will have no effect. Keeping for backwards compatibility.
      */
     @Deprecated("The SDK now automatically flushes the queue on app lifecycle events. Any usage of this method is safe to remove and will have no effect")
-    fun flushEventQueue() {
+    public fun flushEventQueue() {
         // no-op
     }
 
@@ -383,7 +382,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
      *
      * @return Whether the event queue flush timer is running.
      */
-    fun flushTimerIsActive(): Boolean {
+    public fun flushTimerIsActive(): Boolean {
         return flushManager.isRunning
     }
 
@@ -395,11 +394,11 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
         flushQueue.invoke(isDebug)
     }
 
-    companion object {
+    public companion object {
         private var instance: ParselyTracker? = null
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private const val DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500
-        @JvmField val ROOT_URL = "https://p1.parsely.com/".intern()
+        @JvmField public val ROOT_URL: String = "https://p1.parsely.com/".intern()
 
         /**
          * Singleton instance accessor. Note: This must be called after [.sharedInstance]
@@ -407,7 +406,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
          * @return The singleton instance
          */
         @JvmStatic
-        fun sharedInstance(): ParselyTracker? {
+        public fun sharedInstance(): ParselyTracker? {
             return instance
         }
 
@@ -421,7 +420,7 @@ open class ParselyTracker protected constructor(siteId: String, flushInterval: I
          */
         @JvmStatic
         @JvmOverloads
-        fun sharedInstance(
+        public fun sharedInstance(
             siteId: String,
             flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
             context: Context
