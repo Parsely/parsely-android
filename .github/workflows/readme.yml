@@ -16,6 +16,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+      - name: Validate binary compatibility
+        run: ./gradlew apiCheck
       - name: Build library
         run: ./gradlew :parsely:assembleDebug
       - name: Build example app
