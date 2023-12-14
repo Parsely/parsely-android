@@ -66,11 +66,12 @@ public class ParselyTracker {
      */
     protected ParselyTracker(String siteId, int flushInterval, Context c) {
         Context context = c.getApplicationContext();
+        clock = new Clock();
         eventsBuilder = new EventsBuilder(
                 new AndroidDeviceInfoRepository(
                         new AdvertisementIdProvider(context, ParselyCoroutineScopeKt.getSdkScope()),
                         new AndroidIdProvider(context)
-                ), siteId);
+                ), siteId, clock);
         LocalStorageRepository localStorageRepository = new LocalStorageRepository(context);
         flushManager = new ParselyFlushManager(new Function0<Unit>() {
             @Override
@@ -88,7 +89,6 @@ public class ParselyTracker {
             return Unit.INSTANCE;
         });
         flushQueue = new FlushQueue(flushManager, localStorageRepository, new ParselyAPIConnection(ROOT_URL + "mobileproxy"), ParselyCoroutineScopeKt.getSdkScope(), new AndroidConnectivityStatusProvider(context));
-        clock = new Clock();
         intervalCalculator = new HeartbeatIntervalCalculator(clock);
 
         // get the adkey straight away on instantiation
