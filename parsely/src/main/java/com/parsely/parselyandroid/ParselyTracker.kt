@@ -79,7 +79,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
         isDebug = false
         flushManager.start()
         ProcessLifecycleOwner.get().lifecycle.addObserver(
-            LifecycleEventObserver { _: LifecycleOwner?, event: Lifecycle.Event ->
+            LifecycleEventObserver { _, event: Lifecycle.Event ->
                 if (event == Lifecycle.Event.ON_STOP) {
                     flushEvents()
                 }
@@ -104,7 +104,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
      * @return Whether the engagement tracker is running.
      */
     public fun engagementIsActive(): Boolean {
-        return engagementManager != null && engagementManager!!.isRunning
+        return engagementManager?.isRunning ?: false
     }
 
     /**
@@ -113,7 +113,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
      * @return Whether video tracking is active.
      */
     public fun videoIsActive(): Boolean {
-        return videoEngagementManager != null && videoEngagementManager!!.isRunning
+        return videoEngagementManager?.isRunning ?: false
     }
 
     /**
@@ -216,8 +216,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
             intervalCalculator,
             sdkScope,
             clock
-        )
-        engagementManager!!.start()
+        ).also { it.start() }
     }
 
     /**
@@ -230,10 +229,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
      * and Parse.ly values may be inaccurate.
      */
     public fun stopEngagement() {
-        if (engagementManager == null) {
-            return
-        }
-        engagementManager!!.stop()
+        engagementManager?.stop()
         engagementManager = null
     }
 
@@ -318,10 +314,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
      * and Parse.ly values may be inaccurate.
      */
     public fun trackPause() {
-        if (videoEngagementManager == null) {
-            return
-        }
-        videoEngagementManager!!.stop()
+        videoEngagementManager?.stop()
     }
 
     /**
@@ -338,21 +331,13 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
      * and Parse.ly values may be inaccurate.
      */
     public fun resetVideo() {
-        if (videoEngagementManager == null) {
-            return
-        }
-        videoEngagementManager!!.stop()
+        videoEngagementManager?.stop()
         videoEngagementManager = null
     }
 
     /**
      * Add an event Map to the queue.
-     *
-     *
      * Place a data structure representing the event into the in-memory queue for later use.
-     *
-     *
-     *
      * @param event The event Map to enqueue.
      */
     internal open fun enqueueEvent(event: Map<String, Any>) {
