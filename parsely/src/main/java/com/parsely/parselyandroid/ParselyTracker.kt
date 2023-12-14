@@ -47,11 +47,12 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
      */
     init {
         val context = c.applicationContext
+        clock = Clock()
         eventsBuilder = EventsBuilder(
             AndroidDeviceInfoRepository(
                 AdvertisementIdProvider(context, sdkScope),
                 AndroidIdProvider(context)
-            ), siteId
+            ), siteId, clock
         )
         val localStorageRepository = LocalStorageRepository(context)
         flushManager = ParselyFlushManager(
@@ -73,7 +74,6 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
             sdkScope,
             AndroidConnectivityStatusProvider(context)
         )
-        clock = Clock()
         intervalCalculator = HeartbeatIntervalCalculator(clock)
 
         isDebug = false
