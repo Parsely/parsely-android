@@ -30,7 +30,7 @@ import java.util.UUID
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-public open class ParselyTracker protected constructor(siteId: String, flushInterval: Int, c: Context) {
+public open class ParselyTracker internal constructor(siteId: String, flushInterval: Int, c: Context) {
     private var isDebug: Boolean
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
@@ -405,7 +405,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
         private var instance: ParselyTracker? = null
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private const val DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500
-        @JvmField public val ROOT_URL: String = "https://p1.parsely.com/".intern()
+        @JvmField internal val ROOT_URL: String = "https://p1.parsely.com/".intern()
 
         /**
          * Singleton instance accessor. Note: This must be called after [.sharedInstance]
