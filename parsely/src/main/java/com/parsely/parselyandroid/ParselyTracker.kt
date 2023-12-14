@@ -272,18 +272,16 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
         }
 
         // If there is already an engagement manager for this video make sure it is started.
-        if (videoEngagementManager != null) {
-            videoEngagementManager =
-                if (videoEngagementManager!!.isSameVideo(url, urlRef.orEmpty(), videoMetadata)) {
-                    if (!videoEngagementManager!!.isRunning) {
-                        videoEngagementManager!!.start()
-                    }
-                    return  // all done here. early exit.
-                } else {
-                    // Different video. Stop and remove it so we can start fresh.
-                    videoEngagementManager!!.stop()
-                    null
+        videoEngagementManager?.let { manager ->
+            if (manager.isSameVideo(url, urlRef.orEmpty(), videoMetadata)) {
+                if (!manager.isRunning) {
+                    manager.start()
                 }
+                return // all done here. early exit.
+            } else {
+                // Different video. Stop and remove it so we can start fresh.
+                manager.stop()
+            }
         }
         val uuid = generatePixelId()
 
@@ -303,8 +301,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
             intervalCalculator,
             sdkScope,
             clock
-        )
-        videoEngagementManager!!.start()
+        ).also { it.start() }
     }
 
     /**
