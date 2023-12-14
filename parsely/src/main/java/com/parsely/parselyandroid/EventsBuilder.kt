@@ -6,7 +6,8 @@ import java.util.TimeZone
 
 internal class EventsBuilder(
     private val deviceInfoRepository: DeviceInfoRepository,
-    private val siteId: String
+    private val siteId: String,
+    private val clock: Clock,
 ) {
     /**
      * Create an event Map
@@ -26,7 +27,6 @@ internal class EventsBuilder(
         uuid: String
     ): Map<String, Any> {
         log("buildEvent called for %s/%s", action, url)
-        val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
         // Main event info
         val event: MutableMap<String, Any> = HashMap()
@@ -41,7 +41,7 @@ internal class EventsBuilder(
             data.putAll(extraData)
         }
         val deviceInfo = deviceInfoRepository.collectDeviceInfo()
-        data["ts"] = now.timeInMillis
+        data["ts"] = clock.now.inWholeMilliseconds
         data.putAll(deviceInfo)
         event["data"] = data
         metadata?.let {
