@@ -32,6 +32,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    buildFeatures {
+        buildConfig = false
+    }
     packagingOptions {
         exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/LICENSE'
