@@ -2,9 +2,6 @@ package com.parsely.parselyandroid
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.test.TestCoroutineScheduler
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.MapAssert
 import org.junit.Before
@@ -24,7 +21,7 @@ internal class EventsBuilderTest {
     }
 
     @Test
-    fun `when building pageview event, then build the correct one`() = runTest {
+    fun `when building pageview event, then build the correct one`() {
         // when
         val event: Map<String, Any> = sut.buildEvent(
             TEST_URL,
