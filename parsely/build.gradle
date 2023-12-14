@@ -1,8 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlinx.kover'
+    id 'org.jetbrains.kotlinx.binary-compatibility-validator'
 }
 
 ext {
