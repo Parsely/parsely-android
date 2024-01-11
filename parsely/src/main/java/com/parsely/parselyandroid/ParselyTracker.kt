@@ -33,7 +33,7 @@ public open class ParselyTracker protected constructor(
     siteId: String,
     flushInterval: Int,
     c: Context,
-    private val debug: Boolean
+    private val dryRun: Boolean
 ) {
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
@@ -368,7 +368,7 @@ public open class ParselyTracker protected constructor(
     }
 
     private fun flushEvents() {
-        flushQueue.invoke(debug)
+        flushQueue.invoke(dryRun)
     }
 
     public companion object {
@@ -393,6 +393,7 @@ public open class ParselyTracker protected constructor(
          * @param siteId        The Parsely public site id (eg "example.com")
          * @param flushInterval The interval at which the events queue should flush, in seconds
          * @param context             The current Android application context
+         * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
          * @return The singleton instance
          */
         @JvmStatic
@@ -401,10 +402,10 @@ public open class ParselyTracker protected constructor(
             siteId: String,
             flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
             context: Context,
-            debug: Boolean = false,
+            dryRun: Boolean = false,
         ): ParselyTracker {
             return instance ?: run {
-                val newInstance = ParselyTracker(siteId, flushInterval, context, debug)
+                val newInstance = ParselyTracker(siteId, flushInterval, context, dryRun)
                 instance = newInstance
                 return newInstance
             }
