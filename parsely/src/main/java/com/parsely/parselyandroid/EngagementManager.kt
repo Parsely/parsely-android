@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
  * 2. Progressive backoff for long engagements to save data.
  */
 internal class EngagementManager(
-    private val parselyTracker: ParselyTracker,
+    private val eventQueuer: EventQueuer,
     private var latestDelayMillis: Long,
     private val baseEvent: Map<String, Any>,
     private val intervalCalculator: HeartbeatIntervalCalculator,
@@ -76,7 +76,7 @@ internal class EngagementManager(
         totalTime += inc
         event["inc"] = inc / 1000
         event["tt"] = totalTime
-        parselyTracker.enqueueEvent(event)
+        eventQueuer.enqueueEvent(event)
     }
 
     val intervalMillis: Double

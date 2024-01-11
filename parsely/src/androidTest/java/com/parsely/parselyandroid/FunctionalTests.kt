@@ -314,7 +314,7 @@ class FunctionalTests {
     private fun initializeTracker(
         activity: Activity,
         flushInterval: Duration = defaultFlushInterval
-    ): ParselyTracker {
+    ): Tracker {
         val field: Field = ParselyTracker::class.java.getDeclaredField("ROOT_URL")
         field.isAccessible = true
         field.set(this, url)
