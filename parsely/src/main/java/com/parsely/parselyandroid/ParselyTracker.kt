@@ -140,7 +140,7 @@ public open class ParselyTracker protected constructor(
      */
     public fun trackPageview(
         url: String,
-        urlRef: String? = null,
+        urlRef: String = "",
         urlMetadata: ParselyMetadata? = null,
         extraData: Map<String, Any>? = null,
     ) {
@@ -155,7 +155,7 @@ public open class ParselyTracker protected constructor(
         enqueueEvent(
             eventsBuilder.buildEvent(
                 url,
-                urlRef.orEmpty(),
+                urlRef,
                 "pageview",
                 urlMetadata,
                 extraData,
@@ -246,7 +246,7 @@ public open class ParselyTracker protected constructor(
     @JvmOverloads
     public fun trackPlay(
         url: String,
-        urlRef: String? = null,
+        urlRef: String = "",
         videoMetadata: ParselyVideoMetadata,
         extraData: Map<String, Any>? = null,
     ) {
@@ -257,7 +257,7 @@ public open class ParselyTracker protected constructor(
 
         // If there is already an engagement manager for this video make sure it is started.
         videoEngagementManager?.let { manager ->
-            if (manager.isSameVideo(url, urlRef.orEmpty(), videoMetadata)) {
+            if (manager.isSameVideo(url, urlRef, videoMetadata)) {
                 if (!manager.isRunning) {
                     manager.start()
                 }
