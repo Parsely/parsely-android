@@ -138,6 +138,7 @@ public open class ParselyTracker protected constructor(
      * would normally crawl.
      * @param extraData   A Map of additional information to send with the event.
      */
+    @JvmOverloads
     public fun trackPageview(
         url: String,
         urlRef: String = "",
