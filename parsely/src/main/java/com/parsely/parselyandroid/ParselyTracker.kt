@@ -218,7 +218,10 @@ public open class ParselyTracker protected constructor(
      * and Parse.ly values may be inaccurate.
      */
     public fun stopEngagement() {
-        engagementManager?.stop()
+        engagementManager?.let {
+            it.stop()
+            log("Engagement session has been stopped")
+        }
         engagementManager = null
     }
 
