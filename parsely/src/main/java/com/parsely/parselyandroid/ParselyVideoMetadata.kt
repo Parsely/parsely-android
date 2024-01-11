@@ -32,9 +32,9 @@ class ParselyVideoMetadata
      *
      * @return a Map object representing the metadata.
      */
-    override fun toMap(): Map<String, Any?>? {
-        val output = super.toMap()?.toMutableMap()
-        output?.put("duration", durationSeconds)
+    override fun toMap(): Map<String, Any?> {
+        val output = super.toMap().toMutableMap()
+        output["duration"] = durationSeconds
         return output
     }
 }

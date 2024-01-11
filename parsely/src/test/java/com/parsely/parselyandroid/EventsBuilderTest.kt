@@ -1,5 +1,7 @@
 package com.parsely.parselyandroid
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.MapAssert
 import org.junit.Before
@@ -7,12 +9,14 @@ import org.junit.Test
 
 internal class EventsBuilderTest {
     private lateinit var sut: EventsBuilder
+    private val clock = FakeClock()
 
     @Before
     fun setUp() {
         sut = EventsBuilder(
             FakeDeviceInfoRepository(),
             TEST_SITE_ID,
+            clock
         )
     }
 
@@ -187,9 +191,6 @@ internal class EventsBuilderTest {
                 assertThat(it)
                     .hasSize(2)
                     .containsAllEntriesOf(FAKE_DEVICE_INFO)
-                    .hasEntrySatisfying("ts") { timestamp ->
-                        assertThat(timestamp as Long).isBetween(1111111111111, 9999999999999)
-                    }
             }
 
     companion object {
@@ -197,10 +198,15 @@ internal class EventsBuilderTest {
         const val TEST_URL = "http://example.com/some-old/article.html"
         const val TEST_UUID = "123e4567-e89b-12d3-a456-426614174000"
 
-        val FAKE_DEVICE_INFO = mapOf("device" to "info")
+        val FAKE_NOW = 15.hours
+        val FAKE_DEVICE_INFO = mapOf("device" to "info", "ts" to FAKE_NOW.inWholeMilliseconds.toString())
     }
 
     class FakeDeviceInfoRepository: DeviceInfoRepository {
         override fun collectDeviceInfo(): Map<String, String> = FAKE_DEVICE_INFO
+    }
+
+    class FakeClock() : Clock() {
+        override val now: Duration = FAKE_NOW
     }
 }
