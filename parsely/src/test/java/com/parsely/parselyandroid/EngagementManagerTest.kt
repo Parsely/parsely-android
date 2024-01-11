@@ -194,7 +194,8 @@ internal class EngagementManagerTest {
     class FakeTracker : ParselyTracker(
         "",
         0,
-        ApplicationProvider.getApplicationContext()
+        ApplicationProvider.getApplicationContext(),
+        false,
     ) {
         val events = mutableListOf<Event>()
 
