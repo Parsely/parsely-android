@@ -18,7 +18,6 @@ package com.parsely.parselyandroid
 import android.content.Context
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.parsely.parselyandroid.Logging.log
 import java.util.UUID
@@ -30,8 +29,12 @@ import java.util.UUID
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-public open class ParselyTracker protected constructor(siteId: String, flushInterval: Int, c: Context) {
-    private var isDebug: Boolean
+public open class ParselyTracker protected constructor(
+    siteId: String,
+    flushInterval: Int,
+    c: Context,
+    private val debug: Boolean
+) {
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
     private var videoEngagementManager: EngagementManager? = null
@@ -76,7 +79,6 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
         )
         intervalCalculator = HeartbeatIntervalCalculator(clock)
 
-        isDebug = false
         flushManager.start()
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event: Lifecycle.Event ->
@@ -123,20 +125,6 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
      */
     public val flushInterval: Long
         get() = flushManager.intervalMillis / 1000
-
-    /**
-     * Set a debug flag which will prevent data from being sent to Parse.ly
-     *
-     *
-     * Use this flag when developing to prevent the SDK from actually sending requests
-     * to Parse.ly servers. The value it would otherwise send is logged to the console.
-     *
-     * @param debug Value to use for debug flag.
-     */
-    public fun setDebug(debug: Boolean) {
-        isDebug = debug
-        log("Debugging is now set to $isDebug")
-    }
 
     /**
      * Register a pageview event using a URL and optional metadata.
@@ -380,7 +368,7 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
     }
 
     private fun flushEvents() {
-        flushQueue.invoke(isDebug)
+        flushQueue.invoke(debug)
     }
 
     public companion object {
@@ -412,10 +400,11 @@ public open class ParselyTracker protected constructor(siteId: String, flushInte
         public fun sharedInstance(
             siteId: String,
             flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
-            context: Context
+            context: Context,
+            debug: Boolean = false,
         ): ParselyTracker {
             return instance ?: run {
-                val newInstance = ParselyTracker(siteId, flushInterval, context)
+                val newInstance = ParselyTracker(siteId, flushInterval, context, debug)
                 instance = newInstance
                 return newInstance
             }
