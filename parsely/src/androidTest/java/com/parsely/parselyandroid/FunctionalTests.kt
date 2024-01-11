@@ -63,7 +63,7 @@ class FunctionalTests {
                 parselyTracker = initializeTracker(activity)
 
                 repeat(51) {
-                    parselyTracker.trackPageview("url", null, null, null)
+                    parselyTracker.trackPageview("url")
                 }
             }
 
@@ -93,13 +93,13 @@ class FunctionalTests {
                 server.enqueue(MockResponse().setResponseCode(200))
                 parselyTracker = initializeTracker(activity)
 
-                parselyTracker.trackPageview("url", null, null, null)
+                parselyTracker.trackPageview("url")
             }
 
             Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
 
             scenario.onActivity {
-                parselyTracker.trackPageview("url", null, null, null)
+                parselyTracker.trackPageview("url")
             }
 
             Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
@@ -108,7 +108,7 @@ class FunctionalTests {
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
 
             scenario.onActivity {
-                parselyTracker.trackPageview("url", null, null, null)
+                parselyTracker.trackPageview("url")
             }
 
             Thread.sleep(defaultFlushInterval.inWholeMilliseconds)
@@ -138,7 +138,7 @@ class FunctionalTests {
                 parselyTracker = initializeTracker(activity, flushInterval = 1.hours)
 
                 repeat(20) {
-                    parselyTracker.trackPageview("url", null, null, null)
+                    parselyTracker.trackPageview("url")
                 }
             }
 
@@ -172,7 +172,7 @@ class FunctionalTests {
                 parselyTracker = initializeTracker(activity)
 
                 repeat(eventsToSend) {
-                    parselyTracker.trackPageview("url", null, null, null)
+                    parselyTracker.trackPageview("url")
                 }
             }
 
@@ -221,7 +221,7 @@ class FunctionalTests {
 
                 // when
                 startTimestamp = System.currentTimeMillis().milliseconds
-                parselyTracker.trackPageview("url", null, null, null)
+                parselyTracker.trackPageview("url")
                 parselyTracker.startEngagement(engagementUrl, null)
             }
 

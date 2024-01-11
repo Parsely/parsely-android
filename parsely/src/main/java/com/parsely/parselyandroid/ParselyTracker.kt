@@ -18,7 +18,6 @@ package com.parsely.parselyandroid
 import android.content.Context
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.parsely.parselyandroid.Logging.log
 import java.util.UUID
@@ -30,8 +29,12 @@ import java.util.UUID
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-public open class ParselyTracker internal constructor(siteId: String, flushInterval: Int, c: Context) {
-    private var isDebug: Boolean
+public open class ParselyTracker internal constructor(
+    siteId: String,
+    flushInterval: Int,
+    c: Context,
+    private val dryRun: Boolean
+) {
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
     private var videoEngagementManager: EngagementManager? = null
@@ -76,10 +79,9 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
         )
         intervalCalculator = HeartbeatIntervalCalculator(clock)
 
-        isDebug = false
         flushManager.start()
         ProcessLifecycleOwner.get().lifecycle.addObserver(
-            LifecycleEventObserver { _: LifecycleOwner?, event: Lifecycle.Event ->
+            LifecycleEventObserver { _, event: Lifecycle.Event ->
                 if (event == Lifecycle.Event.ON_STOP) {
                     flushEvents()
                 }
@@ -104,7 +106,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
      * @return Whether the engagement tracker is running.
      */
     public fun engagementIsActive(): Boolean {
-        return engagementManager != null && engagementManager!!.isRunning
+        return engagementManager?.isRunning ?: false
     }
 
     /**
@@ -113,7 +115,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
      * @return Whether video tracking is active.
      */
     public fun videoIsActive(): Boolean {
-        return videoEngagementManager != null && videoEngagementManager!!.isRunning
+        return videoEngagementManager?.isRunning ?: false
     }
 
     /**
@@ -123,20 +125,6 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
      */
     public val flushInterval: Long
         get() = flushManager.intervalMillis / 1000
-
-    /**
-     * Set a debug flag which will prevent data from being sent to Parse.ly
-     *
-     *
-     * Use this flag when developing to prevent the SDK from actually sending requests
-     * to Parse.ly servers. The value it would otherwise send is logged to the console.
-     *
-     * @param debug Value to use for debug flag.
-     */
-    public fun setDebug(debug: Boolean) {
-        isDebug = debug
-        log("Debugging is now set to $isDebug")
-    }
 
     /**
      * Register a pageview event using a URL and optional metadata.
@@ -150,9 +138,10 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
      * would normally crawl.
      * @param extraData   A Map of additional information to send with the event.
      */
+    @JvmOverloads
     public fun trackPageview(
         url: String,
-        urlRef: String? = null,
+        urlRef: String = "",
         urlMetadata: ParselyMetadata? = null,
         extraData: Map<String, Any>? = null,
     ) {
@@ -167,7 +156,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
         enqueueEvent(
             eventsBuilder.buildEvent(
                 url,
-                urlRef.orEmpty(),
+                urlRef,
                 "pageview",
                 urlMetadata,
                 extraData,
@@ -216,8 +205,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
             intervalCalculator,
             sdkScope,
             clock
-        )
-        engagementManager!!.start()
+        ).also { it.start() }
     }
 
     /**
@@ -230,10 +218,10 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
      * and Parse.ly values may be inaccurate.
      */
     public fun stopEngagement() {
-        if (engagementManager == null) {
-            return
+        engagementManager?.let {
+            it.stop()
+            log("Engagement session has been stopped")
         }
-        engagementManager!!.stop()
         engagementManager = null
     }
 
@@ -262,7 +250,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
     @JvmOverloads
     public fun trackPlay(
         url: String,
-        urlRef: String? = null,
+        urlRef: String = "",
         videoMetadata: ParselyVideoMetadata,
         extraData: Map<String, Any>? = null,
     ) {
@@ -272,18 +260,16 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
         }
 
         // If there is already an engagement manager for this video make sure it is started.
-        if (videoEngagementManager != null) {
-            videoEngagementManager =
-                if (videoEngagementManager!!.isSameVideo(url, urlRef.orEmpty(), videoMetadata)) {
-                    if (!videoEngagementManager!!.isRunning) {
-                        videoEngagementManager!!.start()
-                    }
-                    return  // all done here. early exit.
-                } else {
-                    // Different video. Stop and remove it so we can start fresh.
-                    videoEngagementManager!!.stop()
-                    null
+        videoEngagementManager?.let { manager ->
+            if (manager.isSameVideo(url, urlRef, videoMetadata)) {
+                if (!manager.isRunning) {
+                    manager.start()
                 }
+                return // all done here. early exit.
+            } else {
+                // Different video. Stop and remove it so we can start fresh.
+                manager.stop()
+            }
         }
         val uuid = generatePixelId()
 
@@ -303,8 +289,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
             intervalCalculator,
             sdkScope,
             clock
-        )
-        videoEngagementManager!!.start()
+        ).also { it.start() }
     }
 
     /**
@@ -321,10 +306,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
      * and Parse.ly values may be inaccurate.
      */
     public fun trackPause() {
-        if (videoEngagementManager == null) {
-            return
-        }
-        videoEngagementManager!!.stop()
+        videoEngagementManager?.stop()
     }
 
     /**
@@ -341,21 +323,13 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
      * and Parse.ly values may be inaccurate.
      */
     public fun resetVideo() {
-        if (videoEngagementManager == null) {
-            return
-        }
-        videoEngagementManager!!.stop()
+        videoEngagementManager?.stop()
         videoEngagementManager = null
     }
 
     /**
      * Add an event Map to the queue.
-     *
-     *
      * Place a data structure representing the event into the in-memory queue for later use.
-     *
-     *
-     *
      * @param event The event Map to enqueue.
      */
     internal open fun enqueueEvent(event: Map<String, Any>) {
@@ -398,7 +372,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
     }
 
     private fun flushEvents() {
-        flushQueue.invoke(isDebug)
+        flushQueue.invoke(dryRun)
     }
 
     public companion object {
@@ -423,6 +397,7 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
          * @param siteId        The Parsely public site id (eg "example.com")
          * @param flushInterval The interval at which the events queue should flush, in seconds
          * @param context             The current Android application context
+         * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
          * @return The singleton instance
          */
         @JvmStatic
@@ -430,10 +405,11 @@ public open class ParselyTracker internal constructor(siteId: String, flushInter
         public fun sharedInstance(
             siteId: String,
             flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
-            context: Context
+            context: Context,
+            dryRun: Boolean = false,
         ): ParselyTracker {
             return instance ?: run {
-                val newInstance = ParselyTracker(siteId, flushInterval, context)
+                val newInstance = ParselyTracker(siteId, flushInterval, context, dryRun)
                 instance = newInstance
                 return newInstance
             }
