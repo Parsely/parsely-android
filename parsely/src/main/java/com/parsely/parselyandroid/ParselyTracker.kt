@@ -22,7 +22,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.parsely.parselyandroid.Logging.log
 import java.util.UUID
 
-public interface Tracker {
+public interface ParselyTracker {
     public val engagementInterval: Double?
     public val videoEngagementInterval: Double?
     public val flushInterval: Long
@@ -58,7 +58,7 @@ public interface Tracker {
 
     public companion object {
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
-        private var instance: ParselyTracker? = null
+        private var instance: ParselyTrackerInternal? = null
 
         /**
          * Singleton instance accessor. Note: This must be called after [.sharedInstance]
@@ -66,7 +66,7 @@ public interface Tracker {
          * @return The singleton instance
          */
         @JvmStatic
-        public fun sharedInstance(): Tracker? {
+        public fun sharedInstance(): ParselyTracker? {
             return instance
         }
 
@@ -86,9 +86,9 @@ public interface Tracker {
             flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
             context: Context,
             dryRun: Boolean = false,
-        ): Tracker {
+        ): ParselyTracker {
             return instance ?: run {
-                val newInstance = ParselyTracker(siteId, flushInterval, context, dryRun)
+                val newInstance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
                 instance = newInstance
                 return newInstance
             }
@@ -107,12 +107,12 @@ internal interface EventQueuer {
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-internal class ParselyTracker internal constructor(
+internal class ParselyTrackerInternal internal constructor(
     siteId: String,
     flushInterval: Int,
     c: Context,
     private val dryRun: Boolean
-) : Tracker, EventQueuer {
+) : ParselyTracker, EventQueuer {
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
     private var videoEngagementManager: EngagementManager? = null
