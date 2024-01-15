@@ -349,8 +349,8 @@ internal class ParselyTrackerInternal internal constructor(
         flushQueue.invoke(dryRun)
     }
 
-    public companion object {
+    companion object {
         private const val DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500
-        @JvmField public val ROOT_URL: String = "https://p1.parsely.com/".intern()
+        @JvmField val ROOT_URL: String = "https://p1.parsely.com/".intern()
     }
 }
