@@ -222,7 +222,7 @@ class FunctionalTests {
                 // when
                 startTimestamp = System.currentTimeMillis().milliseconds
                 parselyTracker.trackPageview("url")
-                parselyTracker.startEngagement(engagementUrl, null)
+                parselyTracker.startEngagement(engagementUrl)
             }
 
             Thread.sleep((firstInterval + secondInterval + pauseInterval).inWholeMilliseconds)
@@ -315,7 +315,7 @@ class FunctionalTests {
         activity: Activity,
         flushInterval: Duration = defaultFlushInterval
     ): ParselyTracker {
-        val field: Field = ParselyTracker::class.java.getDeclaredField("ROOT_URL")
+        val field: Field = ParselyTrackerInternal::class.java.getDeclaredField("ROOT_URL")
         field.isAccessible = true
         field.set(this, url)
         return ParselyTracker.sharedInstance(

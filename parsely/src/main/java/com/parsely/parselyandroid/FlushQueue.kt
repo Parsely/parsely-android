@@ -39,7 +39,7 @@ internal class FlushQueue(
                 log("Sending request with %d events", eventsToSend.size)
                 val jsonPayload = toParselyEventsPayload(eventsToSend)
                 log("POST Data %s", jsonPayload)
-                log("Requested %s", ParselyTracker.ROOT_URL)
+                log("Requested %s", ParselyTrackerInternal.ROOT_URL)
                 restClient.send(jsonPayload)
                     .fold(
                         onSuccess = {
