@@ -55,6 +55,45 @@ public interface Tracker {
     public fun resetVideo()
     public fun flushEventQueue()
     public fun flushTimerIsActive(): Boolean
+
+    public companion object {
+        private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
+        private var instance: ParselyTracker? = null
+
+        /**
+         * Singleton instance accessor. Note: This must be called after [.sharedInstance]
+         *
+         * @return The singleton instance
+         */
+        @JvmStatic
+        public fun sharedInstance(): Tracker? {
+            return instance
+        }
+
+        /**
+         * Singleton instance factory Note: this must be called before [.sharedInstance]
+         *
+         * @param siteId        The Parsely public site id (eg "example.com")
+         * @param flushInterval The interval at which the events queue should flush, in seconds
+         * @param context             The current Android application context
+         * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
+         * @return The singleton instance
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun sharedInstance(
+            siteId: String,
+            flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
+            context: Context,
+            dryRun: Boolean = false,
+        ): Tracker {
+            return instance ?: run {
+                val newInstance = ParselyTracker(siteId, flushInterval, context, dryRun)
+                instance = newInstance
+                return newInstance
+            }
+        }
+    }
 }
 
 internal interface EventQueuer {
@@ -68,12 +107,12 @@ internal interface EventQueuer {
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-public class ParselyTracker protected constructor(
+internal class ParselyTracker internal constructor(
     siteId: String,
     flushInterval: Int,
     c: Context,
     private val dryRun: Boolean
-): Tracker, EventQueuer {
+) : Tracker, EventQueuer {
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
     private var videoEngagementManager: EngagementManager? = null
@@ -412,43 +451,7 @@ public class ParselyTracker protected constructor(
     }
 
     public companion object {
-        private var instance: ParselyTracker? = null
-        private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private const val DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500
         @JvmField public val ROOT_URL: String = "https://p1.parsely.com/".intern()
-
-        /**
-         * Singleton instance accessor. Note: This must be called after [.sharedInstance]
-         *
-         * @return The singleton instance
-         */
-        @JvmStatic
-        public fun sharedInstance(): Tracker? {
-            return instance
-        }
-
-        /**
-         * Singleton instance factory Note: this must be called before [.sharedInstance]
-         *
-         * @param siteId        The Parsely public site id (eg "example.com")
-         * @param flushInterval The interval at which the events queue should flush, in seconds
-         * @param context             The current Android application context
-         * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
-         * @return The singleton instance
-         */
-        @JvmStatic
-        @JvmOverloads
-        public fun sharedInstance(
-            siteId: String,
-            flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
-            context: Context,
-            dryRun: Boolean = false,
-        ): Tracker {
-            return instance ?: run {
-                val newInstance = ParselyTracker(siteId, flushInterval, context, dryRun)
-                instance = newInstance
-                return newInstance
-            }
-        }
     }
 }
