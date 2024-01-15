@@ -41,7 +41,7 @@ public interface ParselyTracker {
 
     public fun startEngagement(
         url: String,
-        urlRef: String? = null,
+        urlRef: String = "",
         extraData: Map<String, Any>? = null
     )
 

@@ -154,7 +154,7 @@ internal class ParselyTrackerInternal internal constructor(
      */
     override fun startEngagement(
         url: String,
-        urlRef: String?,
+        urlRef: String,
         extraData: Map<String, Any>?
     ) {
         if (url.isBlank()) {
@@ -172,7 +172,7 @@ internal class ParselyTrackerInternal internal constructor(
 
         // Start a new EngagementTask
         val event =
-            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "heartbeat", null, extraData, pageViewUuid)
+            eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, pageViewUuid)
         engagementManager = EngagementManager(
             this,
             DEFAULT_ENGAGEMENT_INTERVAL_MILLIS.toLong(),
@@ -249,12 +249,12 @@ internal class ParselyTrackerInternal internal constructor(
 
         // Enqueue the videostart
         val videostartEvent =
-            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "videostart", videoMetadata, extraData, uuid)
+            eventsBuilder.buildEvent(url, urlRef, "videostart", videoMetadata, extraData, uuid)
         enqueueEvent(videostartEvent)
 
         // Start a new engagement manager for the video.
         val hbEvent =
-            eventsBuilder.buildEvent(url, urlRef.orEmpty(), "vheartbeat", videoMetadata, extraData, uuid)
+            eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid)
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = EngagementManager(
             this,

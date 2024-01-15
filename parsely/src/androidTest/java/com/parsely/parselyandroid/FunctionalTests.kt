@@ -222,7 +222,7 @@ class FunctionalTests {
                 // when
                 startTimestamp = System.currentTimeMillis().milliseconds
                 parselyTracker.trackPageview("url")
-                parselyTracker.startEngagement(engagementUrl, null)
+                parselyTracker.startEngagement(engagementUrl)
             }
 
             Thread.sleep((firstInterval + secondInterval + pauseInterval).inWholeMilliseconds)
