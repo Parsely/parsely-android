@@ -132,7 +132,8 @@ public class MainActivity extends Activity {
                 "http://example.com/thumbs/video-1234",
                 "Awesome Video #1234",
                 Calendar.getInstance(),
-                90
+                90,
+                "post"
         );
         // NOTE: For videos embedded in an article, "url" should be the URL for that article.
         ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", null, metadata, null);
