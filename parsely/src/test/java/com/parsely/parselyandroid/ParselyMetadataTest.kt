@@ -10,6 +10,7 @@ class ParselyMetadataTest {
     @Test
     fun `given metadata with complete set of data, when converting to map, then the map is as expected`() {
         // given
+        val pageType = "post"
         val sut = ParselyMetadata(
             authors,
             link,
@@ -25,7 +26,8 @@ class ParselyMetadataTest {
         val map = sut.toMap()
 
         // then
-        assertThat(map).isEqualTo(expectedParselyMetadataMap)
+        val expectedMapWithPageType = expectedBaseParselyMetadataMap + ("page_type" to pageType)
+        assertThat(map).isEqualTo(expectedMapWithPageType)
     }
 
     @Test
@@ -58,7 +60,6 @@ class ParselyMetadataTest {
         val thumbUrl = "sample thumb url"
         val title = "sample title"
         val pubDate = Calendar.getInstance().apply { set(2023, 0, 1) }
-        val pageType = "post"
 
         val expectedParselyMetadataMap = mapOf(
             "authors" to authors,
@@ -67,8 +68,7 @@ class ParselyMetadataTest {
             "tags" to tags,
             "thumb_url" to thumbUrl,
             "title" to title,
-            "pub_date_tmsp" to pubDate.timeInMillis / 1000,
-            "page_type" to pageType
+            "pub_date_tmsp" to pubDate.timeInMillis / 1000
         )
     }
 }
