@@ -26,8 +26,7 @@ class ParselyMetadataTest {
         val map = sut.toMap()
 
         // then
-        val expectedMapWithPageType = expectedBaseParselyMetadataMap + ("page_type" to pageType)
-        assertThat(map).isEqualTo(expectedMapWithPageType)
+        assertThat(map).isEqualTo(expectedParselyMetadataMap + ("page_type" to pageType))
     }
 
     @Test
