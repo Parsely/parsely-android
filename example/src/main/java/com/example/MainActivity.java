@@ -25,10 +25,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         // initialize the Parsely tracker with your site id and the current Context
-        ParselyTracker.sharedInstance("example.com", 30, this);
-
-        // Set debugging to true so we don't actually send things to Parse.ly
-        ParselyTracker.sharedInstance().setDebug(true);
+        ParselyTracker.sharedInstance("example.com", 30, this, true);
 
         final TextView intervalView = (TextView) findViewById(R.id.interval);
 

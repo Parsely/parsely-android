@@ -17,14 +17,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-private typealias Event = MutableMap<String, Any>
+private typealias Event = Map<String, Any>
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class EngagementManagerTest {
 
     private lateinit var sut: EngagementManager
-    private val tracker = FakeTracker()
+    private val eventQueuer = FakeEventQueuer()
     private val baseEvent: Event = mutableMapOf(
         "action" to "heartbeat",
         "data" to testData
@@ -34,7 +34,7 @@ internal class EngagementManagerTest {
     fun `when starting manager, then record the correct event after interval millis`() = runTest {
         // given
         sut = EngagementManager(
-            tracker,
+            eventQueuer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
@@ -48,7 +48,7 @@ internal class EngagementManagerTest {
         runCurrent()
 
         // then
-        assertThat(tracker.events[0]).isCorrectEvent(
+        assertThat(eventQueuer.events[0]).isCorrectEvent(
             withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds)},
             withTotalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeMilliseconds) },
             withTimestamp = { isEqualTo(currentTime) }
@@ -59,7 +59,7 @@ internal class EngagementManagerTest {
     fun `when starting manager, then schedule task each interval period`() = runTest {
         // given
         sut = EngagementManager(
-            tracker,
+            eventQueuer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
@@ -80,19 +80,19 @@ internal class EngagementManagerTest {
         val thirdTimestamp = currentTime
 
         // then
-        val firstEvent = tracker.events[0]
+        val firstEvent = eventQueuer.events[0]
         assertThat(firstEvent).isCorrectEvent(
             withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
             withTotalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeMilliseconds) },
             withTimestamp = { isEqualTo(firstTimestamp) }
         )
-        val secondEvent = tracker.events[1]
+        val secondEvent = eventQueuer.events[1]
         assertThat(secondEvent).isCorrectEvent(
             withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
             withTotalTime = { isEqualTo((DEFAULT_INTERVAL * 2).inWholeMilliseconds) },
             withTimestamp = { isEqualTo(secondTimestamp) }
         )
-        val thirdEvent = tracker.events[2]
+        val thirdEvent = eventQueuer.events[2]
         assertThat(thirdEvent).isCorrectEvent(
             withIncrementalTime = { isEqualTo(DEFAULT_INTERVAL.inWholeSeconds) },
             withTotalTime = { isEqualTo((DEFAULT_INTERVAL * 3).inWholeMilliseconds) },
@@ -104,7 +104,7 @@ internal class EngagementManagerTest {
     fun `given started manager, when stopping manager before interval ticks, then schedule an event`() = runTest {
         // given
         sut = EngagementManager(
-            tracker,
+            eventQueuer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
@@ -121,7 +121,7 @@ internal class EngagementManagerTest {
         // first tick: after initial delay 30s, incremental addition 30s
         // second tick: after regular delay 30s, incremental addition 30s
         // third tick: after cancellation after 10s, incremental addition 10s
-        assertThat(tracker.events).hasSize(3).satisfies({
+        assertThat(eventQueuer.events).hasSize(3).satisfies({
             assertThat(it[0]).containsEntry("inc", 30L)
             assertThat(it[1]).containsEntry("inc", 30L)
             assertThat(it[2]).containsEntry("inc", 10L)
@@ -132,7 +132,7 @@ internal class EngagementManagerTest {
     fun `when starting manager, then it should return true for isRunning`() = runTest {
         // given
         sut = EngagementManager(
-            tracker,
+            eventQueuer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
@@ -151,7 +151,7 @@ internal class EngagementManagerTest {
     fun `given started manager, when stoping manager, then it should return false for isRunning`() = runTest {
         // given
         sut = EngagementManager(
-            tracker,
+            eventQueuer,
             DEFAULT_INTERVAL.inWholeMilliseconds,
             baseEvent,
             FakeIntervalCalculator(),
@@ -191,11 +191,7 @@ internal class EngagementManagerTest {
             }
     }
 
-    class FakeTracker : ParselyTracker(
-        "",
-        0,
-        ApplicationProvider.getApplicationContext()
-    ) {
+    class FakeEventQueuer : EventQueuer {
         val events = mutableListOf<Event>()
 
         override fun enqueueEvent(event: Event) {

@@ -11,7 +11,7 @@ import java.util.Calendar
  * internet (i.e. app-only content) or if the customer is using an "in-pixel" integration.
  * Otherwise, metadata will be gathered by Parse.ly's crawling infrastructure.
  */
-open class ParselyMetadata
+public open class ParselyMetadata
 /**
  * Create a new ParselyMetadata object.
  *
@@ -36,7 +36,7 @@ open class ParselyMetadata
      *
      * @return a Map object representing the metadata.
      */
-    open fun toMap(): Map<String, Any?> {
+    internal open fun toMap(): Map<String, Any?> {
         val output: MutableMap<String, Any?> = HashMap()
         if (authors != null) {
             output["authors"] = authors
