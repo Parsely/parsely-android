@@ -41,7 +41,6 @@ class ParselyMetadataTest {
             title,
             pubDate,
             duration,
-            pageType
         )
 
         // when
