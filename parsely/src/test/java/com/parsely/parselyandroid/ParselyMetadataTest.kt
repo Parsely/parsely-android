@@ -40,7 +40,7 @@ class ParselyMetadataTest {
             thumbUrl,
             title,
             pubDate,
-            duration,
+            duration
         )
 
         // when
