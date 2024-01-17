@@ -15,13 +15,14 @@ open class ParselyMetadata
 /**
  * Create a new ParselyMetadata object.
  *
- * @param authors  The names of the authors of the content. Up to 10 authors are accepted.
- * @param link     A post's canonical url.
- * @param section  The category or vertical to which this content belongs.
- * @param tags     User-defined tags for the content. Up to 20 are allowed.
- * @param thumbUrl URL at which the main image for this content is located.
- * @param title    The title of the content.
- * @param pubDate  The date this piece of content was published.
+ * @param authors   The names of the authors of the content. Up to 10 authors are accepted.
+ * @param link      A post's canonical url.
+ * @param section   The category or vertical to which this content belongs.
+ * @param tags      User-defined tags for the content. Up to 20 are allowed.
+ * @param thumbUrl  URL at which the main image for this content is located.
+ * @param title     The title of the content.
+ * @param pubDate   The date this piece of content was published.
+ * @param pageType The type of page being tracked
  */(
     private val authors: List<String>? = null,
     @JvmField internal val link: String? = null,
@@ -30,6 +31,7 @@ open class ParselyMetadata
     private val thumbUrl: String? = null,
     private val title: String? = null,
     private val pubDate: Calendar? = null
+    private val pageType: String? = null
 ) {
     /**
      * Turn this object into a Map
@@ -58,6 +60,9 @@ open class ParselyMetadata
         }
         if (pubDate != null) {
             output["pub_date_tmsp"] = pubDate.timeInMillis / 1000
+        }
+        if (pageType != null) {
+            output["page_type"] = pageType
         }
         return output
     }
