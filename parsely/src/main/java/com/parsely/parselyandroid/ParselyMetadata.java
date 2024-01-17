@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public class ParselyMetadata {
     public ArrayList<String> authors, tags;
-    public String link, section, thumbUrl, title;
+    public String link, section, thumbUrl, title, pageType;
     public Calendar pubDate;
 
     /**
