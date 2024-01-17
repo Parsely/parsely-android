@@ -30,6 +30,7 @@ public class ParselyMetadata {
      * @param thumbUrl URL at which the main image for this content is located.
      * @param title    The title of the content.
      * @param pubDate  The date this piece of content was published.
+     * @param pageType The type of page being tracked.
      */
     public ParselyMetadata(
             @Nullable ArrayList<String> authors,
@@ -38,7 +39,8 @@ public class ParselyMetadata {
             @Nullable ArrayList<String> tags,
             @Nullable String thumbUrl,
             @Nullable String title,
-            @Nullable Calendar pubDate
+            @Nullable Calendar pubDate,
+            @Nullable String pageType
     ) {
         this.authors = authors;
         this.link = link;
@@ -47,6 +49,7 @@ public class ParselyMetadata {
         this.thumbUrl = thumbUrl;
         this.title = title;
         this.pubDate = pubDate;
+        this.pageType = pageType;
     }
 
     /**
@@ -76,6 +79,9 @@ public class ParselyMetadata {
         }
         if (this.pubDate != null) {
             output.put("pub_date_tmsp", this.pubDate.getTimeInMillis() / 1000);
+        }
+        if (this.pageType != null) {
+            output.put("page_type", this.pageType);
         }
         return output;
     }
