@@ -30,7 +30,7 @@ open class ParselyMetadata
     private val tags: List<String>? = null,
     private val thumbUrl: String? = null,
     private val title: String? = null,
-    private val pubDate: Calendar? = null
+    private val pubDate: Calendar? = null,
     private val pageType: String? = null
 ) {
     /**
