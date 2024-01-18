@@ -16,6 +16,7 @@
 package com.parsely.parselyandroid
 
 import android.content.Context
+import kotlin.jvm.Throws
 
 /**
  * Tracks Parse.ly app views in Android apps
@@ -25,52 +26,72 @@ import android.content.Context
  * flushes the queue to the Parse.ly pixel proxy server.
  */
 public interface ParselyTracker {
-    public val engagementInterval: Double?
-    public val videoEngagementInterval: Double?
-    public val flushInterval: Long
-
-    public fun engagementIsActive(): Boolean
-    public fun videoIsActive(): Boolean
-
-    public fun trackPageview(
-        url: String,
-        urlRef: String = "",
-        urlMetadata: ParselyMetadata? = null,
-        extraData: Map<String, Any>? = null,
-    )
-
-    public fun startEngagement(
-        url: String,
-        urlRef: String = "",
-        extraData: Map<String, Any>? = null
-    )
-
-    public fun stopEngagement()
-
-    public fun trackPlay(
-        url: String,
-        urlRef: String = "",
-        videoMetadata: ParselyVideoMetadata,
-        extraData: Map<String, Any>? = null,
-    )
-    public fun trackPause()
-    public fun resetVideo()
-    public fun flushEventQueue()
-    public fun flushTimerIsActive(): Boolean
 
     public companion object {
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private var instance: ParselyTrackerInternal? = null
 
-        /**
-         * Singleton instance accessor. Note: This must be called after [.sharedInstance]
-         *
-         * @return The singleton instance
-         */
-        @JvmStatic
-        public fun sharedInstance(): ParselyTracker? {
-            return instance
+        @Throws(ParselyNotInitializedException::class)
+        private fun ensureInitialized(): ParselyTrackerInternal {
+            return instance ?: run {
+                throw ParselyNotInitializedException("Parse.ly client has not been initialized. Call ParselyTracker#init before using the SDK.");
+            }
         }
+
+        public val engagementInterval: Double?
+            @JvmStatic
+            get() = ensureInitialized().engagementInterval
+
+        public val videoEngagementInterval: Double?
+            @JvmStatic
+            get() = ensureInitialized().videoEngagementInterval
+        public val flushInterval: Long
+            @JvmStatic
+            get() = ensureInitialized().flushInterval
+
+        @JvmStatic
+        public fun engagementIsActive(): Boolean = ensureInitialized().engagementIsActive()
+
+        @JvmStatic
+        public fun videoIsActive(): Boolean = ensureInitialized().videoIsActive()
+
+        @JvmStatic
+        public fun trackPageview(
+            url: String,
+            urlRef: String = "",
+            urlMetadata: ParselyMetadata? = null,
+            extraData: Map<String, Any>? = null,
+        ): Unit = ensureInitialized().trackPageview(url, urlRef, urlMetadata, extraData)
+
+        @JvmStatic
+        public fun startEngagement(
+            url: String,
+            urlRef: String = "",
+            extraData: Map<String, Any>? = null
+        ): Unit = ensureInitialized().startEngagement(url, urlRef, extraData)
+
+        @JvmStatic
+        public fun stopEngagement(): Unit = ensureInitialized().stopEngagement()
+
+        @JvmStatic
+        public fun trackPlay(
+            url: String,
+            urlRef: String = "",
+            videoMetadata: ParselyVideoMetadata,
+            extraData: Map<String, Any>? = null,
+        ): Unit = ensureInitialized().trackPlay(url, urlRef, videoMetadata, extraData)
+
+        @JvmStatic
+        public fun trackPause(): Unit = ensureInitialized().trackPause()
+
+        @JvmStatic
+        public fun resetVideo(): Unit = ensureInitialized().resetVideo()
+
+        @JvmStatic
+        public fun flushEventQueue(): Unit = ensureInitialized().flushEventQueue()
+
+        @JvmStatic
+        public fun flushTimerIsActive(): Boolean = ensureInitialized().flushTimerIsActive()
 
         /**
          * Singleton instance factory Note: this must be called before [.sharedInstance]
