@@ -83,17 +83,14 @@ public interface ParselyTracker {
          */
         @JvmStatic
         @JvmOverloads
-        public fun sharedInstance(
+        public fun init(
             siteId: String,
             flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
             context: Context,
             dryRun: Boolean = false,
-        ): ParselyTracker {
-            return instance ?: run {
-                val newInstance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
-                instance = newInstance
-                return newInstance
-            }
+        ) {
+            Logging.log("Parse.ly has been already initialized. Previous configuration will be overwritten.")
+            instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
         }
     }
 }
