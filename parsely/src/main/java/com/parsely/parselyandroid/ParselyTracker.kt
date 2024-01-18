@@ -25,93 +25,92 @@ import kotlin.jvm.Throws
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-public interface ParselyTracker {
+public object ParselyTracker {
 
-    public companion object {
-        private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
-        private var instance: ParselyTrackerInternal? = null
+    private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
+    private var instance: ParselyTrackerInternal? = null
 
-        @Throws(ParselyNotInitializedException::class)
-        private fun ensureInitialized(): ParselyTrackerInternal {
-            return instance ?: run {
-                throw ParselyNotInitializedException("Parse.ly client has not been initialized. Call ParselyTracker#init before using the SDK.");
-            }
+    @Throws(ParselyNotInitializedException::class)
+    private fun ensureInitialized(): ParselyTrackerInternal {
+        return instance ?: run {
+            throw ParselyNotInitializedException("Parse.ly client has not been initialized. Call ParselyTracker#init before using the SDK.");
         }
+    }
 
-        public val engagementInterval: Double?
-            @JvmStatic
-            get() = ensureInitialized().engagementInterval
-
-        public val videoEngagementInterval: Double?
-            @JvmStatic
-            get() = ensureInitialized().videoEngagementInterval
-        public val flushInterval: Long
-            @JvmStatic
-            get() = ensureInitialized().flushInterval
-
+    public val engagementInterval: Double?
         @JvmStatic
-        public fun engagementIsActive(): Boolean = ensureInitialized().engagementIsActive()
+        get() = ensureInitialized().engagementInterval
 
+    public val videoEngagementInterval: Double?
         @JvmStatic
-        public fun videoIsActive(): Boolean = ensureInitialized().videoIsActive()
+        get() = ensureInitialized().videoEngagementInterval
 
+    public val flushInterval: Long
         @JvmStatic
-        public fun trackPageview(
-            url: String,
-            urlRef: String = "",
-            urlMetadata: ParselyMetadata? = null,
-            extraData: Map<String, Any>? = null,
-        ): Unit = ensureInitialized().trackPageview(url, urlRef, urlMetadata, extraData)
+        get() = ensureInitialized().flushInterval
 
-        @JvmStatic
-        public fun startEngagement(
-            url: String,
-            urlRef: String = "",
-            extraData: Map<String, Any>? = null
-        ): Unit = ensureInitialized().startEngagement(url, urlRef, extraData)
+    @JvmStatic
+    public fun engagementIsActive(): Boolean = ensureInitialized().engagementIsActive()
 
-        @JvmStatic
-        public fun stopEngagement(): Unit = ensureInitialized().stopEngagement()
+    @JvmStatic
+    public fun videoIsActive(): Boolean = ensureInitialized().videoIsActive()
 
-        @JvmStatic
-        public fun trackPlay(
-            url: String,
-            urlRef: String = "",
-            videoMetadata: ParselyVideoMetadata,
-            extraData: Map<String, Any>? = null,
-        ): Unit = ensureInitialized().trackPlay(url, urlRef, videoMetadata, extraData)
+    @JvmStatic
+    public fun trackPageview(
+        url: String,
+        urlRef: String = "",
+        urlMetadata: ParselyMetadata? = null,
+        extraData: Map<String, Any>? = null,
+    ): Unit = ensureInitialized().trackPageview(url, urlRef, urlMetadata, extraData)
 
-        @JvmStatic
-        public fun trackPause(): Unit = ensureInitialized().trackPause()
+    @JvmStatic
+    public fun startEngagement(
+        url: String,
+        urlRef: String = "",
+        extraData: Map<String, Any>? = null
+    ): Unit = ensureInitialized().startEngagement(url, urlRef, extraData)
 
-        @JvmStatic
-        public fun resetVideo(): Unit = ensureInitialized().resetVideo()
+    @JvmStatic
+    public fun stopEngagement(): Unit = ensureInitialized().stopEngagement()
 
-        @JvmStatic
-        public fun flushEventQueue(): Unit = ensureInitialized().flushEventQueue()
+    @JvmStatic
+    public fun trackPlay(
+        url: String,
+        urlRef: String = "",
+        videoMetadata: ParselyVideoMetadata,
+        extraData: Map<String, Any>? = null,
+    ): Unit = ensureInitialized().trackPlay(url, urlRef, videoMetadata, extraData)
 
-        @JvmStatic
-        public fun flushTimerIsActive(): Boolean = ensureInitialized().flushTimerIsActive()
+    @JvmStatic
+    public fun trackPause(): Unit = ensureInitialized().trackPause()
 
-        /**
-         * Singleton instance factory Note: this must be called before [.sharedInstance]
-         *
-         * @param siteId        The Parsely public site id (eg "example.com")
-         * @param flushInterval The interval at which the events queue should flush, in seconds
-         * @param context             The current Android application context
-         * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
-         * @return The singleton instance
-         */
-        @JvmStatic
-        @JvmOverloads
-        public fun init(
-            siteId: String,
-            flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
-            context: Context,
-            dryRun: Boolean = false,
-        ) {
-            Logging.log("Parse.ly has been already initialized. Previous configuration will be overwritten.")
-            instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
-        }
+    @JvmStatic
+    public fun resetVideo(): Unit = ensureInitialized().resetVideo()
+
+    @JvmStatic
+    public fun flushEventQueue(): Unit = ensureInitialized().flushEventQueue()
+
+    @JvmStatic
+    public fun flushTimerIsActive(): Boolean = ensureInitialized().flushTimerIsActive()
+
+    /**
+     * Singleton instance factory Note: this must be called before [.sharedInstance]
+     *
+     * @param siteId        The Parsely public site id (eg "example.com")
+     * @param flushInterval The interval at which the events queue should flush, in seconds
+     * @param context             The current Android application context
+     * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
+     * @return The singleton instance
+     */
+    @JvmStatic
+    @JvmOverloads
+    public fun init(
+        siteId: String,
+        flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
+        context: Context,
+        dryRun: Boolean = false,
+    ) {
+        Logging.log("Parse.ly has been already initialized. Previous configuration will be overwritten.")
+        instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
     }
 }

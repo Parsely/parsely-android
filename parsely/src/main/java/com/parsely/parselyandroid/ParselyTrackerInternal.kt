@@ -11,7 +11,7 @@ internal class ParselyTrackerInternal internal constructor(
     flushInterval: Int,
     c: Context,
     private val dryRun: Boolean
-) : ParselyTracker, EventQueuer {
+) : EventQueuer {
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
     private var videoEngagementManager: EngagementManager? = null
