@@ -110,7 +110,9 @@ public object ParselyTracker {
         context: Context,
         dryRun: Boolean = false,
     ) {
-        Logging.log("Parse.ly has been already initialized. Previous configuration will be overwritten.")
+        if (instance != null) {
+            Logging.log("Parse.ly has been already initialized. Previous configuration will be overwritten.")
+        }
         instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
     }
 }
