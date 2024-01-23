@@ -52,6 +52,25 @@ public class ParselyMetadata {
         this.pageType = pageType;
     }
 
+    public ParselyMetadata(
+            @Nullable ArrayList<String> authors,
+            @Nullable String link,
+            @Nullable String section,
+            @Nullable ArrayList<String> tags,
+            @Nullable String thumbUrl,
+            @Nullable String title,
+            @Nullable Calendar pubDate
+    ) {
+        this.authors = authors;
+        this.link = link;
+        this.section = section;
+        this.tags = tags;
+        this.thumbUrl = thumbUrl;
+        this.title = title;
+        this.pubDate = pubDate;
+        this.pageType = null;
+    }
+
     /**
      * Turn this object into a Map
      *

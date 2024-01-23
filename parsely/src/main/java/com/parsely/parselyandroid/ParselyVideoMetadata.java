@@ -44,6 +44,23 @@ public class ParselyVideoMetadata extends ParselyMetadata {
         this.durationSeconds = durationSeconds;
     }
 
+    public ParselyVideoMetadata(
+            @Nullable ArrayList<String> authors,
+            @NonNull String videoId,
+            @Nullable String section,
+            @Nullable ArrayList<String> tags,
+            @Nullable String thumbUrl,
+            @Nullable String title,
+            @Nullable Calendar pubDate,
+            @NonNull int durationSeconds
+    ) {
+        super(authors, videoId, section, tags, thumbUrl, title, pubDate, null);
+        if (videoId == null) {
+            throw new NullPointerException("videoId cannot be null");
+        }
+        this.durationSeconds = durationSeconds;
+    }
+
     /**
      * Turn this object into a Map
      *
