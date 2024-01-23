@@ -25,95 +25,132 @@ import org.jetbrains.annotations.TestOnly
  * Accessed as a singleton. Maintains a queue of pageview events in memory and periodically
  * flushes the queue to the Parse.ly pixel proxy server.
  */
-public object ParselyTracker {
-
-    private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
-    private var instance: ParselyTrackerInternal? = null
-
-    private fun ensureInitialized(): ParselyTrackerInternal {
-        return instance ?: run {
-            throw ParselyNotInitializedException("Parse.ly client has not been initialized. Call ParselyTracker#init before using the SDK.");
-        }
-    }
-
+public interface ParselyTracker {
     public val engagementInterval: Double?
-        @JvmStatic
-        get() = ensureInitialized().engagementInterval
-
     public val videoEngagementInterval: Double?
-        @JvmStatic
-        get() = ensureInitialized().videoEngagementInterval
-
     public val flushInterval: Long
-        @JvmStatic
-        get() = ensureInitialized().flushInterval
 
-    @JvmStatic
-    public fun engagementIsActive(): Boolean = ensureInitialized().engagementIsActive()
+    public fun engagementIsActive(): Boolean
 
-    @JvmStatic
-    public fun videoIsActive(): Boolean = ensureInitialized().videoIsActive()
+    public fun videoIsActive(): Boolean
 
-    @JvmStatic
     public fun trackPageview(
         url: String,
         urlRef: String = "",
         urlMetadata: ParselyMetadata? = null,
         extraData: Map<String, Any>? = null,
-    ): Unit = ensureInitialized().trackPageview(url, urlRef, urlMetadata, extraData)
+    ): Unit
 
-    @JvmStatic
     public fun startEngagement(
         url: String,
         urlRef: String = "",
         extraData: Map<String, Any>? = null
-    ): Unit = ensureInitialized().startEngagement(url, urlRef, extraData)
+    ): Unit
 
-    @JvmStatic
-    public fun stopEngagement(): Unit = ensureInitialized().stopEngagement()
+    public fun stopEngagement(): Unit
 
-    @JvmStatic
     public fun trackPlay(
         url: String,
         urlRef: String = "",
         videoMetadata: ParselyVideoMetadata,
         extraData: Map<String, Any>? = null,
-    ): Unit = ensureInitialized().trackPlay(url, urlRef, videoMetadata, extraData)
+    ): Unit
 
-    @JvmStatic
-    public fun trackPause(): Unit = ensureInitialized().trackPause()
+    public fun trackPause(): Unit
 
-    @JvmStatic
-    public fun resetVideo(): Unit = ensureInitialized().resetVideo()
+    public fun resetVideo(): Unit
 
-    @JvmStatic
-    public fun flushTimerIsActive(): Boolean = ensureInitialized().flushTimerIsActive()
+    public fun flushTimerIsActive(): Boolean
 
-    /**
-     * Singleton instance factory Note: this must be called before [.sharedInstance]
-     *
-     * @param siteId        The Parsely public site id (eg "example.com")
-     * @param flushInterval The interval at which the events queue should flush, in seconds
-     * @param context             The current Android application context
-     * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
-     * @return The singleton instance
-     */
-    @JvmStatic
-    @JvmOverloads
-    public fun init(
-        siteId: String,
-        flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
-        context: Context,
-        dryRun: Boolean = false,
-    ) {
-        if (instance != null) {
-            throw ParselyAlreadyInitializedException()
+    public companion object : ParselyTracker {
+        private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
+        private var instance: ParselyTrackerInternal? = null
+
+        private fun ensureInitialized(): ParselyTrackerInternal {
+            return instance ?: run {
+                throw ParselyNotInitializedException("Parse.ly client has not been initialized. Call ParselyTracker#init before using the SDK.");
+            }
         }
-        instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
-    }
 
-    @TestOnly
-    internal fun tearDown() {
-        instance = null
+        override val engagementInterval: Double?
+            @JvmStatic
+            get() = ensureInitialized().engagementInterval
+
+        override val videoEngagementInterval: Double?
+            @JvmStatic
+            get() = ensureInitialized().videoEngagementInterval
+
+        override val flushInterval: Long
+            @JvmStatic
+            get() = ensureInitialized().flushInterval
+
+        @JvmStatic
+        override fun engagementIsActive(): Boolean = ensureInitialized().engagementIsActive()
+
+        @JvmStatic
+        override fun videoIsActive(): Boolean = ensureInitialized().videoIsActive()
+
+        @JvmStatic
+        override fun trackPageview(
+            url: String,
+            urlRef: String,
+            urlMetadata: ParselyMetadata?,
+            extraData: Map<String, Any>?,
+        ): Unit = ensureInitialized().trackPageview(url, urlRef, urlMetadata, extraData)
+
+        @JvmStatic
+        override fun startEngagement(
+            url: String,
+            urlRef: String,
+            extraData: Map<String, Any>?
+        ): Unit = ensureInitialized().startEngagement(url, urlRef, extraData)
+
+        @JvmStatic
+        override fun stopEngagement(): Unit = ensureInitialized().stopEngagement()
+
+        @JvmStatic
+        override fun trackPlay(
+            url: String,
+            urlRef: String,
+            videoMetadata: ParselyVideoMetadata,
+            extraData: Map<String, Any>?,
+        ): Unit = ensureInitialized().trackPlay(url, urlRef, videoMetadata, extraData)
+
+        @JvmStatic
+        override fun trackPause(): Unit = ensureInitialized().trackPause()
+
+        @JvmStatic
+        override fun resetVideo(): Unit = ensureInitialized().resetVideo()
+
+        @JvmStatic
+        override fun flushTimerIsActive(): Boolean = ensureInitialized().flushTimerIsActive()
+
+        /**
+         * Singleton instance factory Note: this must be called before [.sharedInstance]
+         *
+         * @param siteId        The Parsely public site id (eg "example.com")
+         * @param flushInterval The interval at which the events queue should flush, in seconds
+         * @param context             The current Android application context
+         * @param dryRun If set to `true`, events **won't** be sent to Parse.ly server
+         * @return The singleton instance
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun init(
+            siteId: String,
+            flushInterval: Int = DEFAULT_FLUSH_INTERVAL_SECS,
+            context: Context,
+            dryRun: Boolean = false,
+        ) {
+            if (instance != null) {
+                throw ParselyAlreadyInitializedException()
+            }
+            instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
+        }
+
+        @TestOnly
+        internal fun tearDown() {
+            instance = null
+        }
     }
 }
