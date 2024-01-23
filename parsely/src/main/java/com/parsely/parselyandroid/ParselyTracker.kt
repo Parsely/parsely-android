@@ -32,7 +32,7 @@ public object ParselyTracker {
 
     private fun ensureInitialized(): ParselyTrackerInternal {
         return instance ?: run {
-            throw ParselyNotInitializedException("Parse.ly client has not been initialized. Call ParselyTracker#init before using the SDK.");
+            throw ParselyNotInitializedException();
         }
     }
 
