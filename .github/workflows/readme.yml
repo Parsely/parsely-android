@@ -15,7 +15,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Build library
         run: ./gradlew :parsely:assembleDebug
       - name: Build example app
@@ -54,7 +55,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
