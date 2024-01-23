@@ -108,8 +108,7 @@ public object ParselyTracker {
         dryRun: Boolean = false,
     ) {
         if (instance != null) {
-            Logging.log("Parse.ly SDK has been already initialized. Reinitialization is not supported.")
-            return
+            throw ParselyAlreadyInitializedException()
         }
         instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
     }
