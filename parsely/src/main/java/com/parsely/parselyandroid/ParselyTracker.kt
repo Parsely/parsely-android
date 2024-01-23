@@ -55,6 +55,7 @@ public object ParselyTracker {
     public fun videoIsActive(): Boolean = ensureInitialized().videoIsActive()
 
     @JvmStatic
+    @JvmOverloads
     public fun trackPageview(
         url: String,
         urlRef: String = "",
@@ -63,6 +64,7 @@ public object ParselyTracker {
     ): Unit = ensureInitialized().trackPageview(url, urlRef, urlMetadata, extraData)
 
     @JvmStatic
+    @JvmOverloads
     public fun startEngagement(
         url: String,
         urlRef: String = "",
@@ -73,6 +75,7 @@ public object ParselyTracker {
     public fun stopEngagement(): Unit = ensureInitialized().stopEngagement()
 
     @JvmStatic
+    @JvmOverloads
     public fun trackPlay(
         url: String,
         urlRef: String = "",
