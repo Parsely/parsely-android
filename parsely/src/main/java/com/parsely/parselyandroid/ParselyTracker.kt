@@ -30,7 +30,6 @@ public object ParselyTracker {
     private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
     private var instance: ParselyTrackerInternal? = null
 
-    @Throws(ParselyNotInitializedException::class)
     private fun ensureInitialized(): ParselyTrackerInternal {
         return instance ?: run {
             throw ParselyNotInitializedException("Parse.ly client has not been initialized. Call ParselyTracker#init before using the SDK.");
