@@ -96,7 +96,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           disk-size: 4096M
-          script: ./gradlew :parsely:connectedDebugAndroidTest
+          script: adb uninstall "com.parsely.parselyandroid.test"; ./gradlew :parsely:connectedDebugAndroidTest
       - name: Publish build artifacts
         uses: actions/upload-artifact@v3
         if: always()
