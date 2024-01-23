@@ -36,7 +36,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class FunctionalTests {
 
-    private lateinit var parselyTracker: ParselyTracker
     private val server = MockWebServer()
     private val url = server.url("/").toString()
     private lateinit var appsFiles: Path
@@ -60,10 +59,10 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity)
+                initializeTracker(activity)
 
                 repeat(51) {
-                    parselyTracker.trackPageview("url")
+                    ParselyTracker.trackPageview("url")
                 }
             }
 
@@ -91,15 +90,15 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity)
+                initializeTracker(activity)
 
-                parselyTracker.trackPageview("url")
+                ParselyTracker.trackPageview("url")
             }
 
             Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
 
             scenario.onActivity {
-                parselyTracker.trackPageview("url")
+                ParselyTracker.trackPageview("url")
             }
 
             Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
@@ -108,7 +107,7 @@ class FunctionalTests {
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
 
             scenario.onActivity {
-                parselyTracker.trackPageview("url")
+                ParselyTracker.trackPageview("url")
             }
 
             Thread.sleep(defaultFlushInterval.inWholeMilliseconds)
@@ -135,10 +134,10 @@ class FunctionalTests {
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity, flushInterval = 1.hours)
+                initializeTracker(activity, flushInterval = 1.hours)
 
                 repeat(20) {
-                    parselyTracker.trackPageview("url")
+                    ParselyTracker.trackPageview("url")
                 }
             }
 
@@ -169,10 +168,10 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity)
+                initializeTracker(activity)
 
                 repeat(eventsToSend) {
-                    parselyTracker.trackPageview("url")
+                    ParselyTracker.trackPageview("url")
                 }
             }
 
@@ -217,16 +216,16 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity, flushInterval = 30.seconds)
+                initializeTracker(activity, flushInterval = 30.seconds)
 
                 // when
                 startTimestamp = System.currentTimeMillis().milliseconds
-                parselyTracker.trackPageview("url")
-                parselyTracker.startEngagement(engagementUrl)
+                ParselyTracker.trackPageview("url")
+                ParselyTracker.startEngagement(engagementUrl)
             }
 
             Thread.sleep((firstInterval + secondInterval + pauseInterval).inWholeMilliseconds)
-            parselyTracker.stopEngagement()
+            ParselyTracker.stopEngagement()
 
             // then
             val request = server.takeRequest(35, TimeUnit.SECONDS)!!.toMap()["events"]!!
@@ -314,11 +313,11 @@ class FunctionalTests {
     private fun initializeTracker(
         activity: Activity,
         flushInterval: Duration = defaultFlushInterval
-    ): ParselyTracker {
+    )  {
         val field: Field = ParselyTrackerInternal::class.java.getDeclaredField("ROOT_URL")
         field.isAccessible = true
         field.set(this, url)
-        return ParselyTracker.sharedInstance(
+        ParselyTracker.init(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
         )
     }
