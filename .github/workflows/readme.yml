@@ -70,8 +70,22 @@ jobs:
             ~/.android/avd/*
             ~/.android/adb*
           key: avd
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          working-directory: .
+          api-level: 31
+          profile: Nexus 6
+          arch: x86_64
+          force-avd-creation: false
+          avd-name: macOS-avd-x86_64-31
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          disk-size: 4096M
+          script: echo "Generated AVD snapshot for caching."
       - name: Functional Tests
-        uses: reactivecircus/android-emulator-runner@v2.29.0
+        uses: reactivecircus/android-emulator-runner@v2
         with:
           working-directory: .
           api-level: 31
@@ -81,6 +95,7 @@ jobs:
           avd-name: macOS-avd-x86_64-31
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
+          disk-size: 4096M
           script: ./gradlew :parsely:connectedDebugAndroidTest
       - name: Publish build artifacts
         uses: actions/upload-artifact@v3
