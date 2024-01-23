@@ -16,7 +16,7 @@
 package com.parsely.parselyandroid
 
 import android.content.Context
-import kotlin.jvm.Throws
+import org.jetbrains.annotations.TestOnly
 
 /**
  * Tracks Parse.ly app views in Android apps
@@ -110,5 +110,10 @@ public object ParselyTracker {
             throw ParselyAlreadyInitializedException()
         }
         instance = ParselyTrackerInternal(siteId, flushInterval, context, dryRun)
+    }
+
+    @TestOnly
+    internal fun tearDown() {
+        instance = null
     }
 }
