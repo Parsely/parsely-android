@@ -44,7 +44,7 @@ jobs:
           name: artifact
           path: ~/.m2/repository/com/parsely/parsely/*
   functional-tests:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -55,8 +55,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       - name: Functional Tests
-        uses: reactivecircus/android-emulator-runner@v2.28.0
+        uses: reactivecircus/android-emulator-runner@v2.29.0
         with:
           working-directory: .
           api-level: 31
