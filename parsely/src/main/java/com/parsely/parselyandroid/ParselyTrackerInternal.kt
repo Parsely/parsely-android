@@ -312,15 +312,6 @@ internal class ParselyTrackerInternal internal constructor(
     }
 
     /**
-     * Deprecated since 3.1.1. The SDK now automatically flushes the queue on app lifecycle events.
-     * Any usage of this method is safe to remove and will have no effect. Keeping for backwards compatibility.
-     */
-    @Deprecated("The SDK now automatically flushes the queue on app lifecycle events. Any usage of this method is safe to remove and will have no effect")
-    fun flushEventQueue() {
-        // no-op
-    }
-
-    /**
      * Start the timer to flush events to Parsely.
      *
      *

@@ -88,9 +88,6 @@ public object ParselyTracker {
     public fun resetVideo(): Unit = ensureInitialized().resetVideo()
 
     @JvmStatic
-    public fun flushEventQueue(): Unit = ensureInitialized().flushEventQueue()
-
-    @JvmStatic
     public fun flushTimerIsActive(): Boolean = ensureInitialized().flushTimerIsActive()
 
     /**
