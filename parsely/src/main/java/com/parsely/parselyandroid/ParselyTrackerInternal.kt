@@ -6,12 +6,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import java.util.UUID
 
-internal class ParselyTrackerInternal internal constructor(
+public class ParselyTrackerInternal internal constructor(
     siteId: String,
     flushInterval: Int,
     c: Context,
     private val dryRun: Boolean
-) : EventQueuer {
+) : ParselyTracker, EventQueuer {
     private val flushManager: FlushManager
     private var engagementManager: EngagementManager? = null
     private var videoEngagementManager: EngagementManager? = null
@@ -71,10 +71,10 @@ internal class ParselyTrackerInternal internal constructor(
      *
      * @return The base engagement tracking interval.
      */
-    internal val engagementInterval: Double?
+    override val engagementInterval: Double?
         get() = engagementManager?.intervalMillis
 
-    internal val videoEngagementInterval: Double?
+    override val videoEngagementInterval: Double?
         get() = videoEngagementManager?.intervalMillis
 
     /**
@@ -82,7 +82,7 @@ internal class ParselyTrackerInternal internal constructor(
      *
      * @return Whether the engagement tracker is running.
      */
-    internal fun engagementIsActive(): Boolean {
+    override fun engagementIsActive(): Boolean {
         return engagementManager?.isRunning ?: false
     }
 
@@ -91,7 +91,7 @@ internal class ParselyTrackerInternal internal constructor(
      *
      * @return Whether video tracking is active.
      */
-    internal fun videoIsActive(): Boolean {
+    override fun videoIsActive(): Boolean {
         return videoEngagementManager?.isRunning ?: false
     }
 
@@ -100,7 +100,7 @@ internal class ParselyTrackerInternal internal constructor(
      *
      * @return The interval at which the event queue is flushed to Parse.ly.
      */
-    internal val flushInterval: Long
+    override val flushInterval: Long
         get() = flushManager.intervalMillis / 1000
 
     /**
@@ -115,7 +115,7 @@ internal class ParselyTrackerInternal internal constructor(
      * would normally crawl.
      * @param extraData   A Map of additional information to send with the event.
      */
-    internal fun trackPageview(
+    override fun trackPageview(
         url: String,
         urlRef: String,
         urlMetadata: ParselyMetadata?,
@@ -152,7 +152,7 @@ internal class ParselyTrackerInternal internal constructor(
      * @param url    The URL to track engaged time for.
      * @param urlRef Referrer URL associated with this video view.
      */
-    internal fun startEngagement(
+    override fun startEngagement(
         url: String,
         urlRef: String,
         extraData: Map<String, Any>?
@@ -192,7 +192,7 @@ internal class ParselyTrackerInternal internal constructor(
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
-    internal fun stopEngagement() {
+    override fun stopEngagement() {
         engagementManager?.let {
             it.stop()
             Logging.log("Engagement session has been stopped")
@@ -222,7 +222,7 @@ internal class ParselyTrackerInternal internal constructor(
      * @param videoMetadata Metadata about the video being tracked.
      * @param extraData     A Map of additional information to send with the event.
     </CUSTOMERDOMAIN></CUSTOMERDOMAIN> */
-    internal fun trackPlay(
+    override fun trackPlay(
         url: String,
         urlRef: String,
         videoMetadata: ParselyVideoMetadata,
@@ -279,7 +279,7 @@ internal class ParselyTrackerInternal internal constructor(
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
-    internal fun trackPause() {
+    override fun trackPause() {
         videoEngagementManager?.stop()
     }
 
@@ -296,7 +296,7 @@ internal class ParselyTrackerInternal internal constructor(
      * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
      * and Parse.ly values may be inaccurate.
      */
-    internal fun resetVideo() {
+    override fun resetVideo() {
         videoEngagementManager?.stop()
         videoEngagementManager = null
     }
@@ -328,7 +328,7 @@ internal class ParselyTrackerInternal internal constructor(
      *
      * @return Whether the event queue flush timer is running.
      */
-    internal fun flushTimerIsActive(): Boolean {
+    override fun flushTimerIsActive(): Boolean {
         return flushManager.isRunning
     }
 
@@ -340,7 +340,7 @@ internal class ParselyTrackerInternal internal constructor(
         flushQueue.invoke(dryRun)
     }
 
-    companion object {
+    internal companion object {
         private const val DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500
         @JvmField val ROOT_URL: String = "https://p1.parsely.com/".intern()
     }

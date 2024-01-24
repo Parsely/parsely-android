@@ -36,6 +36,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class FunctionalTests {
 
+    private lateinit var parselyTracker: ParselyTracker
     private val server = MockWebServer()
     private val url = server.url("/").toString()
     private lateinit var appsFiles: Path
@@ -62,7 +63,7 @@ class FunctionalTests {
                 initializeTracker(activity)
 
                 repeat(51) {
-                    ParselyTracker.trackPageview("url")
+                    parselyTracker.trackPageview("url")
                 }
             }
 
@@ -92,13 +93,13 @@ class FunctionalTests {
                 server.enqueue(MockResponse().setResponseCode(200))
                 initializeTracker(activity)
 
-                ParselyTracker.trackPageview("url")
+                parselyTracker.trackPageview("url")
             }
 
             Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
 
             scenario.onActivity {
-                ParselyTracker.trackPageview("url")
+                parselyTracker.trackPageview("url")
             }
 
             Thread.sleep((defaultFlushInterval / 2).inWholeMilliseconds)
@@ -107,7 +108,7 @@ class FunctionalTests {
             assertThat(firstRequestPayload!!["events"]).hasSize(2)
 
             scenario.onActivity {
-                ParselyTracker.trackPageview("url")
+                parselyTracker.trackPageview("url")
             }
 
             Thread.sleep(defaultFlushInterval.inWholeMilliseconds)
@@ -137,7 +138,7 @@ class FunctionalTests {
                 initializeTracker(activity, flushInterval = 1.hours)
 
                 repeat(20) {
-                    ParselyTracker.trackPageview("url")
+                    parselyTracker.trackPageview("url")
                 }
             }
 
@@ -171,7 +172,7 @@ class FunctionalTests {
                 initializeTracker(activity)
 
                 repeat(eventsToSend) {
-                    ParselyTracker.trackPageview("url")
+                    parselyTracker.trackPageview("url")
                 }
             }
 
@@ -220,12 +221,12 @@ class FunctionalTests {
 
                 // when
                 startTimestamp = System.currentTimeMillis().milliseconds
-                ParselyTracker.trackPageview("url")
-                ParselyTracker.startEngagement(engagementUrl)
+                parselyTracker.trackPageview("url")
+                parselyTracker.startEngagement(engagementUrl)
             }
 
             Thread.sleep((firstInterval + secondInterval + pauseInterval).inWholeMilliseconds)
-            ParselyTracker.stopEngagement()
+            parselyTracker.stopEngagement()
 
             // then
             val request = server.takeRequest(35, TimeUnit.SECONDS)!!.toMap()["events"]!!
@@ -320,6 +321,7 @@ class FunctionalTests {
         ParselyTracker.init(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
         )
+        parselyTracker = ParselyTracker.sharedInstance()
     }
 
     private companion object {
