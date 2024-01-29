@@ -68,7 +68,7 @@ public interface ParselyTracker {
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private var instance: ParselyTrackerInternal? = null
 
-        private fun ensureInitialized(): ParselyTrackerInternal {
+        private fun ensureInitialized(): ParselyTracker {
             return instance ?: run {
                 throw ParselyNotInitializedException()
             }
@@ -98,7 +98,7 @@ public interface ParselyTracker {
         }
 
         @JvmStatic
-        public fun sharedInstance(): ParselyTrackerInternal = ensureInitialized()
+        public fun sharedInstance(): ParselyTracker = ensureInitialized()
 
         @TestOnly
         internal fun tearDown() {
