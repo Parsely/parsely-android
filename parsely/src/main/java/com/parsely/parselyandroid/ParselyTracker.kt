@@ -26,9 +26,6 @@ import org.jetbrains.annotations.TestOnly
  */
 public interface ParselyTracker {
 
-
-    public val videoEngagementInterval: Double?
-
     /**
      * Returns the interval at which the event queue is flushed to Parse.ly.
      *

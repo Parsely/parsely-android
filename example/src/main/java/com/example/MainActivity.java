@@ -88,7 +88,7 @@ public class MainActivity extends Activity {
         } else {
             vMsg.append("inactive.");
         }
-        vMsg.append(String.format(" (interval: %.01fms)", parselyTracker.getVideoEngagementInterval()));
+        vMsg.append(String.format(" (interval: %.01fms)", getVideoEngagementInterval()));
 
         TextView vView = findViewById(R.id.video_interval);
         vView.setText(vMsg.toString());
@@ -145,6 +145,11 @@ public class MainActivity extends Activity {
     @Nullable
     private Double getEngagementInterval() {
         return (Double) invokePrivateMethod("getEngagementInterval");
+    }
+
+    @Nullable
+    private Double getVideoEngagementInterval() {
+        return (Double) invokePrivateMethod("getVideoEngagementInterval");
     }
 
     private Object invokePrivateMethod(String methodName, Object... args) {
