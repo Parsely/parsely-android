@@ -1,5 +1,7 @@
 package com.example;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -17,7 +19,12 @@ import android.widget.TextView;
 
 import com.parsely.parselyandroid.*;
 
+/**
+ * @noinspection KotlinInternalInJava
+ */
 public class MainActivity extends Activity {
+
+    private static ParselyTracker parselyTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +33,7 @@ public class MainActivity extends Activity {
 
         // initialize the Parsely tracker with your site id and the current Context
         ParselyTracker.init("example.com", 30, this, true);
+        parselyTracker = ParselyTracker.sharedInstance();
 
         final TextView intervalView = (TextView) findViewById(R.id.interval);
 
@@ -62,23 +70,23 @@ public class MainActivity extends Activity {
 
     private void updateEngagementStrings() {
         StringBuilder eMsg = new StringBuilder("Engagement is ");
-        if (ParselyTracker.sharedInstance().engagementIsActive()) {
+        if (engagementIsActive()) {
             eMsg.append("active.");
         } else {
             eMsg.append("inactive.");
         }
-        eMsg.append(String.format(" (interval: %.01fms)", ParselyTracker.sharedInstance().getEngagementInterval()));
+        eMsg.append(String.format(" (interval: %.01fms)", parselyTracker.getEngagementInterval()));
 
         TextView eView = findViewById(R.id.et_interval);
         eView.setText(eMsg.toString());
 
         StringBuilder vMsg = new StringBuilder("Video is ");
-        if (ParselyTracker.sharedInstance().videoIsActive()) {
+        if (parselyTracker.videoIsActive()) {
             vMsg.append("active.");
         } else {
             vMsg.append("inactive.");
         }
-        vMsg.append(String.format(" (interval: %.01fms)", ParselyTracker.sharedInstance().getVideoEngagementInterval()));
+        vMsg.append(String.format(" (interval: %.01fms)", parselyTracker.getVideoEngagementInterval()));
 
         TextView vView = findViewById(R.id.video_interval);
         vView.setText(vMsg.toString());
@@ -125,5 +133,18 @@ public class MainActivity extends Activity {
         ParselyTracker.sharedInstance().trackPause();
     }
 
-    public void trackReset(View view) {ParselyTracker.sharedInstance().resetVideo(); }
+    public void trackReset(View view) {
+        ParselyTracker.sharedInstance().resetVideo();
+    }
+
+    private static boolean engagementIsActive() {
+        try {
+            Method engagementIsActive = null;
+            engagementIsActive = ParselyTrackerInternal.class.getDeclaredMethod("engagementIsActive");
+            engagementIsActive.setAccessible(true);
+            return (boolean) engagementIsActive.invoke(parselyTracker);
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

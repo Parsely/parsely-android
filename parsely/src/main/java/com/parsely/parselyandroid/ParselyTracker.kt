@@ -43,13 +43,6 @@ public interface ParselyTracker {
     public val flushInterval: Long
 
     /**
-     * Returns whether the engagement tracker is running.
-     *
-     * @return Whether the engagement tracker is running.
-     */
-    public fun engagementIsActive(): Boolean
-
-    /**
      * Returns whether video tracking is active.
      *
      * @return Whether video tracking is active.

@@ -11,7 +11,7 @@ class ParselyTrackerTest {
 
     @Test(expected = ParselyNotInitializedException::class)
     fun `given no prior initialization, when executing a method, throw the exception`() {
-        ParselyTracker.sharedInstance().engagementIsActive()
+        ParselyTracker.sharedInstance().startEngagement("url")
     }
 
     @Test(expected = ParselyAlreadyInitializedException::class)
@@ -30,7 +30,7 @@ class ParselyTrackerTest {
     fun `given tracker initialized, when calling a method, do not throw any exception`() {
         ParselyTracker.init(siteId = "", context = RuntimeEnvironment.getApplication())
 
-        ParselyTracker.sharedInstance().engagementIsActive()
+        ParselyTracker.sharedInstance().startEngagement("url")
     }
 
     @After
