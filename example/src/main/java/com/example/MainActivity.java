@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class MainActivity extends Activity {
 
-    private static ParselyTracker parselyTracker;
+    private ParselyTracker parselyTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,23 +139,19 @@ public class MainActivity extends Activity {
         ParselyTracker.sharedInstance().resetVideo();
     }
 
-    private static boolean engagementIsActive() {
-        try {
-            Method engagementIsActive = null;
-            engagementIsActive = ParselyTrackerInternal.class.getDeclaredMethod("engagementIsActive");
-            engagementIsActive.setAccessible(true);
-            return (boolean) engagementIsActive.invoke(parselyTracker);
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+    private boolean engagementIsActive() {
+        return (boolean) invokePrivateMethod("engagementIsActive");
     }
     @Nullable
-    private static Double getEngagementInterval() {
+    private Double getEngagementInterval() {
+        return (Double) invokePrivateMethod("getEngagementInterval");
+    }
+
+    private Object invokePrivateMethod(String methodName, Object... args) {
         try {
-            Method getEngagementInterval = null;
-            getEngagementInterval = ParselyTrackerInternal.class.getDeclaredMethod("getEngagementInterval");
-            getEngagementInterval.setAccessible(true);
-            return (Double) getEngagementInterval.invoke(parselyTracker);
+            Method method = ParselyTrackerInternal.class.getDeclaredMethod(methodName);
+            method.setAccessible(true);
+            return method.invoke(parselyTracker, args);
         } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
