@@ -19,6 +19,8 @@ import android.widget.TextView;
 
 import com.parsely.parselyandroid.*;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * @noinspection KotlinInternalInJava
  */
@@ -75,7 +77,7 @@ public class MainActivity extends Activity {
         } else {
             eMsg.append("inactive.");
         }
-        eMsg.append(String.format(" (interval: %.01fms)", parselyTracker.getEngagementInterval()));
+        eMsg.append(String.format(" (interval: %.01fms)", getEngagementInterval()));
 
         TextView eView = findViewById(R.id.et_interval);
         eView.setText(eMsg.toString());
@@ -143,6 +145,17 @@ public class MainActivity extends Activity {
             engagementIsActive = ParselyTrackerInternal.class.getDeclaredMethod("engagementIsActive");
             engagementIsActive.setAccessible(true);
             return (boolean) engagementIsActive.invoke(parselyTracker);
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    @Nullable
+    private static Double getEngagementInterval() {
+        try {
+            Method getEngagementInterval = null;
+            getEngagementInterval = ParselyTrackerInternal.class.getDeclaredMethod("getEngagementInterval");
+            getEngagementInterval.setAccessible(true);
+            return (Double) getEngagementInterval.invoke(parselyTracker);
         } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }

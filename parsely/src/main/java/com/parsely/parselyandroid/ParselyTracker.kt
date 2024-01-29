@@ -26,12 +26,6 @@ import org.jetbrains.annotations.TestOnly
  */
 public interface ParselyTracker {
 
-    /**
-     * Get the heartbeat interval
-     *
-     * @return The base engagement tracking interval.
-     */
-    public val engagementInterval: Double?
 
     public val videoEngagementInterval: Double?
 

@@ -66,7 +66,7 @@ internal class ParselyTrackerInternal internal constructor(
         )
     }
 
-    override val engagementInterval: Double?
+    private val engagementInterval: Double?
         get() = engagementManager?.intervalMillis
 
     override val videoEngagementInterval: Double?
