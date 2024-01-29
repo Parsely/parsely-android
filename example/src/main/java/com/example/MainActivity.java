@@ -25,7 +25,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         // initialize the Parsely tracker with your site id and the current Context
-        ParselyTracker.sharedInstance("example.com", 30, this, true);
+        ParselyTracker.init("example.com", 30, this, true);
 
         final TextView intervalView = (TextView) findViewById(R.id.interval);
 
@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
 
     private void updateEngagementStrings() {
         StringBuilder eMsg = new StringBuilder("Engagement is ");
-        if (ParselyTracker.sharedInstance().engagementIsActive() == true) {
+        if (ParselyTracker.sharedInstance().engagementIsActive()) {
             eMsg.append("active.");
         } else {
             eMsg.append("inactive.");
@@ -73,7 +73,7 @@ public class MainActivity extends Activity {
         eView.setText(eMsg.toString());
 
         StringBuilder vMsg = new StringBuilder("Video is ");
-        if (ParselyTracker.sharedInstance().videoIsActive() == true) {
+        if (ParselyTracker.sharedInstance().videoIsActive()) {
             vMsg.append("active.");
         } else {
             vMsg.append("inactive.");
