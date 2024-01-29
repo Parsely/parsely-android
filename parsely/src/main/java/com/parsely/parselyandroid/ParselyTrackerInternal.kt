@@ -6,7 +6,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import java.util.UUID
 
-public class ParselyTrackerInternal internal constructor(
+internal class ParselyTrackerInternal internal constructor(
     siteId: String,
     flushInterval: Int,
     c: Context,
