@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
                 90
         );
         // NOTE: For videos embedded in an article, "url" should be the URL for that article.
-        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", null, metadata, null);
+        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", "", metadata, null);
 
     }
 
