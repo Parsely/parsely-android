@@ -26,16 +26,48 @@ import org.jetbrains.annotations.TestOnly
  */
 public interface ParselyTracker {
 
+    /**
+     * Get the heartbeat interval
+     *
+     * @return The base engagement tracking interval.
+     */
     public val engagementInterval: Double?
 
     public val videoEngagementInterval: Double?
 
+    /**
+     * Returns the interval at which the event queue is flushed to Parse.ly.
+     *
+     * @return The interval at which the event queue is flushed to Parse.ly.
+     */
     public val flushInterval: Long
 
+    /**
+     * Returns whether the engagement tracker is running.
+     *
+     * @return Whether the engagement tracker is running.
+     */
     public fun engagementIsActive(): Boolean
 
+    /**
+     * Returns whether video tracking is active.
+     *
+     * @return Whether video tracking is active.
+     */
     public fun videoIsActive(): Boolean
 
+    /**
+     * Register a pageview event using a URL and optional metadata.
+     *
+     * @param url         The URL of the article being tracked
+     * (eg: "http://example.com/some-old/article.html")
+     * @param urlRef      Referrer URL associated with this video view.
+     * @param urlMetadata Optional metadata for the URL -- not used in most cases. Only needed
+     * when `url` isn't accessible over the Internet (i.e. app-only
+     * content). Do not use this for **content also hosted on** URLs Parse.ly
+     * would normally crawl.
+     * @param extraData   A Map of additional information to send with the event.
+     */
     public fun trackPageview(
         url: String,
         urlRef: String = "",
@@ -43,14 +75,56 @@ public interface ParselyTracker {
         extraData: Map<String, Any>? = null,
     )
 
+    /**
+     * Start engaged time tracking for the given URL.
+     *
+     *
+     * This starts a timer which will send events to Parse.ly on a regular basis
+     * to capture engaged time for this URL. The value of `url` should be a URL for
+     * which `trackPageview` has been called.
+     *
+     * @param url    The URL to track engaged time for.
+     * @param urlRef Referrer URL associated with this video view.
+     */
     public fun startEngagement(
         url: String,
         urlRef: String = "",
         extraData: Map<String, Any>? = null
     )
 
+    /**
+     * Stop engaged time tracking.
+     *
+     *
+     * Stops the engaged time tracker, sending any accumulated engaged time to Parse.ly.
+     * NOTE: This **must** be called in your `MainActivity` during various Android lifecycle events
+     * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
+     * and Parse.ly values may be inaccurate.
+     */
     public fun stopEngagement()
 
+    /**
+     * Start video tracking.
+     *
+     *
+     * Starts tracking view time for a video being viewed at a given url. Will send a `videostart`
+     * event unless the same url/videoId had previously been paused.
+     * Video metadata must be provided, specifically the video ID and video duration.
+     *
+     *
+     * The `url` value is *not* the URL of a video, but the post which contains the video. If the video
+     * is not embedded in a post, then this should contain a well-formatted URL on the customer's
+     * domain (e.g. http://<CUSTOMERDOMAIN>/app-videos). This URL doesn't need to return a 200 status
+     * when crawled, but must but well-formatted so Parse.ly systems recognize it as belonging to
+     * the customer.
+     *
+     * @param url           URL of post the video is embedded in. If videos is not embedded, a
+     * valid URL for the customer should still be provided.
+     * (e.g. http://<CUSTOMERDOMAIN>/app-videos)
+     * @param urlRef        Referrer URL associated with this video view.
+     * @param videoMetadata Metadata about the video being tracked.
+     * @param extraData     A Map of additional information to send with the event.
+    </CUSTOMERDOMAIN></CUSTOMERDOMAIN> */
     public fun trackPlay(
         url: String,
         urlRef: String = "",
@@ -58,8 +132,34 @@ public interface ParselyTracker {
         extraData: Map<String, Any>? = null,
     )
 
+    /**
+     * Pause video tracking.
+     *
+     *
+     * Pauses video tracking for an ongoing video. If [.trackPlay] is immediately called again for
+     * the same video, a new video start event will not be sent. This models a user pausing a
+     * playing video.
+     *
+     *
+     * NOTE: This or [.resetVideo] **must** be called in your `MainActivity` during various Android lifecycle events
+     * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
+     * and Parse.ly values may be inaccurate.
+     */
     public fun trackPause()
 
+    /**
+     * Reset tracking on a video.
+     *
+     *
+     * Stops video tracking and resets internal state for the video. If [.trackPlay] is immediately
+     * called for the same video, a new video start event is set. This models a user stopping a
+     * video and (on [.trackPlay] being called again) starting it over.
+     *
+     *
+     * NOTE: This or [.trackPause] **must** be called in your `MainActivity` during various Android lifecycle events
+     * like `onPause` or `onStop`. Otherwise, engaged time tracking may keep running in the background
+     * and Parse.ly values may be inaccurate.
+     */
     public fun resetVideo()
 
     public fun flushTimerIsActive(): Boolean
