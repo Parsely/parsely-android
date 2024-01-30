@@ -27,13 +27,6 @@ import org.jetbrains.annotations.TestOnly
 public interface ParselyTracker {
 
     /**
-     * Returns the interval at which the event queue is flushed to Parse.ly.
-     *
-     * @return The interval at which the event queue is flushed to Parse.ly.
-     */
-    public val flushInterval: Long
-
-    /**
      * Returns whether video tracking is active.
      *
      * @return Whether video tracking is active.

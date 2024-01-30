@@ -81,7 +81,7 @@ internal class ParselyTrackerInternal internal constructor(
         return videoEngagementManager?.isRunning ?: false
     }
 
-    override val flushInterval: Long
+    private val flushInterval: Long
         get() = flushManager.intervalMillis / 1000
 
     override fun trackPageview(

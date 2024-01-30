@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
                 TextView[] v = (TextView[]) msg.obj;
                 TextView iView = v[0];
                 if (ParselyTracker.sharedInstance().flushTimerIsActive()) {
-                    iView.setText(String.format("Flush Interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
+                    iView.setText(String.format("Flush Interval: %d", getFlushInterval()));
                 } else {
                     iView.setText("Flush timer inactive");
                 }
@@ -150,6 +150,10 @@ public class MainActivity extends Activity {
     @Nullable
     private Double getVideoEngagementInterval() {
         return (Double) invokePrivateMethod("getVideoEngagementInterval");
+    }
+
+    private long getFlushInterval() {
+        return (long) invokePrivateMethod("getFlushInterval");
     }
 
     private Object invokePrivateMethod(String methodName, Object... args) {
