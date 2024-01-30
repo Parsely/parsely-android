@@ -132,8 +132,6 @@ public interface ParselyTracker {
      */
     public fun resetVideo()
 
-    public fun flushTimerIsActive(): Boolean
-
     public companion object {
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private var instance: ParselyTrackerInternal? = null

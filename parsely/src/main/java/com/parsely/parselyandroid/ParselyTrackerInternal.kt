@@ -229,7 +229,7 @@ internal class ParselyTrackerInternal internal constructor(
      *
      * @return Whether the event queue flush timer is running.
      */
-    override fun flushTimerIsActive(): Boolean {
+    private fun flushTimerIsActive(): Boolean {
         return flushManager.isRunning
     }
 

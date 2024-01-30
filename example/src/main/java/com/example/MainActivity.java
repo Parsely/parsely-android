@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
             public void handleMessage(Message msg) {
                 TextView[] v = (TextView[]) msg.obj;
                 TextView iView = v[0];
-                if (ParselyTracker.sharedInstance().flushTimerIsActive()) {
+                if (flushTimerIsActive()) {
                     iView.setText(String.format("Flush Interval: %d", getFlushInterval()));
                 } else {
                     iView.setText("Flush timer inactive");
@@ -158,6 +158,10 @@ public class MainActivity extends Activity {
 
     private boolean videoIsActive() {
         return (boolean) invokePrivateMethod("videoIsActive");
+    }
+
+    private boolean flushTimerIsActive() {
+        return (boolean) invokePrivateMethod("flushTimerIsActive");
     }
 
     private Object invokePrivateMethod(String methodName, Object... args) {
