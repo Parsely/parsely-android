@@ -1,0 +1,53 @@
+public final class com/parsely/parselyandroid/ParselyAlreadyInitializedException : java/lang/Exception {
+	public fun <init> ()V
+}
+
+public class com/parsely/parselyandroid/ParselyMetadata {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Calendar;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Calendar;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/parsely/parselyandroid/ParselyNotInitializedException : java/lang/Exception {
+	public fun <init> ()V
+}
+
+public abstract interface class com/parsely/parselyandroid/ParselyTracker {
+	public static final field Companion Lcom/parsely/parselyandroid/ParselyTracker$Companion;
+	public abstract fun engagementIsActive ()Z
+	public abstract fun flushTimerIsActive ()Z
+	public abstract fun getEngagementInterval ()Ljava/lang/Double;
+	public abstract fun getFlushInterval ()J
+	public abstract fun getVideoEngagementInterval ()Ljava/lang/Double;
+	public static fun init (Ljava/lang/String;ILandroid/content/Context;)V
+	public static fun init (Ljava/lang/String;ILandroid/content/Context;Z)V
+	public static fun init (Ljava/lang/String;Landroid/content/Context;)V
+	public abstract fun resetVideo ()V
+	public static fun sharedInstance ()Lcom/parsely/parselyandroid/ParselyTracker;
+	public abstract fun startEngagement (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public abstract fun stopEngagement ()V
+	public abstract fun trackPageview (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;)V
+	public abstract fun trackPause ()V
+	public abstract fun trackPlay (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;)V
+	public abstract fun videoIsActive ()Z
+}
+
+public final class com/parsely/parselyandroid/ParselyTracker$Companion {
+	public final fun init (Ljava/lang/String;ILandroid/content/Context;)V
+	public final fun init (Ljava/lang/String;ILandroid/content/Context;Z)V
+	public final fun init (Ljava/lang/String;Landroid/content/Context;)V
+	public static synthetic fun init$default (Lcom/parsely/parselyandroid/ParselyTracker$Companion;Ljava/lang/String;ILandroid/content/Context;ZILjava/lang/Object;)V
+	public final fun sharedInstance ()Lcom/parsely/parselyandroid/ParselyTracker;
+}
+
+public final class com/parsely/parselyandroid/ParselyTracker$DefaultImpls {
+	public static synthetic fun startEngagement$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
+	public static synthetic fun trackPageview$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;ILjava/lang/Object;)V
+	public static synthetic fun trackPlay$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;ILjava/lang/Object;)V
+}
+
+public final class com/parsely/parselyandroid/ParselyVideoMetadata : com/parsely/parselyandroid/ParselyMetadata {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Calendar;I)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Calendar;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
