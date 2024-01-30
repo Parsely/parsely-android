@@ -83,7 +83,7 @@ public class MainActivity extends Activity {
         eView.setText(eMsg.toString());
 
         StringBuilder vMsg = new StringBuilder("Video is ");
-        if (parselyTracker.videoIsActive()) {
+        if (videoIsActive()) {
             vMsg.append("active.");
         } else {
             vMsg.append("inactive.");
@@ -154,6 +154,10 @@ public class MainActivity extends Activity {
 
     private long getFlushInterval() {
         return (long) invokePrivateMethod("getFlushInterval");
+    }
+
+    private boolean videoIsActive() {
+        return (boolean) invokePrivateMethod("videoIsActive");
     }
 
     private Object invokePrivateMethod(String methodName, Object... args) {

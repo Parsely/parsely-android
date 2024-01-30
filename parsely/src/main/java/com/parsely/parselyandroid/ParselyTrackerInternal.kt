@@ -77,7 +77,7 @@ internal class ParselyTrackerInternal internal constructor(
         return engagementManager?.isRunning ?: false
     }
 
-    override fun videoIsActive(): Boolean {
+    private fun videoIsActive(): Boolean {
         return videoEngagementManager?.isRunning ?: false
     }
 

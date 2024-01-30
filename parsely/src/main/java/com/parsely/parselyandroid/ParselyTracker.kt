@@ -27,13 +27,6 @@ import org.jetbrains.annotations.TestOnly
 public interface ParselyTracker {
 
     /**
-     * Returns whether video tracking is active.
-     *
-     * @return Whether video tracking is active.
-     */
-    public fun videoIsActive(): Boolean
-
-    /**
      * Register a pageview event using a URL and optional metadata.
      *
      * @param url         The URL of the article being tracked
