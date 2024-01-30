@@ -142,6 +142,7 @@ public class MainActivity extends Activity {
     private boolean engagementIsActive() {
         return (boolean) invokePrivateMethod("engagementIsActive");
     }
+    
     @Nullable
     private Double getEngagementInterval() {
         return (Double) invokePrivateMethod("getEngagementInterval");
@@ -164,11 +165,11 @@ public class MainActivity extends Activity {
         return (boolean) invokePrivateMethod("flushTimerIsActive");
     }
 
-    private Object invokePrivateMethod(String methodName, Object... args) {
+    private Object invokePrivateMethod(String methodName) {
         try {
             Method method = ParselyTrackerInternal.class.getDeclaredMethod(methodName);
             method.setAccessible(true);
-            return method.invoke(parselyTracker, args);
+            return method.invoke(parselyTracker);
         } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
