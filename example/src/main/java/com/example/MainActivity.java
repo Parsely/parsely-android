@@ -142,7 +142,7 @@ public class MainActivity extends Activity {
     private boolean engagementIsActive() {
         return (boolean) invokePrivateMethod("engagementIsActive");
     }
-    
+
     @Nullable
     private Double getEngagementInterval() {
         return (Double) invokePrivateMethod("getEngagementInterval");
