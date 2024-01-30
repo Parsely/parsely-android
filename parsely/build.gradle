@@ -70,6 +70,7 @@ android {
     }
 
     dokkaHtml.configure {
+        suppressInheritedMembers.set(true)
         dokkaSourceSets {
             named("main") {
                 includes.from("README.md")
