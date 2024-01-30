@@ -5,6 +5,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlinx.kover'
     id 'org.jetbrains.kotlinx.binary-compatibility-validator'
+    id 'org.jetbrains.dokka'
 }
 
 ext {
@@ -66,6 +67,14 @@ android {
 
     kotlin {
         explicitApi(ExplicitApiMode.Strict)
+    }
+
+    dokkaHtml.configure {
+        dokkaSourceSets {
+            named("main") {
+                includes.from("README.md")
+            }
+        }
     }
 }
 
