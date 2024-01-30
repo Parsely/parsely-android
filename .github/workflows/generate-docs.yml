@@ -1,0 +1,24 @@
+name: Generate documentation
+
+on:
+  release:
+    types: [ released ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Generate API documentation
+        run: ./gradlew dokkaHtml
+      - name: Deploy API documentation to Github Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: parsely/build/dokka/html
