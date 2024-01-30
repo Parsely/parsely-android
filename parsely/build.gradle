@@ -33,7 +33,7 @@ dependencies {
     def kotlinVersion = "1.8.10"
 
     implementation 'androidx.appcompat:appcompat:1.4.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
     implementation 'androidx.lifecycle:lifecycle-process:2.6.2'
     constraints {
