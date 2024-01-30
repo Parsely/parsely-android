@@ -132,6 +132,7 @@ public class MainActivity extends Activity {
                 "http://example.com/thumbs/video-1234",
                 "Awesome Video #1234",
                 Calendar.getInstance(),
+                "post",
                 90
         );
         // NOTE: For videos embedded in an article, "url" should be the URL for that article.
