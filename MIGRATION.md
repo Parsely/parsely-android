@@ -66,4 +66,4 @@ Configuring the debug mode during the SDK initialization has been simplified to 
 
 ---
 
-For clarification on any of these changes or assistance with migrating your code to the latest version of the Parse.ly Android SDK, please contact our support team.
+For clarification on any of these changes or assistance with migrating your code to the latest version of the Parse.ly Android SDK, please contact our support team at `support@parsely.com` or open a GitHub issue.
