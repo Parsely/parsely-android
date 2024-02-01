@@ -1,5 +1,16 @@
 package com.example;
 
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.view.View;
+import android.widget.TextView;
+
+import com.parsely.parselyandroid.ParselyTracker;
+import com.parsely.parselyandroid.ParselyTrackerInternal;
+import com.parsely.parselyandroid.ParselyVideoMetadata;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -7,17 +18,12 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.app.Activity;
-import android.view.Menu;
-import android.view.View;
-import android.widget.TextView;
-
-import com.parsely.parselyandroid.*;
-
+/**
+ * @noinspection KotlinInternalInJava
+ */
 public class MainActivity extends Activity {
+
+    private InternalDebugOnlyData internalDebugOnlyData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +31,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         // initialize the Parsely tracker with your site id and the current Context
-        ParselyTracker.sharedInstance("example.com", 30, this, true);
+        ParselyTracker.init("example.com", 30, this, true);
+        internalDebugOnlyData = new InternalDebugOnlyData((ParselyTrackerInternal) ParselyTracker.sharedInstance());
 
         final TextView intervalView = (TextView) findViewById(R.id.interval);
 
@@ -39,8 +46,8 @@ public class MainActivity extends Activity {
             public void handleMessage(Message msg) {
                 TextView[] v = (TextView[]) msg.obj;
                 TextView iView = v[0];
-                if (ParselyTracker.sharedInstance().flushTimerIsActive()) {
-                    iView.setText(String.format("Flush Interval: %d", ParselyTracker.sharedInstance().getFlushInterval()));
+                if (internalDebugOnlyData.flushTimerIsActive()) {
+                    iView.setText(String.format("Flush Interval: %d", internalDebugOnlyData.getFlushInterval()));
                 } else {
                     iView.setText("Flush timer inactive");
                 }
@@ -62,23 +69,23 @@ public class MainActivity extends Activity {
 
     private void updateEngagementStrings() {
         StringBuilder eMsg = new StringBuilder("Engagement is ");
-        if (ParselyTracker.sharedInstance().engagementIsActive() == true) {
+        if (internalDebugOnlyData.engagementIsActive()) {
             eMsg.append("active.");
         } else {
             eMsg.append("inactive.");
         }
-        eMsg.append(String.format(" (interval: %.01fms)", ParselyTracker.sharedInstance().getEngagementInterval()));
+        eMsg.append(String.format(" (interval: %.01fms)", internalDebugOnlyData.getEngagementInterval()));
 
         TextView eView = findViewById(R.id.et_interval);
         eView.setText(eMsg.toString());
 
         StringBuilder vMsg = new StringBuilder("Video is ");
-        if (ParselyTracker.sharedInstance().videoIsActive() == true) {
+        if (internalDebugOnlyData.videoIsActive()) {
             vMsg.append("active.");
         } else {
             vMsg.append("inactive.");
         }
-        vMsg.append(String.format(" (interval: %.01fms)", ParselyTracker.sharedInstance().getVideoEngagementInterval()));
+        vMsg.append(String.format(" (interval: %.01fms)", internalDebugOnlyData.getVideoEngagementInterval()));
 
         TextView vView = findViewById(R.id.video_interval);
         vView.setText(vMsg.toString());
@@ -117,7 +124,7 @@ public class MainActivity extends Activity {
                 90
         );
         // NOTE: For videos embedded in an article, "url" should be the URL for that article.
-        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", null, metadata, null);
+        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", "", metadata, null);
 
     }
 
@@ -125,5 +132,7 @@ public class MainActivity extends Activity {
         ParselyTracker.sharedInstance().trackPause();
     }
 
-    public void trackReset(View view) {ParselyTracker.sharedInstance().resetVideo(); }
+    public void trackReset(View view) {
+        ParselyTracker.sharedInstance().resetVideo();
+    }
 }

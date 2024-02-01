@@ -1,8 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlinx.kover'
+    id 'org.jetbrains.kotlinx.binary-compatibility-validator'
 }
 
 ext {
@@ -12,11 +14,12 @@ ext {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdk 34
+    namespace = "com.parsely.parselyandroid"
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
@@ -29,6 +32,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    buildFeatures {
+        buildConfig = false
     }
     packagingOptions {
         exclude 'META-INF/LGPL2.1'
@@ -61,17 +67,17 @@ android {
 
     kotlin {
         explicitApi(ExplicitApiMode.Strict)
+        jvmToolchain(17)
     }
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.4.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
     implementation 'androidx.lifecycle:lifecycle-process:2.6.2'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
 
-    testImplementation 'org.robolectric:robolectric:4.10.3'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
     testImplementation 'androidx.test:core:1.5.0'
     testImplementation "org.assertj:assertj-core:$assertJVersion"
     testImplementation 'junit:junit:4.13.2'

@@ -60,7 +60,7 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity)
+                initializeTracker(activity)
 
                 repeat(51) {
                     parselyTracker.trackPageview("url")
@@ -91,7 +91,7 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity)
+                initializeTracker(activity)
 
                 parselyTracker.trackPageview("url")
             }
@@ -135,7 +135,7 @@ class FunctionalTests {
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity, flushInterval = 1.hours)
+                initializeTracker(activity, flushInterval = 1.hours)
 
                 repeat(20) {
                     parselyTracker.trackPageview("url")
@@ -169,7 +169,7 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity)
+                initializeTracker(activity)
 
                 repeat(eventsToSend) {
                     parselyTracker.trackPageview("url")
@@ -217,7 +217,7 @@ class FunctionalTests {
             scenario.onActivity { activity: Activity ->
                 beforeEach(activity)
                 server.enqueue(MockResponse().setResponseCode(200))
-                parselyTracker = initializeTracker(activity, flushInterval = 30.seconds)
+                initializeTracker(activity, flushInterval = 30.seconds)
 
                 // when
                 startTimestamp = System.currentTimeMillis().milliseconds
@@ -314,13 +314,14 @@ class FunctionalTests {
     private fun initializeTracker(
         activity: Activity,
         flushInterval: Duration = defaultFlushInterval
-    ): ParselyTracker {
+    )  {
         val field: Field = ParselyTrackerInternal::class.java.getDeclaredField("ROOT_URL")
         field.isAccessible = true
         field.set(this, url)
-        return ParselyTracker.sharedInstance(
+        ParselyTracker.init(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
         )
+        parselyTracker = ParselyTracker.sharedInstance()
     }
 
     private companion object {
