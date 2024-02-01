@@ -27,7 +27,7 @@ import org.jetbrains.annotations.TestOnly
 public interface ParselyTracker {
 
     /**
-     * Register a pageview event using a URL and optional metadata. You should only be call this once per page view.
+     * Register a pageview event using a URL and optional metadata. You should only call this method once per page view.
      *
      * @param url         The URL of the article being tracked (eg: "http://example.com/some-old/article.html")
      * @param urlRef      The url of the page that linked to the viewed page. Analogous to HTTP referer
