@@ -66,21 +66,22 @@ internal class ParselyTrackerInternal internal constructor(
         )
     }
 
-    override val engagementInterval: Double?
+    private val engagementInterval: Double?
         get() = engagementManager?.intervalMillis
 
-    override val videoEngagementInterval: Double?
+    private val videoEngagementInterval: Double?
         get() = videoEngagementManager?.intervalMillis
 
-    override fun engagementIsActive(): Boolean {
+    @Suppress("unused") // used via reflection in sample app
+    private fun engagementIsActive(): Boolean {
         return engagementManager?.isRunning ?: false
     }
 
-    override fun videoIsActive(): Boolean {
+    private fun videoIsActive(): Boolean {
         return videoEngagementManager?.isRunning ?: false
     }
 
-    override val flushInterval: Long
+    private val flushInterval: Long
         get() = flushManager.intervalMillis / 1000
 
     override fun trackPageview(
@@ -228,7 +229,7 @@ internal class ParselyTrackerInternal internal constructor(
      *
      * @return Whether the event queue flush timer is running.
      */
-    override fun flushTimerIsActive(): Boolean {
+    private fun flushTimerIsActive(): Boolean {
         return flushManager.isRunning
     }
 

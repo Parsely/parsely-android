@@ -27,36 +27,6 @@ import org.jetbrains.annotations.TestOnly
 public interface ParselyTracker {
 
     /**
-     * Get the heartbeat interval
-     *
-     * @return The base engagement tracking interval.
-     */
-    public val engagementInterval: Double?
-
-    public val videoEngagementInterval: Double?
-
-    /**
-     * Returns the interval at which the event queue is flushed to Parse.ly.
-     *
-     * @return The interval at which the event queue is flushed to Parse.ly.
-     */
-    public val flushInterval: Long
-
-    /**
-     * Returns whether the engagement tracker is running.
-     *
-     * @return Whether the engagement tracker is running.
-     */
-    public fun engagementIsActive(): Boolean
-
-    /**
-     * Returns whether video tracking is active.
-     *
-     * @return Whether video tracking is active.
-     */
-    public fun videoIsActive(): Boolean
-
-    /**
      * Register a pageview event using a URL and optional metadata.
      *
      * @param url         The URL of the article being tracked
@@ -161,8 +131,6 @@ public interface ParselyTracker {
      * and Parse.ly values may be inaccurate.
      */
     public fun resetVideo()
-
-    public fun flushTimerIsActive(): Boolean
 
     public companion object {
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
