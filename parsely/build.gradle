@@ -14,12 +14,12 @@ ext {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
     namespace = "com.parsely.parselyandroid"
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
