@@ -1,7 +1,16 @@
 package com.example;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.view.View;
+import android.widget.TextView;
+
+import com.parsely.parselyandroid.ParselyTracker;
+import com.parsely.parselyandroid.ParselyTrackerInternal;
+import com.parsely.parselyandroid.ParselyVideoMetadata;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -9,24 +18,12 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.app.Activity;
-import android.view.Menu;
-import android.view.View;
-import android.widget.TextView;
-
-import com.parsely.parselyandroid.*;
-
-import org.jetbrains.annotations.Nullable;
-
 /**
  * @noinspection KotlinInternalInJava
  */
 public class MainActivity extends Activity {
 
-    private ParselyTracker parselyTracker;
+    private InternalDebugOnlyData internalDebugOnlyData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +32,7 @@ public class MainActivity extends Activity {
 
         // initialize the Parsely tracker with your site id and the current Context
         ParselyTracker.init("example.com", 30, this, true);
-        parselyTracker = ParselyTracker.sharedInstance();
+        internalDebugOnlyData = new InternalDebugOnlyData((ParselyTrackerInternal) ParselyTracker.sharedInstance());
 
         final TextView intervalView = (TextView) findViewById(R.id.interval);
 
@@ -49,8 +46,8 @@ public class MainActivity extends Activity {
             public void handleMessage(Message msg) {
                 TextView[] v = (TextView[]) msg.obj;
                 TextView iView = v[0];
-                if (flushTimerIsActive()) {
-                    iView.setText(String.format("Flush Interval: %d", getFlushInterval()));
+                if (internalDebugOnlyData.flushTimerIsActive()) {
+                    iView.setText(String.format("Flush Interval: %d", internalDebugOnlyData.getFlushInterval()));
                 } else {
                     iView.setText("Flush timer inactive");
                 }
@@ -72,23 +69,23 @@ public class MainActivity extends Activity {
 
     private void updateEngagementStrings() {
         StringBuilder eMsg = new StringBuilder("Engagement is ");
-        if (engagementIsActive()) {
+        if (internalDebugOnlyData.engagementIsActive()) {
             eMsg.append("active.");
         } else {
             eMsg.append("inactive.");
         }
-        eMsg.append(String.format(" (interval: %.01fms)", getEngagementInterval()));
+        eMsg.append(String.format(" (interval: %.01fms)", internalDebugOnlyData.getEngagementInterval()));
 
         TextView eView = findViewById(R.id.et_interval);
         eView.setText(eMsg.toString());
 
         StringBuilder vMsg = new StringBuilder("Video is ");
-        if (videoIsActive()) {
+        if (internalDebugOnlyData.videoIsActive()) {
             vMsg.append("active.");
         } else {
             vMsg.append("inactive.");
         }
-        vMsg.append(String.format(" (interval: %.01fms)", getVideoEngagementInterval()));
+        vMsg.append(String.format(" (interval: %.01fms)", internalDebugOnlyData.getVideoEngagementInterval()));
 
         TextView vView = findViewById(R.id.video_interval);
         vView.setText(vMsg.toString());
@@ -137,41 +134,5 @@ public class MainActivity extends Activity {
 
     public void trackReset(View view) {
         ParselyTracker.sharedInstance().resetVideo();
-    }
-
-    private boolean engagementIsActive() {
-        return (boolean) invokePrivateMethod("engagementIsActive");
-    }
-    
-    @Nullable
-    private Double getEngagementInterval() {
-        return (Double) invokePrivateMethod("getEngagementInterval");
-    }
-
-    @Nullable
-    private Double getVideoEngagementInterval() {
-        return (Double) invokePrivateMethod("getVideoEngagementInterval");
-    }
-
-    private long getFlushInterval() {
-        return (long) invokePrivateMethod("getFlushInterval");
-    }
-
-    private boolean videoIsActive() {
-        return (boolean) invokePrivateMethod("videoIsActive");
-    }
-
-    private boolean flushTimerIsActive() {
-        return (boolean) invokePrivateMethod("flushTimerIsActive");
-    }
-
-    private Object invokePrivateMethod(String methodName) {
-        try {
-            Method method = ParselyTrackerInternal.class.getDeclaredMethod(methodName);
-            method.setAccessible(true);
-            return method.invoke(parselyTracker);
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
