@@ -6,9 +6,9 @@ This document acts as a guide for migration, detailing every breaking change tha
 
 When migrating to version 4.x of the Parse.ly Android SDK, you will encounter several changes that may require updates to your codebase. The following list details these breaking changes and recommended actions:
 
-### Removed initialization `ParselyTracker#sharedInstace` methods
+### Removed initialization `ParselyTracker#sharedInstance` methods
 
-Previously, the SDK was initialized `ParselyTracker#sharedInstace` method, which should be replaced with `ParselyTracker#init` method:
+Previously, the SDK was initialized `ParselyTracker#sharedInstance` method, which should be replaced with `ParselyTracker#init` method:
 
 ```kotlin
 ParselyTracker.sharedInstance("example.com", 30, this, true) // before
