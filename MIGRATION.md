@@ -62,6 +62,8 @@ Configuring the debug mode during the SDK initialization has been simplified to 
 
 - The method `ParselyTracker#setDebug` is no longer available.
 
-*Action required*: When initializing the `ParselyTracker`, set the `dryRun` property to `true`.
+*Action required*: To enable `debug` mode, when initializing the `ParselyTracker`, set the `dryRun` property to `true`.
+
+---
 
 For clarification on any of these changes or assistance with migrating your code to the latest version of the Parse.ly Android SDK, please contact our support team.
