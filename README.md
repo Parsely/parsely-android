@@ -18,3 +18,8 @@ implementation("com.parsely:parsely:<release_version>")
 
 Full instructions and documentation can be found on
 the [Parse.ly help page](https://docs.parse.ly/android-sdk/).
+
+## Migration to 4.0.0
+
+Version 4.0.0 of the SDK introduces significant updates and breaking changes that enhance performance and add new features.
+These changes may require modifications to your existing code. For detailed instructions on how to adapt your code to these changes, please refer to our [Migration Guide](MIGRATION.md).
