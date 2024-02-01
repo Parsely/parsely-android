@@ -6,7 +6,7 @@ This document acts as a guide for migration, detailing every breaking change tha
 
 When migrating to version 4.x of the Parse.ly Android SDK, you will encounter several changes that may require updates to your codebase. The following list details these breaking changes and recommended actions:
 
-### Removed `ParselyTracker#sharedInstace` methods
+### Removed initialization `ParselyTracker#sharedInstace` methods
 
 Previously, the SDK was initialized `ParselyTracker#sharedInstace` method, which should be replaced with `ParselyTracker#init` method:
 
@@ -16,31 +16,31 @@ ParselyTracker.sharedInstance("example.com", 30, this, true) // before
 ParselyTracker.init("example.com", 30, this, true) // now
 ```
 
-The `ParselyTracker` was later accessed via a second variant of `ParselyTracker#sharedInstance`. All SDK methods are now available statically from `ParselyTracker`:
-
-```kotlin
-ParselyTracker.sharedInstance().trackPageview("http://example.com/article1.html", "http://example.com/", null, null) // before
-
-ParselyTracker.trackPageview("http://example.com/article1.html", "http://example.com/", null, null) // now
-```
+Without prior initialization, the SDK will now throw `ParselyNotInitializedException` when accessing `ParselyTracker#sharedInstance`.
 
 *Action required*: Update how the Parsely SDK is initialized and accessed as presented above.
 
 ### Removed methods or access restriction
-The following methods have been removed from the `ParselyTracker` class:
+The following methods are no longer accessible from the `ParselyTracker` class:
 
+- `engagementIsActive`
 - `flushEventQueue`
+- `flushTimerIsActive`
 - `getDebug`
+- `getEngagementInterval`
+- `getFlushInterval`
+- `getVideoEngagementInterval`
 - `queueSize`
-- `storedEventsCount`
 - `stopFlushTimer`
-
-The `toMap` methods that convert metadata objects to maps are no longer available for API consumers:
+- `storedEventsCount`
+- `videoIsActive`
+  
+Also, `toMap` methods are no longer available for API consumers:
 
 - `ParselyMetadata#toMap`
 - `ParselyVideoMetadata#toMap`
 
-*Action required*: Those methods shouldn't be needed to use the SDK.
+*Action required*: Those methods aren't needed to use the SDK. Remove any code segments that interact with them.
 
 ### Restricted access to internal API connection
 `ParselyAPIConnection`, which might have been previously used for direct API interactions, is no longer accessible to the API consumer.
