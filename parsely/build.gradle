@@ -15,6 +15,7 @@ ext {
 
 android {
     compileSdkVersion 33
+    namespace = "com.parsely.parselyandroid"
 
     defaultConfig {
         minSdkVersion 21
@@ -66,6 +67,7 @@ android {
 
     kotlin {
         explicitApi(ExplicitApiMode.Strict)
+        jvmToolchain(17)
     }
 }
 

@@ -4,6 +4,7 @@ plugins {
 
 android {
     compileSdkVersion 33
+    namespace = "com.example"
 
     defaultConfig {
         applicationId "com.parsely.example.parselyexample"
