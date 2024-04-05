@@ -21,6 +21,7 @@ import kotlin.io.path.Path
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.parse
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -281,6 +282,46 @@ class FunctionalTests {
                     )
                 })
         }
+    }
+
+    /**
+     * In this scenario, the consumer app starts an engagement session and configures siteId
+     * with a custom value for the session.
+     *
+     * Intervals:
+     * With current implementation of `HeartbeatIntervalCalculator`, the next intervals are:
+     * - 10500ms for the first interval
+     * - 13650ms for the second interval
+     *
+     * So after ~27,2s we should observe 2 `heartbeat` events from `startEngagement`.
+     *
+     * They both should have the same custom site id.
+     */
+    @Test
+    fun customSiteIdIsAppliedToConcurrentEventsInEngagementSession() {
+        ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
+            // given
+            val customSiteId = "customSiteId"
+            val flushInterval = 30.seconds
+            scenario.onActivity { activity: Activity ->
+                beforeEach(activity)
+                server.enqueue(MockResponse().setResponseCode(200))
+                initializeTracker(activity, flushInterval)
+
+                // when
+                parselyTracker.trackPageview("engagementUrl")
+                parselyTracker.startEngagement("engagementUrl", siteIdSource = SiteIdSource.Custom(customSiteId))
+            }
+
+            // then
+            val request = server.takeRequest().toMap()["events"]!!
+
+            assertThat(request.filter { it.action=="heartbeat" }).hasSize(2)
+                .allSatisfy {
+                    assertThat(it.idsite).isEqualTo(customSiteId)
+                }
+        }
+
     }
 
     private fun RecordedRequest.toMap(): Map<String, List<Event>> {
