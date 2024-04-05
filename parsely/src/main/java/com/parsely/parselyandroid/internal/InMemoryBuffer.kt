@@ -1,6 +1,6 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
-import com.parsely.parselyandroid.Logging.log
+import com.parsely.parselyandroid.internal.Logging.log
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay

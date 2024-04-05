@@ -1,5 +1,6 @@
 package com.parsely.parselyandroid
 
+import com.parsely.parselyandroid.internal.AndroidDeviceInfoRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test

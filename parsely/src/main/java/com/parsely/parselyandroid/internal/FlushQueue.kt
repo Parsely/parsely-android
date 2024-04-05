@@ -1,7 +1,7 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
-import com.parsely.parselyandroid.JsonSerializer.toParselyEventsPayload
-import com.parsely.parselyandroid.Logging.log
+import com.parsely.parselyandroid.internal.JsonSerializer.toParselyEventsPayload
+import com.parsely.parselyandroid.internal.Logging.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex

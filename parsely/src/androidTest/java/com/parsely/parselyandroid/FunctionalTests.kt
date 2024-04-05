@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.parsely.parselyandroid.internal.ParselyTrackerInternal
 import java.io.File
 import java.io.FileInputStream
 import java.io.ObjectInputStream

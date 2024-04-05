@@ -1,5 +1,6 @@
 package com.parsely.parselyandroid
 
+import com.parsely.parselyandroid.internal.ParselyAPIConnection
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest

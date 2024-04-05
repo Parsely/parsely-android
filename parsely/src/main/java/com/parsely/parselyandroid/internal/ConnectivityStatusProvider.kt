@@ -1,4 +1,4 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -10,7 +10,8 @@ internal interface ConnectivityStatusProvider {
     fun isReachable(): Boolean
 }
 
-internal class AndroidConnectivityStatusProvider(private val context: Context): ConnectivityStatusProvider {
+internal class AndroidConnectivityStatusProvider(private val context: Context):
+    ConnectivityStatusProvider {
 
     override fun isReachable(): Boolean {
         val cm = context.getSystemService(

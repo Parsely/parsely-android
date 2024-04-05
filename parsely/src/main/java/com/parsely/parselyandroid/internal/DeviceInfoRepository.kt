@@ -1,7 +1,7 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
 import android.os.Build
-import com.parsely.parselyandroid.Logging.log
+import com.parsely.parselyandroid.internal.Logging.log
 
 internal interface DeviceInfoRepository{
     fun collectDeviceInfo(): Map<String, String>

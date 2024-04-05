@@ -1,4 +1,4 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes

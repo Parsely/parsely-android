@@ -1,7 +1,7 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
 import android.content.Context
-import com.parsely.parselyandroid.Logging.log
+import com.parsely.parselyandroid.internal.Logging.log
 import java.io.EOFException
 import java.io.FileNotFoundException
 import java.io.ObjectInputStream

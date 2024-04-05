@@ -3,6 +3,7 @@ package com.parsely.parselyandroid
 import android.app.Application
 import android.provider.Settings
 import androidx.test.core.app.ApplicationProvider
+import com.parsely.parselyandroid.internal.AndroidIdProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test

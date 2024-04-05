@@ -1,8 +1,7 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
-import com.parsely.parselyandroid.Logging.log
-import java.util.Calendar
-import java.util.TimeZone
+import com.parsely.parselyandroid.internal.Logging.log
+import com.parsely.parselyandroid.ParselyMetadata
 
 internal class EventsBuilder(
     private val deviceInfoRepository: DeviceInfoRepository,

@@ -1,4 +1,4 @@
-package com.parsely.parselyandroid
+package com.parsely.parselyandroid.internal
 
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope

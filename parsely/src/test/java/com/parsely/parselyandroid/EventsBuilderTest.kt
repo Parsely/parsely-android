@@ -1,5 +1,8 @@
 package com.parsely.parselyandroid
 
+import com.parsely.parselyandroid.internal.Clock
+import com.parsely.parselyandroid.internal.DeviceInfoRepository
+import com.parsely.parselyandroid.internal.EventsBuilder
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import org.assertj.core.api.Assertions.assertThat
