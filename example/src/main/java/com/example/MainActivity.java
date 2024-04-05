@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.parsely.parselyandroid.ParselyTracker;
+import com.parsely.parselyandroid.SiteIdSource;
 import com.parsely.parselyandroid.internal.ParselyTrackerInternal;
 import com.parsely.parselyandroid.ParselyVideoMetadata;
 
@@ -96,14 +97,14 @@ public class MainActivity extends Activity {
         //       the post has an internet-accessible URL, we will crawl it. urlMetadata is only used
         //       in the case of app-only content that we can't crawl.
         ParselyTracker.sharedInstance().trackPageview(
-                "http://example.com/article1.html", "http://example.com/", null, null
+                "http://example.com/article1.html", "http://example.com/", null, null, SiteIdSource.Default.INSTANCE
         );
     }
 
     public void startEngagement(View view) {
         final Map<String, Object> extraData = new HashMap<>();
         extraData.put("product-id", "12345");
-        ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html", "http://example.com/", extraData);
+        ParselyTracker.sharedInstance().startEngagement("http://example.com/article1.html", "http://example.com/", extraData, SiteIdSource.Default.INSTANCE);
         updateEngagementStrings();
     }
 
@@ -124,7 +125,7 @@ public class MainActivity extends Activity {
                 90
         );
         // NOTE: For videos embedded in an article, "url" should be the URL for that article.
-        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", "", metadata, null);
+        ParselyTracker.sharedInstance().trackPlay("http://example.com/app-videos", "", metadata, null, SiteIdSource.Default.INSTANCE);
 
     }
 

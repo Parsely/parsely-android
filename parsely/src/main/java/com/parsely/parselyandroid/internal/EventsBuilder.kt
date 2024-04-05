@@ -2,10 +2,11 @@ package com.parsely.parselyandroid.internal
 
 import com.parsely.parselyandroid.internal.Logging.log
 import com.parsely.parselyandroid.ParselyMetadata
+import com.parsely.parselyandroid.SiteIdSource
 
 internal class EventsBuilder(
     private val deviceInfoRepository: DeviceInfoRepository,
-    private val siteId: String,
+    private val initializationSiteId: String,
     private val clock: Clock,
 ) {
     /**
@@ -23,7 +24,8 @@ internal class EventsBuilder(
         action: String,
         metadata: ParselyMetadata?,
         extraData: Map<String, Any>?,
-        uuid: String
+        uuid: String,
+        siteIdSource: SiteIdSource,
     ): Map<String, Any> {
         log("buildEvent called for %s/%s", action, url)
 
@@ -31,7 +33,10 @@ internal class EventsBuilder(
         val event: MutableMap<String, Any> = HashMap()
         event["url"] = url
         event["urlref"] = urlRef
-        event["idsite"] = siteId
+        event["idsite"] = when (siteIdSource) {
+            is SiteIdSource.Default -> initializationSiteId
+            is SiteIdSource.Custom -> siteIdSource.siteId
+        }
         event["action"] = action
 
         // Make a copy of extraData and add some things.

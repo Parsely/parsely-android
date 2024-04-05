@@ -33,6 +33,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -52,6 +53,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -71,6 +73,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -90,6 +93,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -112,6 +116,7 @@ internal class EventsBuilderTest {
             null,
             extraData,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -135,6 +140,7 @@ internal class EventsBuilderTest {
             null,
             extraData,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -156,6 +162,7 @@ internal class EventsBuilderTest {
             metadata,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -177,6 +184,7 @@ internal class EventsBuilderTest {
             metadata,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then

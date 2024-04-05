@@ -7,6 +7,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.parsely.parselyandroid.ParselyMetadata
 import com.parsely.parselyandroid.ParselyTracker
 import com.parsely.parselyandroid.ParselyVideoMetadata
+import com.parsely.parselyandroid.SiteIdSource
 import java.util.UUID
 
 internal class ParselyTrackerInternal internal constructor(
@@ -92,6 +93,7 @@ internal class ParselyTrackerInternal internal constructor(
         urlRef: String,
         urlMetadata: ParselyMetadata?,
         extraData: Map<String, Any>?,
+        siteIdSource: SiteIdSource,
     ) {
         if (url.isBlank()) {
             Logging.log("url cannot be empty")
@@ -108,7 +110,8 @@ internal class ParselyTrackerInternal internal constructor(
                 "pageview",
                 urlMetadata,
                 extraData,
-                pageViewUuid
+                pageViewUuid,
+                siteIdSource
             )
         )
     }
@@ -116,7 +119,8 @@ internal class ParselyTrackerInternal internal constructor(
     override fun startEngagement(
         url: String,
         urlRef: String,
-        extraData: Map<String, Any>?
+        extraData: Map<String, Any>?,
+        siteIdSource: SiteIdSource,
     ) {
         if (url.isBlank()) {
             Logging.log("url cannot be empty")
@@ -133,7 +137,7 @@ internal class ParselyTrackerInternal internal constructor(
 
         // Start a new EngagementTask
         val event =
-            eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, pageViewUuid)
+            eventsBuilder.buildEvent(url, urlRef, "heartbeat", null, extraData, pageViewUuid, siteIdSource)
         engagementManager = EngagementManager(
             this,
             DEFAULT_ENGAGEMENT_INTERVAL_MILLIS.toLong(),
@@ -157,6 +161,7 @@ internal class ParselyTrackerInternal internal constructor(
         urlRef: String,
         videoMetadata: ParselyVideoMetadata,
         extraData: Map<String, Any>?,
+        siteIdSource: SiteIdSource,
     ) {
         if (url.isBlank()) {
             Logging.log("url cannot be empty")
@@ -179,12 +184,12 @@ internal class ParselyTrackerInternal internal constructor(
 
         // Enqueue the videostart
         val videostartEvent =
-            eventsBuilder.buildEvent(url, urlRef, "videostart", videoMetadata, extraData, uuid)
+            eventsBuilder.buildEvent(url, urlRef, "videostart", videoMetadata, extraData, uuid, siteIdSource)
         enqueueEvent(videostartEvent)
 
         // Start a new engagement manager for the video.
         val hbEvent =
-            eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid)
+            eventsBuilder.buildEvent(url, urlRef, "vheartbeat", videoMetadata, extraData, uuid, siteIdSource)
         // TODO: Can we remove some metadata fields from this request?
         videoEngagementManager = EngagementManager(
             this,
