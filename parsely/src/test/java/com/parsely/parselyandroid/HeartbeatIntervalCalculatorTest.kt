@@ -1,8 +1,6 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.internal.HeartbeatIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
-import com.parsely.parselyandroid.internal.Clock
-import com.parsely.parselyandroid.internal.HeartbeatIntervalCalculator
+import com.parsely.parselyandroid.HeartbeatIntervalCalculator.Companion.MAX_TIME_BETWEEN_HEARTBEATS
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat

@@ -1,7 +1,6 @@
-package com.parsely.parselyandroid.internal
+package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.internal.Logging.log
-import com.parsely.parselyandroid.ParselyVideoMetadata
+import com.parsely.parselyandroid.Logging.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

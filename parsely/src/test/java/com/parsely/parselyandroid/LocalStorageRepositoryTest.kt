@@ -2,7 +2,6 @@ package com.parsely.parselyandroid
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.parsely.parselyandroid.internal.LocalStorageRepository
 import java.io.File
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent

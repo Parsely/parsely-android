@@ -1,4 +1,4 @@
-package com.parsely.parselyandroid.internal
+package com.parsely.parselyandroid
 
 import android.content.Context
 import android.net.ConnectivityManager

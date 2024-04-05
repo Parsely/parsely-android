@@ -1,7 +1,5 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.internal.InMemoryBuffer
-import com.parsely.parselyandroid.internal.QueueRepository
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel

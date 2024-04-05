@@ -1,9 +1,9 @@
-package com.parsely.parselyandroid.internal
+package com.parsely.parselyandroid
 
 import android.content.Context
 import android.provider.Settings
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import com.parsely.parselyandroid.internal.Logging.log
+import com.parsely.parselyandroid.Logging.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 

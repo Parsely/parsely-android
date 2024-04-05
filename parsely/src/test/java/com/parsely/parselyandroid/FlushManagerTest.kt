@@ -1,6 +1,5 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.internal.ParselyFlushManager
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy

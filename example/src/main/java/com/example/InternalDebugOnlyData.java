@@ -1,6 +1,6 @@
 package com.example;
 
-import com.parsely.parselyandroid.internal.ParselyTrackerInternal;
+import com.parsely.parselyandroid.ParselyTrackerInternal;
 
 import org.jetbrains.annotations.Nullable;
 

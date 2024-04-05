@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import com.parsely.parselyandroid.ParselyTracker;
 import com.parsely.parselyandroid.SiteIdSource;
-import com.parsely.parselyandroid.internal.ParselyTrackerInternal;
+import com.parsely.parselyandroid.ParselyTrackerInternal;
 import com.parsely.parselyandroid.ParselyVideoMetadata;
 
 import java.util.ArrayList;

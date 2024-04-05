@@ -1,4 +1,4 @@
-package com.parsely.parselyandroid.internal
+package com.parsely.parselyandroid
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.IOException

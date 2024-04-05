@@ -1,9 +1,5 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.internal.Clock
-import com.parsely.parselyandroid.internal.EngagementManager
-import com.parsely.parselyandroid.internal.EventQueuer
-import com.parsely.parselyandroid.internal.HeartbeatIntervalCalculator
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds

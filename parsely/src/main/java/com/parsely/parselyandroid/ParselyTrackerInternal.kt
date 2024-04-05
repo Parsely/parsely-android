@@ -1,13 +1,9 @@
-package com.parsely.parselyandroid.internal
+package com.parsely.parselyandroid
 
 import android.content.Context
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.parsely.parselyandroid.ParselyMetadata
-import com.parsely.parselyandroid.ParselyTracker
-import com.parsely.parselyandroid.ParselyVideoMetadata
-import com.parsely.parselyandroid.SiteIdSource
 import java.util.UUID
 
 internal class ParselyTrackerInternal internal constructor(

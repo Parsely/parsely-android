@@ -1,8 +1,6 @@
-package com.parsely.parselyandroid.internal
+package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.internal.Logging.log
-import com.parsely.parselyandroid.ParselyMetadata
-import com.parsely.parselyandroid.SiteIdSource
+import com.parsely.parselyandroid.Logging.log
 
 internal class EventsBuilder(
     private val deviceInfoRepository: DeviceInfoRepository,

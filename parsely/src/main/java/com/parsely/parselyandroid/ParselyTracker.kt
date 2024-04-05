@@ -16,7 +16,6 @@
 package com.parsely.parselyandroid
 
 import android.content.Context
-import com.parsely.parselyandroid.internal.ParselyTrackerInternal
 import org.jetbrains.annotations.TestOnly
 
 /**
