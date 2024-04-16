@@ -14,6 +14,8 @@ internal class EventsBuilder(
      * @param action    Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
      * @param metadata  Metadata to attach to the event.
      * @param extraData A Map of additional information to send with the event.
+     * @param uuid      A unique identifier for the event.
+     * @param siteIdSource The source of the site ID to use for the event.
      * @return A Map object representing the event to be sent to Parse.ly.
      */
     fun buildEvent(
