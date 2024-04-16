@@ -36,12 +36,16 @@ public interface ParselyTracker {
      *                    content). Do not use this for **content also hosted on** URLs Parse.ly
      *                    would normally crawl.
      * @param extraData   A Map of additional information to send with the event.
+     * @param siteIdSource The source of the site ID to use for the event. If [SiteIdSource.Default],
+     *                     the site ID provided during [init] will be used. Otherwise, the site ID
+     *                     provided in the [SiteIdSource.Custom] object will be used.
      */
     public fun trackPageview(
         url: String,
         urlRef: String = "",
         urlMetadata: ParselyMetadata? = null,
         extraData: Map<String, Any>? = null,
+        siteIdSource: SiteIdSource = SiteIdSource.Default,
     )
 
     /**
@@ -59,11 +63,13 @@ public interface ParselyTracker {
      * @param url    The URL of the tracked article (eg: “http://example.com/some-old/article.html“)
      * @param urlRef The url of the page that linked to the page being engaged with. Analogous to HTTP referer
      * @param extraData A map of additional information to send with the generated `heartbeat` events
+     * @param siteIdSource The source of the site ID to use for the event.
      */
     public fun startEngagement(
         url: String,
         urlRef: String = "",
-        extraData: Map<String, Any>? = null
+        extraData: Map<String, Any>? = null,
+        siteIdSource: SiteIdSource = SiteIdSource.Default,
     )
 
     /**
@@ -96,12 +102,14 @@ public interface ParselyTracker {
      * @param urlRef        The url of the page that linked to the page being engaged with. Analogous to HTTP referer
      * @param videoMetadata Metadata about the tracked video
      * @param extraData     A Map of additional information to send with the event
+     * @param siteIdSource The source of the site ID to use for the event.
      */
     public fun trackPlay(
         url: String,
         urlRef: String = "",
         videoMetadata: ParselyVideoMetadata,
         extraData: Map<String, Any>? = null,
+        siteIdSource: SiteIdSource = SiteIdSource.Default,
     )
 
     /**

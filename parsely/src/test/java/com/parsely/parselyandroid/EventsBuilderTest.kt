@@ -30,6 +30,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -49,6 +50,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -68,6 +70,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -87,6 +90,7 @@ internal class EventsBuilderTest {
             null,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -109,6 +113,7 @@ internal class EventsBuilderTest {
             null,
             extraData,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -132,6 +137,7 @@ internal class EventsBuilderTest {
             null,
             extraData,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -153,6 +159,7 @@ internal class EventsBuilderTest {
             metadata,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
@@ -174,10 +181,49 @@ internal class EventsBuilderTest {
             metadata,
             null,
             TEST_UUID,
+            SiteIdSource.Default,
         )
 
         // then
         assertThat(event).containsKey("metadata")
+    }
+
+    @Test
+    fun `given default site id is provided, when creating a pixel, then use the default site id`() {
+        // when
+        val event: Map<String, Any> = sut.buildEvent(
+            TEST_URL,
+            "",
+            "pageview",
+            null,
+            null,
+            TEST_UUID,
+            SiteIdSource.Default,
+        )
+
+        // then
+        assertThat(event).containsEntry("idsite", TEST_SITE_ID)
+    }
+
+
+    @Test
+    fun `given custom site id is provided, when creating a pixel, then use the custom site id`() {
+        // given
+        val customSiteId = "Custom Site ID"
+
+        // when
+        val event: Map<String, Any> = sut.buildEvent(
+            TEST_URL,
+            "",
+            "pageview",
+            null,
+            null,
+            TEST_UUID,
+            SiteIdSource.Custom(customSiteId),
+        )
+
+        // then
+        assertThat(event).containsEntry("idsite", customSiteId)
     }
 
     private fun MapAssert<String, Any>.sharedPixelAssertions() =

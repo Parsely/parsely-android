@@ -1,6 +1,5 @@
 package com.parsely.parselyandroid
 
-import androidx.test.core.app.ApplicationProvider
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds

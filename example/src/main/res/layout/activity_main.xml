@@ -7,19 +7,27 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
-    
+
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:src="@drawable/parsely_logo_horizontal" />
-        
+
+    <EditText
+        android:id="@+id/custom_site_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageView1"
+        android:layout_centerHorizontal="true"
+        android:hint="Custom site id. Default if empty"/>
+
     <Button android:id="@+id/url_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/imageView1"
+        android:layout_below="@id/custom_site_id"
         android:text="@string/button_track_url"
         android:onClick="trackPageview" />
 

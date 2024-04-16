@@ -1,12 +1,10 @@
 package com.parsely.parselyandroid
 
 import com.parsely.parselyandroid.Logging.log
-import java.util.Calendar
-import java.util.TimeZone
 
 internal class EventsBuilder(
     private val deviceInfoRepository: DeviceInfoRepository,
-    private val siteId: String,
+    private val initializationSiteId: String,
     private val clock: Clock,
 ) {
     /**
@@ -16,6 +14,8 @@ internal class EventsBuilder(
      * @param action    Action to use (e.g. pageview, heartbeat, videostart, vheartbeat)
      * @param metadata  Metadata to attach to the event.
      * @param extraData A Map of additional information to send with the event.
+     * @param uuid      A unique identifier for the event.
+     * @param siteIdSource The source of the site ID to use for the event.
      * @return A Map object representing the event to be sent to Parse.ly.
      */
     fun buildEvent(
@@ -24,7 +24,8 @@ internal class EventsBuilder(
         action: String,
         metadata: ParselyMetadata?,
         extraData: Map<String, Any>?,
-        uuid: String
+        uuid: String,
+        siteIdSource: SiteIdSource,
     ): Map<String, Any> {
         log("buildEvent called for %s/%s", action, url)
 
@@ -32,7 +33,10 @@ internal class EventsBuilder(
         val event: MutableMap<String, Any> = HashMap()
         event["url"] = url
         event["urlref"] = urlRef
-        event["idsite"] = siteId
+        event["idsite"] = when (siteIdSource) {
+            is SiteIdSource.Default -> initializationSiteId
+            is SiteIdSource.Custom -> siteIdSource.siteId
+        }
         event["action"] = action
 
         // Make a copy of extraData and add some things.

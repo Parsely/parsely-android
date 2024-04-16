@@ -19,11 +19,11 @@ public abstract interface class com/parsely/parselyandroid/ParselyTracker {
 	public static fun init (Ljava/lang/String;Landroid/content/Context;)V
 	public abstract fun resetVideo ()V
 	public static fun sharedInstance ()Lcom/parsely/parselyandroid/ParselyTracker;
-	public abstract fun startEngagement (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public abstract fun startEngagement (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;)V
 	public abstract fun stopEngagement ()V
-	public abstract fun trackPageview (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;)V
+	public abstract fun trackPageview (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;)V
 	public abstract fun trackPause ()V
-	public abstract fun trackPlay (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;)V
+	public abstract fun trackPlay (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;)V
 }
 
 public final class com/parsely/parselyandroid/ParselyTracker$Companion {
@@ -35,13 +35,34 @@ public final class com/parsely/parselyandroid/ParselyTracker$Companion {
 }
 
 public final class com/parsely/parselyandroid/ParselyTracker$DefaultImpls {
-	public static synthetic fun startEngagement$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
-	public static synthetic fun trackPageview$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;ILjava/lang/Object;)V
-	public static synthetic fun trackPlay$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;ILjava/lang/Object;)V
+	public static synthetic fun startEngagement$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;ILjava/lang/Object;)V
+	public static synthetic fun trackPageview$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;ILjava/lang/Object;)V
+	public static synthetic fun trackPlay$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;ILjava/lang/Object;)V
 }
 
 public final class com/parsely/parselyandroid/ParselyVideoMetadata : com/parsely/parselyandroid/ParselyMetadata {
 	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Calendar;I)V
 	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Calendar;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract class com/parsely/parselyandroid/SiteIdSource {
+}
+
+public final class com/parsely/parselyandroid/SiteIdSource$Custom : com/parsely/parselyandroid/SiteIdSource {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/parsely/parselyandroid/SiteIdSource$Custom;
+	public static synthetic fun copy$default (Lcom/parsely/parselyandroid/SiteIdSource$Custom;Ljava/lang/String;ILjava/lang/Object;)Lcom/parsely/parselyandroid/SiteIdSource$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSiteId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/parsely/parselyandroid/SiteIdSource$Default : com/parsely/parselyandroid/SiteIdSource {
+	public static final field INSTANCE Lcom/parsely/parselyandroid/SiteIdSource$Default;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 

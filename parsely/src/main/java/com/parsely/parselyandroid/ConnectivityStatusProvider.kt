@@ -10,7 +10,8 @@ internal interface ConnectivityStatusProvider {
     fun isReachable(): Boolean
 }
 
-internal class AndroidConnectivityStatusProvider(private val context: Context): ConnectivityStatusProvider {
+internal class AndroidConnectivityStatusProvider(private val context: Context):
+    ConnectivityStatusProvider {
 
     override fun isReachable(): Boolean {
         val cm = context.getSystemService(

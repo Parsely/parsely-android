@@ -31,13 +31,13 @@ internal class FlushQueue(
                     return@launch
                 }
 
+                val jsonPayload = toParselyEventsPayload(eventsToSend)
                 if (skipSendingEvents) {
-                    log("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events")
+                    log("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events: $jsonPayload")
                     repository.remove(eventsToSend)
                     return@launch
                 }
                 log("Sending request with %d events", eventsToSend.size)
-                val jsonPayload = toParselyEventsPayload(eventsToSend)
                 log("POST Data %s", jsonPayload)
                 log("Requested %s", ParselyTrackerInternal.ROOT_URL)
                 restClient.send(jsonPayload)
