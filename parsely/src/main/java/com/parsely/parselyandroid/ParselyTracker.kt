@@ -36,7 +36,9 @@ public interface ParselyTracker {
      *                    content). Do not use this for **content also hosted on** URLs Parse.ly
      *                    would normally crawl.
      * @param extraData   A Map of additional information to send with the event.
-     * @param siteIdSource The source of the site ID to use for the event.
+     * @param siteIdSource The source of the site ID to use for the event. If [SiteIdSource.Default],
+     *                     the site ID provided during [init] will be used. Otherwise, the site ID
+     *                     provided in the [SiteIdSource.Custom] object will be used.
      */
     public fun trackPageview(
         url: String,
