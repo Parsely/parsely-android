@@ -1,7 +1,5 @@
 package com.parsely.parselyandroid
 
-import com.parsely.parselyandroid.Logging.log
-
 internal class EventsBuilder(
     private val deviceInfoRepository: DeviceInfoRepository,
     private val initializationSiteId: String,
@@ -27,7 +25,7 @@ internal class EventsBuilder(
         uuid: String,
         siteIdSource: SiteIdSource,
     ): Map<String, Any> {
-        log("buildEvent called for %s/%s", action, url)
+        Log.d("buildEvent called for $action/$url")
 
         // Main event info
         val event: MutableMap<String, Any> = HashMap()

@@ -44,7 +44,7 @@ internal class ParselyTrackerInternal internal constructor(
         inMemoryBuffer = InMemoryBuffer(sdkScope, localStorageRepository) {
             if (!flushTimerIsActive()) {
                 startFlushTimer()
-                Logging.log("Flush flushTimer set to %ds", flushManager.intervalMillis / 1000)
+                Log.d("Flush flushTimer set to ${flushManager.intervalMillis / 1000}")
             }
         }
         flushQueue = FlushQueue(
@@ -92,7 +92,7 @@ internal class ParselyTrackerInternal internal constructor(
         siteIdSource: SiteIdSource,
     ) {
         if (url.isBlank()) {
-            Logging.log("url cannot be empty")
+            Log.e("url cannot be empty")
             return
         }
 
@@ -119,12 +119,12 @@ internal class ParselyTrackerInternal internal constructor(
         siteIdSource: SiteIdSource,
     ) {
         if (url.isBlank()) {
-            Logging.log("url cannot be empty")
+            Log.e("url cannot be empty")
             return
         }
         val pageViewUuid = lastPageviewUuid
         if (pageViewUuid == null) {
-            Logging.log("engagement session cannot start without calling trackPageview first")
+            Log.e("engagement session cannot start without calling trackPageview first")
             return
         }
 
@@ -147,7 +147,7 @@ internal class ParselyTrackerInternal internal constructor(
     override fun stopEngagement() {
         engagementManager?.let {
             it.stop()
-            Logging.log("Engagement session has been stopped")
+            Log.d("Engagement session has been stopped")
         }
         engagementManager = null
     }
@@ -160,7 +160,7 @@ internal class ParselyTrackerInternal internal constructor(
         siteIdSource: SiteIdSource,
     ) {
         if (url.isBlank()) {
-            Logging.log("url cannot be empty")
+            Log.e("url cannot be empty")
             return
         }
 

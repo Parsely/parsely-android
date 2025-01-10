@@ -3,7 +3,6 @@ package com.parsely.parselyandroid
 import android.content.Context
 import android.provider.Settings
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import com.parsely.parselyandroid.Logging.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -19,7 +18,7 @@ internal class AdvertisementIdProvider(
             try {
                 adKey = AdvertisingIdClient.getAdvertisingIdInfo(context).id
             } catch (e: Exception) {
-                log("No Google play services or error!")
+                Log.e("No Google play services or error!", e)
             }
         }
     }
@@ -41,7 +40,7 @@ internal class AndroidIdProvider(private val context: Context) : IdProvider {
         } catch (ex: Exception) {
             null
         }
-        log(String.format("Android ID: %s", uuid))
+        Log.d("Android ID: $uuid")
         return uuid
     }
 }
