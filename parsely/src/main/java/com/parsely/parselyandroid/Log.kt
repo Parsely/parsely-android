@@ -4,16 +4,18 @@ import android.util.Log as AndroidLog
 
 internal object AndroidLogWrapper : Log {
 
+    private const val TAG = "Parsely"
+
     override fun i(message: String) {
-        AndroidLog.i("Parsely", message)
+        AndroidLog.i(TAG, message)
     }
 
     override fun d(message: String) {
-        AndroidLog.d("Parsely", message)
+        AndroidLog.d(TAG, message)
     }
 
     override fun e(message: String, throwable: Throwable?) {
-        AndroidLog.e("Parsely", message, throwable)
+        AndroidLog.e(TAG, message, throwable)
     }
 }
 
