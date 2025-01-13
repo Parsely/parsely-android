@@ -1,7 +1,6 @@
 package com.parsely.parselyandroid
 
 import com.parsely.parselyandroid.JsonSerializer.toParselyEventsPayload
-import com.parsely.parselyandroid.Logging.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -19,7 +18,7 @@ internal class FlushQueue(
 
     operator fun invoke(skipSendingEvents: Boolean) {
         if (!connectivityStatusProvider.isReachable()) {
-            log("Network unreachable. Not flushing.")
+            Log.d("Network unreachable. Not flushing.")
             return
         }
         scope.launch {
@@ -33,22 +32,21 @@ internal class FlushQueue(
 
                 val jsonPayload = toParselyEventsPayload(eventsToSend)
                 if (skipSendingEvents) {
-                    log("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events: $jsonPayload")
+                    Log.d("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events: $jsonPayload")
                     repository.remove(eventsToSend)
                     return@launch
                 }
-                log("Sending request with %d events", eventsToSend.size)
-                log("POST Data %s", jsonPayload)
-                log("Requested %s", ParselyTrackerInternal.ROOT_URL)
+                Log.d("Sending request with ${eventsToSend.size} events")
+                Log.d("POST Data $jsonPayload")
+                Log.d("Requested ${ParselyTrackerInternal.ROOT_URL}")
                 restClient.send(jsonPayload)
                     .fold(
                         onSuccess = {
-                            log("Pixel request success")
+                            Log.i("Pixel request success")
                             repository.remove(eventsToSend)
                         },
                         onFailure = {
-                            log("Pixel request exception")
-                            log(it.toString())
+                            Log.e("Pixel request exception", it)
                         }
                     )
             }

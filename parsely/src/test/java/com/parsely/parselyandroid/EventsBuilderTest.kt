@@ -18,6 +18,7 @@ internal class EventsBuilderTest {
             TEST_SITE_ID,
             clock
         )
+        Log.instance = FakeLog
     }
 
     @Test

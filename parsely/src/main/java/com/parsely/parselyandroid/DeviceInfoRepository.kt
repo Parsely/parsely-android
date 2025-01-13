@@ -1,7 +1,6 @@
 package com.parsely.parselyandroid
 
 import android.os.Build
-import com.parsely.parselyandroid.Logging.log
 
 internal interface DeviceInfoRepository{
     fun collectDeviceInfo(): Map<String, String>
@@ -25,7 +24,7 @@ internal open class AndroidDeviceInfoRepository(
         dInfo["parsely_site_uuid"] = parselySiteUuid
         dInfo["manufacturer"] = Build.MANUFACTURER
         dInfo["os"] = "android"
-        dInfo["os_version"] = String.format("%d", Build.VERSION.SDK_INT)
+        dInfo["os_version"] = Build.VERSION.SDK_INT.toString()
 
         return dInfo
     }
@@ -35,12 +34,12 @@ internal open class AndroidDeviceInfoRepository(
             val adKey = advertisementIdProvider.provide()
             val androidId = androidIdProvider.provide()
 
-            log("adkey is: %s, uuid is %s", adKey, androidId)
+            Log.d("adkey is: $adKey, uuid is $androidId")
 
             return if (adKey != null) {
                 adKey
             } else {
-                log("falling back to device uuid")
+                Log.d("falling back to device uuid")
                 androidId .orEmpty()
             }
         }
