@@ -42,7 +42,7 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
       - name: Publish build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artifact
           path: ~/.m2/repository/com/parsely/parsely/*
@@ -100,7 +100,7 @@ jobs:
           disk-size: 4096M
           script: adb uninstall "com.parsely.parselyandroid.test"; ./gradlew :parsely:connectedDebugAndroidTest
       - name: Publish build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: artifact
