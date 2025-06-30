@@ -41,11 +41,6 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-      - name: Publish build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifact
-          path: ~/.m2/repository/com/parsely/parsely/*
   functional-tests:
     runs-on: ubuntu-latest
     steps:
