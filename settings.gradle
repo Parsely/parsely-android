@@ -7,6 +7,7 @@ pluginManagement {
         id 'org.jetbrains.kotlin.android' version '1.9.10'
         id 'org.jetbrains.kotlinx.kover' version '0.7.4'
         id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.14.0'
+        id 'com.vanniktech.maven.publish' version '0.33.0'
     }
 
     repositories {
