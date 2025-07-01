@@ -5,6 +5,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlinx.kover'
     id 'org.jetbrains.kotlinx.binary-compatibility-validator'
+    id 'com.vanniktech.maven.publish'
 }
 
 ext {
@@ -41,14 +42,6 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
-
-    publishing {
-        singleVariant('release') {
-            withSourcesJar()
-            withJavadocJar()
-        }
-    }
-
     testOptions {
         unitTests {
             includeAndroidResources = true
@@ -93,4 +86,45 @@ dependencies {
     androidTestUtil 'androidx.test:orchestrator:1.4.2'
 }
 
-apply from: "${rootProject.projectDir}/publication.gradle"
+def static getVersionFromGitTag() {
+    return 'git describe --abbrev=0 --tags'.execute().text.trim()
+}
+
+def isTagBuild = System.getenv("GITHUB_REF_TYPE") == 'tag'
+
+mavenPublishing {
+    publishToMavenCentral(false)
+    signAllPublications()
+
+    def version = "${getVersionFromGitTag()}${isTagBuild ? '' : '-SNAPSHOT'}"
+    logger.lifecycle("Version: $version")
+
+    coordinates("com.parsely", "parsely", version)
+    pom {
+        name = 'Parse.ly Android SDK'
+        description = 'The official Parse.ly Android toolkit'
+        url = 'https://github.com/Parsely/parsely-android'
+        licenses {
+            license {
+                name = 'Apache-2.0'
+                url = 'https://github.com/Parsely/parsely-android/blob/master/COPYING'
+            }
+        }
+        scm {
+            connection = 'scm:git:github.com/Parsely/parsely-android.git'
+            developerConnection = 'scm:git:ssh://github.com/Parsely/parsely-android.git'
+            url = 'https://github.com/Parsely/parsely-android/tree/main'
+        }
+        developers {
+            developer {
+                id = 'wzieba'
+                name = 'Wojtek Zieba'
+                email = 'wojtek.zieba@automattic.com'
+            }
+        }
+        organization {
+            name = 'Parse.ly'
+            url = 'https://www.parse.ly/'
+        }
+    }
+}

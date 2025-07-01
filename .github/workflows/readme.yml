@@ -16,7 +16,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v4
       - name: Validate binary compatibility
         run: ./gradlew apiCheck
       - name: Build library
@@ -33,19 +33,14 @@ jobs:
         with:
           files: parsely/build/reports/kover/reportDebug.xml
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Validate Maven publication
-        run: ./gradlew :parsely:publishReleasePublicationToMavenLocal
+      - name: Publish snapshot
+        run: ./gradlew :parsely:publishToMavenCentral --max-workers 1
         env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-      - name: Publish build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifact
-          path: ~/.m2/repository/com/parsely/parsely/*
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
   functional-tests:
     runs-on: ubuntu-latest
     steps:
