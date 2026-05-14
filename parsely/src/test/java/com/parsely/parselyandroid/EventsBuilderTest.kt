@@ -208,6 +208,43 @@ internal class EventsBuilderTest {
 
 
     @Test
+    fun `when building conversion event, then build the correct one`() {
+        // given
+        val extraData: Map<String, Any> = mapOf(
+            "_conversion_type" to "subscription",
+            "_conversion_label" to "weekly_plan",
+            "plan" to "Active",
+        )
+
+        // when
+        val event: Map<String, Any> = sut.buildEvent(
+            TEST_URL,
+            "",
+            "conversion",
+            null,
+            extraData,
+            TEST_UUID,
+            SiteIdSource.Default,
+        )
+
+        // then
+        assertThat(event)
+            .doesNotContainKey("pvid")
+            .doesNotContainKey("vsid")
+            .containsEntry("action", "conversion")
+            .containsEntry("url", TEST_URL)
+            .containsEntry("idsite", TEST_SITE_ID)
+            .hasEntrySatisfying("data") {
+                @Suppress("UNCHECKED_CAST")
+                it as Map<String, Any>
+                assertThat(it)
+                    .containsEntry("_conversion_type", "subscription")
+                    .containsEntry("_conversion_label", "weekly_plan")
+                    .containsEntry("plan", "Active")
+            }
+    }
+
+    @Test
     fun `given custom site id is provided, when creating a pixel, then use the custom site id`() {
         // given
         val customSiteId = "Custom Site ID"

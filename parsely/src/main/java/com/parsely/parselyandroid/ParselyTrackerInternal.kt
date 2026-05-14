@@ -206,6 +206,38 @@ internal class ParselyTrackerInternal internal constructor(
         videoEngagementManager = null
     }
 
+    override fun trackConversion(
+        url: String,
+        conversionType: ConversionType,
+        conversionLabel: String,
+        urlRef: String,
+        urlMetadata: ParselyMetadata?,
+        extraData: Map<String, Any>?,
+        siteIdSource: SiteIdSource,
+    ) {
+        if (url.isBlank()) {
+            Log.e("url cannot be empty")
+            return
+        }
+
+        val mergedExtraData = (extraData ?: emptyMap()) + mapOf(
+            "_conversion_type" to conversionType.wireValue,
+            "_conversion_label" to conversionLabel,
+        )
+
+        enqueueEvent(
+            eventsBuilder.buildEvent(
+                url,
+                urlRef,
+                "conversion",
+                urlMetadata,
+                mergedExtraData,
+                generatePixelId(),
+                siteIdSource
+            )
+        )
+    }
+
     /**
      * Add an event Map to the queue.
      * Place a data structure representing the event into the in-memory queue for later use.
