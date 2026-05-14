@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.parsely.parselyandroid.ConversionType;
 import com.parsely.parselyandroid.ParselyTracker;
 import com.parsely.parselyandroid.SiteIdSource;
 import com.parsely.parselyandroid.ParselyTrackerInternal;
@@ -138,6 +139,34 @@ public class MainActivity extends Activity {
 
     public void trackReset(View view) {
         ParselyTracker.sharedInstance().resetVideo();
+    }
+
+    // --- Sandbox buttons for trackConversion smoke testing against sandbox.joshhanson.io.
+    // Both fire against the same URL so the conversions topology has a pageview to attribute to.
+    private static final String SANDBOX_SITE_ID = "sandbox.joshhanson.io";
+    private static final String SANDBOX_URL = "https://sandbox.joshhanson.io/path/test-conversion2";
+
+    public void trackSandboxPageview(View view) {
+        final Map<String, Object> extraData = new HashMap<>();
+        extraData.put("source", "android_demo_app");
+        ParselyTracker.sharedInstance().trackPageview(
+                SANDBOX_URL, "", null, extraData, new SiteIdSource.Custom(SANDBOX_SITE_ID)
+        );
+    }
+
+    public void trackSandboxConversion(View view) {
+        final Map<String, Object> extraData = new HashMap<>();
+        extraData.put("plan", "weekly");
+        extraData.put("source", "android_demo_app");
+        ParselyTracker.sharedInstance().trackConversion(
+                SANDBOX_URL,
+                ConversionType.SUBSCRIPTION,
+                "android_sdk_smoke_test",
+                "",
+                null,
+                extraData,
+                new SiteIdSource.Custom(SANDBOX_SITE_ID)
+        );
     }
 
     private SiteIdSource getSiteId() {

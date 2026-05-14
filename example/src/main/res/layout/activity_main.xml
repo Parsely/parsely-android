@@ -76,11 +76,29 @@
         android:onClick="trackReset"
         android:text="@string/button_reset_video" />
 
+    <Button
+        android:id="@+id/sandbox_pageview_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/reset_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackSandboxPageview"
+        android:text="@string/button_sandbox_pageview" />
+
+    <Button
+        android:id="@+id/sandbox_conversion_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/sandbox_pageview_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackSandboxConversion"
+        android:text="@string/button_sandbox_conversion" />
+
     <TextView android:id="@+id/interval"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/reset_video_button"
+        android:layout_below="@id/sandbox_conversion_button"
         android:text="Flush timer inactive"/>
 
     <TextView

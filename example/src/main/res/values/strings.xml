@@ -8,5 +8,7 @@
     <string name="button_track_video">Track Video</string>
     <string name="button_pause_video">Pause Video</string>
     <string name="button_reset_video">Reset Video</string>
+    <string name="button_sandbox_pageview">Track Pageview (sandbox)</string>
+    <string name="button_sandbox_conversion">Track Conversion (sandbox)</string>
 
 </resources>
