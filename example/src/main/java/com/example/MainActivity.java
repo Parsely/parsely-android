@@ -101,7 +101,21 @@ public class MainActivity extends Activity {
         //       the post has an internet-accessible URL, we will crawl it. urlMetadata is only used
         //       in the case of app-only content that we can't crawl.
         ParselyTracker.sharedInstance().trackPageview(
-                "http://example.com/article1.html", "http://example.com/", null, null, getSiteId()
+                getUrl(), "http://example.com/", null, null, getSiteId()
+        );
+    }
+
+    public void trackConversion(View view) {
+        final Map<String, Object> extraData = new HashMap<>();
+        extraData.put("plan", "weekly");
+        ParselyTracker.sharedInstance().trackConversion(
+                getUrl(),
+                ConversionType.SUBSCRIPTION,
+                "demo_conversion",
+                "",
+                null,
+                extraData,
+                getSiteId()
         );
     }
 
@@ -141,39 +155,19 @@ public class MainActivity extends Activity {
         ParselyTracker.sharedInstance().resetVideo();
     }
 
-    // --- Sandbox buttons for trackConversion smoke testing against sandbox.joshhanson.io.
-    // Both fire against the same URL so the conversions topology has a pageview to attribute to.
-    private static final String SANDBOX_SITE_ID = "sandbox.joshhanson.io";
-    private static final String SANDBOX_URL = "https://sandbox.joshhanson.io/path/test-conversion2";
-
-    public void trackSandboxPageview(View view) {
-        final Map<String, Object> extraData = new HashMap<>();
-        extraData.put("source", "android_demo_app");
-        ParselyTracker.sharedInstance().trackPageview(
-                SANDBOX_URL, "", null, extraData, new SiteIdSource.Custom(SANDBOX_SITE_ID)
-        );
-    }
-
-    public void trackSandboxConversion(View view) {
-        final Map<String, Object> extraData = new HashMap<>();
-        extraData.put("plan", "weekly");
-        extraData.put("source", "android_demo_app");
-        ParselyTracker.sharedInstance().trackConversion(
-                SANDBOX_URL,
-                ConversionType.SUBSCRIPTION,
-                "android_sdk_smoke_test",
-                "",
-                null,
-                extraData,
-                new SiteIdSource.Custom(SANDBOX_SITE_ID)
-        );
-    }
-
     private SiteIdSource getSiteId() {
         Editable fromEditText = ((EditText) findViewById(R.id.custom_site_id)).getText();
         if (fromEditText == null || fromEditText.toString().isEmpty()) {
             return SiteIdSource.Default.INSTANCE;
         }
         return new SiteIdSource.Custom(fromEditText.toString());
+    }
+
+    private String getUrl() {
+        Editable fromEditText = ((EditText) findViewById(R.id.custom_url)).getText();
+        if (fromEditText == null || fromEditText.toString().isEmpty()) {
+            return "http://example.com/article1.html";
+        }
+        return fromEditText.toString();
     }
 }
