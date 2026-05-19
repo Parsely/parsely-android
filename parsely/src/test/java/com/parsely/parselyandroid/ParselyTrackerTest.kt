@@ -33,6 +33,17 @@ class ParselyTrackerTest {
         ParselyTracker.sharedInstance().startEngagement("url")
     }
 
+    @Test
+    fun `given tracker initialized, when calling trackConversion, do not throw any exception`() {
+        ParselyTracker.init(siteId = "example.com", context = RuntimeEnvironment.getApplication())
+
+        ParselyTracker.sharedInstance().trackConversion(
+            url = "https://example.com/path/test-conversion",
+            conversionType = ConversionType.SUBSCRIPTION,
+            conversionLabel = "weekly_plan",
+        )
+    }
+
     @After
     fun tearDown() {
         ParselyTracker.tearDown()

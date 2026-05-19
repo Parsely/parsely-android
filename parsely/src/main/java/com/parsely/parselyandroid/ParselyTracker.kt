@@ -135,6 +135,35 @@ public interface ParselyTracker {
      */
     public fun resetVideo()
 
+    /**
+     * Track a conversion event (e.g. newsletter signup, subscription, purchase).
+     *
+     * The category and label are merged into the event's `extra_data` under the reserved keys
+     * `_conversion_type` and `_conversion_label`, which the Parse.ly conversions backend uses to
+     * identify the goal. Reserved keys cannot be overridden via [extraData].
+     *
+     * @param url             The URL at which the conversion occurred.
+     * @param conversionType  The category of conversion. Use [ConversionType.CUSTOM] for
+     *                        conversions that don't fit the named categories.
+     * @param conversionLabel A customer-defined identifier for this conversion (e.g.
+     *                        "weekly_plan", "homepage_cta"). Events without a label are dropped
+     *                        by the Parse.ly conversions backend.
+     * @param urlRef          The url of the page that linked to the conversion page. Analogous to HTTP referer.
+     * @param urlMetadata     Optional metadata for the URL.
+     * @param extraData       A map of additional information to send with the event. Reserved keys
+     *                        `_conversion_type` and `_conversion_label` will be overwritten.
+     * @param siteIdSource    The source of the site ID to use for the event.
+     */
+    public fun trackConversion(
+        url: String,
+        conversionType: ConversionType,
+        conversionLabel: String,
+        urlRef: String = "",
+        urlMetadata: ParselyMetadata? = null,
+        extraData: Map<String, Any>? = null,
+        siteIdSource: SiteIdSource = SiteIdSource.Default,
+    )
+
     public companion object {
         private const val DEFAULT_FLUSH_INTERVAL_SECS = 60
         private var instance: ParselyTrackerInternal? = null

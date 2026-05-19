@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.parsely.parselyandroid.ConversionType;
 import com.parsely.parselyandroid.ParselyTracker;
 import com.parsely.parselyandroid.SiteIdSource;
 import com.parsely.parselyandroid.ParselyTrackerInternal;
@@ -100,7 +101,21 @@ public class MainActivity extends Activity {
         //       the post has an internet-accessible URL, we will crawl it. urlMetadata is only used
         //       in the case of app-only content that we can't crawl.
         ParselyTracker.sharedInstance().trackPageview(
-                "http://example.com/article1.html", "http://example.com/", null, null, getSiteId()
+                getUrl(), "http://example.com/", null, null, getSiteId()
+        );
+    }
+
+    public void trackConversion(View view) {
+        final Map<String, Object> extraData = new HashMap<>();
+        extraData.put("plan", "weekly");
+        ParselyTracker.sharedInstance().trackConversion(
+                getUrl(),
+                ConversionType.SUBSCRIPTION,
+                "demo_conversion",
+                "",
+                null,
+                extraData,
+                getSiteId()
         );
     }
 
@@ -146,5 +161,13 @@ public class MainActivity extends Activity {
             return SiteIdSource.Default.INSTANCE;
         }
         return new SiteIdSource.Custom(fromEditText.toString());
+    }
+
+    private String getUrl() {
+        Editable fromEditText = ((EditText) findViewById(R.id.custom_url)).getText();
+        if (fromEditText == null || fromEditText.toString().isEmpty()) {
+            return "http://example.com/article1.html";
+        }
+        return fromEditText.toString();
     }
 }

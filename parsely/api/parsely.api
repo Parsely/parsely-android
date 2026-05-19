@@ -1,3 +1,15 @@
+public final class com/parsely/parselyandroid/ConversionType : java/lang/Enum {
+	public static final field CUSTOM Lcom/parsely/parselyandroid/ConversionType;
+	public static final field LEAD_CAPTURE Lcom/parsely/parselyandroid/ConversionType;
+	public static final field LINK_CLICK Lcom/parsely/parselyandroid/ConversionType;
+	public static final field NEWSLETTER_SIGNUP Lcom/parsely/parselyandroid/ConversionType;
+	public static final field PURCHASE Lcom/parsely/parselyandroid/ConversionType;
+	public static final field SUBSCRIPTION Lcom/parsely/parselyandroid/ConversionType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/parsely/parselyandroid/ConversionType;
+	public static fun values ()[Lcom/parsely/parselyandroid/ConversionType;
+}
+
 public final class com/parsely/parselyandroid/ParselyAlreadyInitializedException : java/lang/Exception {
 	public fun <init> ()V
 }
@@ -21,6 +33,7 @@ public abstract interface class com/parsely/parselyandroid/ParselyTracker {
 	public static fun sharedInstance ()Lcom/parsely/parselyandroid/ParselyTracker;
 	public abstract fun startEngagement (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;)V
 	public abstract fun stopEngagement ()V
+	public abstract fun trackConversion (Ljava/lang/String;Lcom/parsely/parselyandroid/ConversionType;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;)V
 	public abstract fun trackPageview (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;)V
 	public abstract fun trackPause ()V
 	public abstract fun trackPlay (Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;)V
@@ -36,6 +49,7 @@ public final class com/parsely/parselyandroid/ParselyTracker$Companion {
 
 public final class com/parsely/parselyandroid/ParselyTracker$DefaultImpls {
 	public static synthetic fun startEngagement$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;ILjava/lang/Object;)V
+	public static synthetic fun trackConversion$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Lcom/parsely/parselyandroid/ConversionType;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;ILjava/lang/Object;)V
 	public static synthetic fun trackPageview$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;ILjava/lang/Object;)V
 	public static synthetic fun trackPlay$default (Lcom/parsely/parselyandroid/ParselyTracker;Ljava/lang/String;Ljava/lang/String;Lcom/parsely/parselyandroid/ParselyVideoMetadata;Ljava/util/Map;Lcom/parsely/parselyandroid/SiteIdSource;ILjava/lang/Object;)V
 }

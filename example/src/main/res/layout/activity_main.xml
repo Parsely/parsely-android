@@ -23,11 +23,20 @@
         android:layout_centerHorizontal="true"
         android:hint="Custom site id. Default if empty"/>
 
+    <EditText
+        android:id="@+id/custom_url"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/custom_site_id"
+        android:layout_centerHorizontal="true"
+        android:hint="Custom URL. Default if empty"
+        android:inputType="textUri"/>
+
     <Button android:id="@+id/url_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/custom_site_id"
+        android:layout_below="@id/custom_url"
         android:text="@string/button_track_url"
         android:onClick="trackPageview" />
 
@@ -76,11 +85,20 @@
         android:onClick="trackReset"
         android:text="@string/button_reset_video" />
 
+    <Button
+        android:id="@+id/track_conversion_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/reset_video_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="trackConversion"
+        android:text="@string/button_track_conversion" />
+
     <TextView android:id="@+id/interval"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/reset_video_button"
+        android:layout_below="@id/track_conversion_button"
         android:text="Flush timer inactive"/>
 
     <TextView
