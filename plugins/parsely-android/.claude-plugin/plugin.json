@@ -1,0 +1,9 @@
+{
+  "name": "parsely-android",
+  "version": "1.0.0",
+  "description": "Parse.ly Android SDK guidance covering setup, tracking (pageview, engagement, video, conversion), and unit testing with FakeParselyTracker.",
+  "author": { "name": "Parse.ly" },
+  "homepage": "https://github.com/Parsely/parsely-android",
+  "keywords": ["parsely", "android", "sdk", "tracking", "analytics"],
+  "skills": ["./skills/"]
+}

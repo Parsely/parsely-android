@@ -19,6 +19,23 @@ implementation("com.parsely:parsely:<release_version>")
 Full instructions and documentation can be found on
 the [Parse.ly help page](https://docs.parse.ly/android-sdk/).
 
+## AI-Assisted Development
+
+A [Claude Code](https://claude.ai/code) plugin is available to help integrate and use this SDK:
+
+```sh
+claude plugin marketplace add Parsely/parsely-android
+claude plugin install parsely-android@parsely-android-marketplace
+```
+
+The plugin provides three skills:
+
+| Skill | Description |
+|-------|-------------|
+| `parsely-android-setup` | Add the SDK to a project: Gradle dependency, Application init, DI wiring |
+| `parsely-android-tracking` | Add tracking calls: pageview, engagement, video, conversion, metadata |
+| `parsely-android-testing` | Write unit tests using `FakeParselyTracker` |
+
 ## Migration to 4.0.0
 
 Version 4.0.0 of the SDK introduces significant updates and breaking changes that enhance performance and add new features.
