@@ -57,9 +57,14 @@ class VideoViewModel(
         parselyTracker.trackPlay(
             url = postUrl,
             videoMetadata = ParselyVideoMetadata(
-                videoId = videoId,
-                durationSeconds = durationSecs,
-                title = "My Video Title", // optional but recommended
+                /* authors =   */ null,
+                /* videoId =   */ videoId,
+                /* section =   */ null,
+                /* tags =      */ null,
+                /* thumbUrl =  */ null,
+                /* title =     */ "My Video Title",
+                /* pubDate =   */ null,
+                /* duration =  */ durationSecs
             )
         )
     }
