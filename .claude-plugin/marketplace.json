@@ -1,0 +1,13 @@
+{
+  "name": "parsely-android-marketplace",
+  "owner": { "name": "Parse.ly" },
+  "plugins": [
+    {
+      "name": "parsely-android",
+      "version": "1.0.0",
+      "description": "Parse.ly Android SDK guidance covering setup, tracking (pageview, engagement, video, conversion), and unit testing with FakeParselyTracker.",
+      "author": { "name": "Parse.ly" },
+      "source": "./plugins/parsely-android"
+    }
+  ]
+}
