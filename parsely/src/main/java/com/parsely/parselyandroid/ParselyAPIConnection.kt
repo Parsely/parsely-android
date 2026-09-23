@@ -19,11 +19,11 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 internal interface RestClient {
-    suspend fun send(payload: String): Result<Unit>
+    suspend fun send(url: String, payload: String): Result<Unit>
 }
 
-internal class ParselyAPIConnection(private val url: String) : RestClient {
-    override suspend fun send(payload: String): Result<Unit> {
+internal class ParselyAPIConnection : RestClient {
+    override suspend fun send(url: String, payload: String): Result<Unit> {
         var connection: HttpURLConnection? = null
         try {
             connection = URL(url).openConnection() as HttpURLConnection

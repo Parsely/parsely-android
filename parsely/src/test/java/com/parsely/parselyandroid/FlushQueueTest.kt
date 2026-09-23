@@ -12,6 +12,8 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class FlushQueueTest {
 
+    private val DEFAULT_HOSTS = PixelHosts(mapOf("a.com" to "p1.parsely.com"))
+
     @Test
     fun `given empty local storage, when sending events, then do nothing`() =
         runTest {
@@ -20,6 +22,7 @@ class FlushQueueTest {
                 FakeFlushManager(),
                 FakeRepository(),
                 FakeRestClient(),
+                DEFAULT_HOSTS,
                 this,
                 FakeConnectivityStatusProvider()
             )
@@ -37,7 +40,7 @@ class FlushQueueTest {
         runTest {
             // given
             val repository = FakeRepository().apply {
-                insertEvents(listOf(mapOf("test" to 123)))
+                insertEvents(listOf(mapOf("idsite" to "a.com", "test" to 123)))
             }
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.success(Unit)
@@ -46,6 +49,7 @@ class FlushQueueTest {
                 FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
+                DEFAULT_HOSTS,
                 this,
                 FakeConnectivityStatusProvider()
             )
@@ -63,12 +67,13 @@ class FlushQueueTest {
         runTest {
             // given
             val repository = FakeRepository().apply {
-                insertEvents(listOf(mapOf("test" to 123)))
+                insertEvents(listOf(mapOf("idsite" to "a.com", "test" to 123)))
             }
             val sut = FlushQueue(
                 FakeFlushManager(),
                 repository,
                 FakeRestClient(),
+                DEFAULT_HOSTS,
                 this,
                 FakeConnectivityStatusProvider()
             )
@@ -86,7 +91,7 @@ class FlushQueueTest {
         runTest {
             // given
             val repository = FakeRepository().apply {
-                insertEvents(listOf(mapOf("test" to 123)))
+                insertEvents(listOf(mapOf("idsite" to "a.com", "test" to 123)))
             }
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
@@ -95,6 +100,7 @@ class FlushQueueTest {
                 FakeFlushManager(),
                 repository,
                 parselyAPIConnection,
+                DEFAULT_HOSTS,
                 this,
                 FakeConnectivityStatusProvider()
             )
@@ -113,7 +119,7 @@ class FlushQueueTest {
             // given
             val flushManager = FakeFlushManager()
             val repository = FakeRepository().apply {
-                insertEvents(listOf(mapOf("test" to 123)))
+                insertEvents(listOf(mapOf("idsite" to "a.com", "test" to 123)))
             }
             val parselyAPIConnection = FakeRestClient().apply {
                 nextResult = Result.failure(Exception())
@@ -122,6 +128,7 @@ class FlushQueueTest {
                 flushManager,
                 repository,
                 parselyAPIConnection,
+                DEFAULT_HOSTS,
                 this,
                 FakeConnectivityStatusProvider()
             )
@@ -141,7 +148,7 @@ class FlushQueueTest {
             val flushManager = FakeFlushManager()
             val repository = object : FakeRepository() {
                 override suspend fun getStoredQueue(): ArrayList<Map<String, Any?>?> {
-                    return ArrayList(listOf(mapOf("test" to 123)))
+                    return ArrayList(listOf(mapOf("idsite" to "a.com", "test" to 123)))
                 }
             }
             val parselyAPIConnection = FakeRestClient().apply {
@@ -151,6 +158,7 @@ class FlushQueueTest {
                 flushManager,
                 repository,
                 parselyAPIConnection,
+                DEFAULT_HOSTS,
                 this,
                 FakeConnectivityStatusProvider()
             )
@@ -171,6 +179,7 @@ class FlushQueueTest {
             flushManager,
             FakeRepository(),
             FakeRestClient(),
+            DEFAULT_HOSTS,
             this,
             FakeConnectivityStatusProvider()
         )
@@ -188,12 +197,13 @@ class FlushQueueTest {
         runTest {
             // given
             val repository = FakeRepository().apply {
-                insertEvents(listOf(mapOf("test" to 123)))
+                insertEvents(listOf(mapOf("idsite" to "a.com", "test" to 123)))
             }
             val sut = FlushQueue(
                 FakeFlushManager(),
                 repository,
                 FakeRestClient(),
+                DEFAULT_HOSTS,
                 this,
                 FakeConnectivityStatusProvider().apply { reachable = false }
             )
@@ -206,6 +216,138 @@ class FlushQueueTest {
             assertThat(repository.getStoredQueue()).isNotEmpty
         }
 
+
+    @Test
+    fun `given site ids sharing a host, when flushing, then send one request`() = runTest {
+        // given
+        val repository = FakeRepository().apply {
+            insertEvents(listOf(mapOf("idsite" to "a.com"), mapOf("idsite" to "b.com")))
+        }
+        val restClient = FakeRestClient().apply { nextResult = Result.success(Unit) }
+        val sut = FlushQueue(
+            FakeFlushManager(),
+            repository,
+            restClient,
+            PixelHosts(mapOf("a.com" to "p1.parsely.com", "b.com" to "p1.parsely.com")),
+            this,
+            FakeConnectivityStatusProvider()
+        )
+
+        // when
+        sut.invoke(false)
+        runCurrent()
+
+        // then
+        assertThat(restClient.sentUrls).containsExactly("https://p1.parsely.com/mobileproxy")
+        assertThat(repository.getStoredQueue()).isEmpty()
+    }
+
+    @Test
+    fun `given site ids on different hosts, when flushing, then send one request per host`() = runTest {
+        // given
+        val repository = FakeRepository().apply {
+            insertEvents(listOf(mapOf("idsite" to "a.com"), mapOf("idsite" to "c.com")))
+        }
+        val restClient = FakeRestClient().apply { nextResult = Result.success(Unit) }
+        val sut = FlushQueue(
+            FakeFlushManager(),
+            repository,
+            restClient,
+            PixelHosts(mapOf("a.com" to "p1.parsely.com", "c.com" to "p1-irl.parsely.com")),
+            this,
+            FakeConnectivityStatusProvider()
+        )
+
+        // when
+        sut.invoke(false)
+        runCurrent()
+
+        // then
+        assertThat(restClient.sentUrls).containsExactlyInAnyOrder(
+            "https://p1.parsely.com/mobileproxy",
+            "https://p1-irl.parsely.com/mobileproxy"
+        )
+        assertThat(repository.getStoredQueue()).isEmpty()
+    }
+
+    @Test
+    fun `given one host failing, when flushing, then the other host's events are still removed`() = runTest {
+        // given
+        val repository = FakeRepository().apply {
+            insertEvents(listOf(mapOf("idsite" to "a.com"), mapOf("idsite" to "c.com")))
+        }
+        val restClient = FakeRestClient().apply {
+            resultsByUrl = mapOf(
+                "https://p1.parsely.com/mobileproxy" to Result.success(Unit),
+                "https://p1-irl.parsely.com/mobileproxy" to Result.failure(Exception()),
+            )
+        }
+        val sut = FlushQueue(
+            FakeFlushManager(),
+            repository,
+            restClient,
+            PixelHosts(mapOf("a.com" to "p1.parsely.com", "c.com" to "p1-irl.parsely.com")),
+            this,
+            FakeConnectivityStatusProvider()
+        )
+
+        // when
+        sut.invoke(false)
+        runCurrent()
+
+        // then
+        assertThat(repository.getStoredQueue()).containsExactly(mapOf("idsite" to "c.com"))
+    }
+
+    @Test
+    fun `given an undeclared site id, when flushing, then drop it from storage and send nothing for it`() = runTest {
+        // given: the stored queue is disk-backed, so merely skipping would accumulate forever
+        val repository = FakeRepository().apply {
+            insertEvents(listOf(mapOf("idsite" to "a.com"), mapOf("idsite" to "undeclared.com")))
+        }
+        val restClient = FakeRestClient().apply { nextResult = Result.success(Unit) }
+        val sut = FlushQueue(
+            FakeFlushManager(),
+            repository,
+            restClient,
+            PixelHosts(mapOf("a.com" to "p1.parsely.com")),
+            this,
+            FakeConnectivityStatusProvider()
+        )
+
+        // when
+        sut.invoke(false)
+        runCurrent()
+
+        // then
+        assertThat(restClient.sentUrls).containsExactly("https://p1.parsely.com/mobileproxy")
+        assertThat(repository.getStoredQueue()).isEmpty()
+    }
+
+    @Test
+    fun `given an empty host map, when flushing, then send nothing and drain storage`() = runTest {
+        // given
+        val repository = FakeRepository().apply {
+            insertEvents(listOf(mapOf("idsite" to "a.com")))
+        }
+        val restClient = FakeRestClient()
+        val sut = FlushQueue(
+            FakeFlushManager(),
+            repository,
+            restClient,
+            PixelHosts(emptyMap()),
+            this,
+            FakeConnectivityStatusProvider()
+        )
+
+        // when
+        sut.invoke(false)
+        runCurrent()
+
+        // then
+        assertThat(restClient.sentUrls).isEmpty()
+        assertThat(repository.getStoredQueue()).isEmpty()
+    }
 
     private class FakeFlushManager : FlushManager {
         var stopped = false
@@ -242,9 +384,12 @@ class FlushQueueTest {
     private class FakeRestClient : RestClient {
 
         var nextResult: Result<Unit>? = null
+        var resultsByUrl: Map<String, Result<Unit>> = emptyMap()
+        val sentUrls = mutableListOf<String>()
 
-        override suspend fun send(payload: String): Result<Unit> {
-            return nextResult!!
+        override suspend fun send(url: String, payload: String): Result<Unit> {
+            sentUrls += url
+            return resultsByUrl[url] ?: nextResult!!
         }
     }
 

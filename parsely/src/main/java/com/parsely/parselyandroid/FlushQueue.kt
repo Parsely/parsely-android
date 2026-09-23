@@ -10,6 +10,7 @@ internal class FlushQueue(
     private val flushManager: FlushManager,
     private val repository: QueueRepository,
     private val restClient: RestClient,
+    private val pixelHosts: PixelHosts,
     private val scope: CoroutineScope,
     private val connectivityStatusProvider: ConnectivityStatusProvider
 ) {
@@ -30,25 +31,41 @@ internal class FlushQueue(
                     return@launch
                 }
 
-                val jsonPayload = toParselyEventsPayload(eventsToSend)
                 if (skipSendingEvents) {
-                    Log.d("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events: $jsonPayload")
+                    Log.d("Debug mode on. Not sending to Parse.ly. Otherwise, would sent ${eventsToSend.size} events")
                     repository.remove(eventsToSend)
                     return@launch
                 }
-                Log.d("Sending request with ${eventsToSend.size} events")
-                Log.d("POST Data $jsonPayload")
-                Log.d("Requested ${ParselyTrackerInternal.ROOT_URL}")
-                restClient.send(jsonPayload)
-                    .fold(
-                        onSuccess = {
-                            Log.i("Pixel request success")
-                            repository.remove(eventsToSend)
-                        },
-                        onFailure = {
-                            Log.e("Pixel request exception", it)
-                        }
+
+                val (byHost, unresolved) = pixelHosts.group(eventsToSend)
+
+                if (unresolved.isNotEmpty()) {
+                    // Removed rather than retained: the baked map cannot change while the app
+                    // runs, so these would never resolve and would grow the stored queue forever.
+                    Log.e(
+                        "Dropping ${unresolved.size} events whose site ID is not configured. " +
+                            "Add every site ID your app uses to parsely-apikeys.json and rebuild."
                     )
+                    repository.remove(unresolved)
+                }
+
+                for ((host, events) in byHost) {
+                    val jsonPayload = toParselyEventsPayload(events)
+                    val url = buildPixelUrl(host)
+                    Log.d("Sending request with ${events.size} events")
+                    Log.d("POST Data $jsonPayload")
+                    Log.d("Requested $url")
+                    restClient.send(url, jsonPayload)
+                        .fold(
+                            onSuccess = {
+                                Log.i("Pixel request success")
+                                repository.remove(events)
+                            },
+                            onFailure = {
+                                Log.e("Pixel request exception", it)
+                            }
+                        )
+                }
             }
         }
     }

@@ -50,7 +50,8 @@ internal class ParselyTrackerInternal internal constructor(
         flushQueue = FlushQueue(
             flushManager,
             localStorageRepository,
-            ParselyAPIConnection(ROOT_URL + "mobileproxy"),
+            ParselyAPIConnection(),
+            PixelHosts.fromAssets(context),
             sdkScope,
             AndroidConnectivityStatusProvider(context)
         )
@@ -279,6 +280,5 @@ internal class ParselyTrackerInternal internal constructor(
 
     internal companion object {
         private const val DEFAULT_ENGAGEMENT_INTERVAL_MILLIS = 10500
-        @JvmField val ROOT_URL: String = "https://p1.parsely.com/".intern()
     }
 }
