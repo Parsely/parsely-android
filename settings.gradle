@@ -1,6 +1,9 @@
 pluginManagement {
     gradle.ext.agpVersion = '8.2.2'
 
+    // The Parse.ly host-baking plugin lives in this repo and is consumed by :example.
+    includeBuild('parsely-gradle-plugin')
+
     plugins {
         id 'com.android.application' version gradle.ext.agpVersion
         id 'com.android.library' version gradle.ext.agpVersion
