@@ -324,6 +324,8 @@ class FunctionalTests {
     fun customSiteIdIsAppliedToConcurrentEventsInEngagementSession() {
         ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
             // given
+            // Declared in androidTest/assets/parsely-hosts.json, on the same host as `siteId`,
+            // so both site IDs coalesce into the single request this test expects.
             val customSiteId = "customSiteId"
             val flushInterval = 30.seconds
             scenario.onActivity { activity: Activity ->
@@ -387,8 +389,9 @@ class FunctionalTests {
     }
 
     private companion object {
-        // Both must match androidTest/assets/parsely-hosts.json, which maps this site ID to
-        // localhost on this port.
+        // Every site ID the tests track, including the custom one, must appear in
+        // androidTest/assets/parsely-hosts.json mapped to localhost on this port — the SDK drops
+        // events for a site ID the baked asset does not cover.
         const val siteId = "123"
         const val bakedPort = 9099
 
