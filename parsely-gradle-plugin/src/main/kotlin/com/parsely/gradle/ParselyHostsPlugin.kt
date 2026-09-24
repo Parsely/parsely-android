@@ -39,7 +39,7 @@ abstract class BakeHostsTask : DefaultTask() {
     abstract val declaration: ConfigurableFileCollection
 
     @get:Input
-    abstract val endpoint: Property<String>
+    abstract val apiBase: Property<String>
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
@@ -65,7 +65,7 @@ abstract class BakeHostsTask : DefaultTask() {
         var networkFailure: Exception? = null
 
         for (siteId in declared) {
-            val url = "${endpoint.get()}/${URLEncoder.encode(siteId, "UTF-8")}/"
+            val url = "${apiBase.get()}/${URLEncoder.encode(siteId, "UTF-8")}/jess/sdk_config/"
             var connection: HttpURLConnection? = null
             try {
                 connection = URL(url).openConnection() as HttpURLConnection
@@ -130,7 +130,7 @@ class ParselyHostsPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         // React to the Android plugin whenever it lands, so `plugins {}` ordering does not
-        // matter to the publisher. Applying this first used to fail with a confusing error.
+        // matter to the publisher.
         var wired = false
         listOf("com.android.application", "com.android.library").forEach { androidPluginId ->
             project.pluginManager.withPlugin(androidPluginId) {
@@ -158,9 +158,9 @@ class ParselyHostsPlugin : Plugin<Project> {
                 BakeHostsTask::class.java
             ) { task ->
                 task.declaration.setFrom(project.layout.projectDirectory.file("parsely-apikeys.json"))
-                task.endpoint.set(
-                    project.providers.gradleProperty("parsely.sdkConfigEndpoint")
-                        .orElse("https://dash.parsely.com/api/jess/sdk-config")
+                task.apiBase.set(
+                    project.providers.gradleProperty("parsely.apiBase")
+                        .orElse("https://dash.parsely.com/api")
                 )
             }
             // AGP merges this into the APK's assets; nothing is ever written into src/.
