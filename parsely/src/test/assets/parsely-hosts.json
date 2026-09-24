@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "generated_at": "2026-09-23T14:02:11Z",
+  "hosts": {
+    "asset.example.com": "p1-irl.parsely.com"
+  }
+}

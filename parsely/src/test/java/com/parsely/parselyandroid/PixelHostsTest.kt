@@ -1,8 +1,13 @@
 package com.parsely.parselyandroid
 
+import androidx.test.core.app.ApplicationProvider
+import android.content.Context
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class PixelHostsTest {
 
     private fun event(siteId: Any?): Map<String, Any?> = mapOf("idsite" to siteId, "url" to "http://a")
@@ -124,5 +129,22 @@ class PixelHostsTest {
     @Test
     fun `given a host that already carries a scheme, when building a url, then do not double it`() {
         assertThat(buildPixelUrl("https://p1.parsely.com")).isEqualTo("https://p1.parsely.com/mobileproxy")
+    }
+
+    @Test
+    fun `given an entry with a blank host, when parsing, then drop only that site id`() {
+        val sut = PixelHosts.fromJson(
+            """{"version": 1, "hosts": {"blank.com": "", "known.com": "p1.parsely.com"}}"""
+        )
+
+        assertThat(sut.hostFor("blank.com")).isNull()
+        assertThat(sut.hostFor("known.com")).isEqualTo("p1.parsely.com")
+    }
+
+    @Test
+    fun `given a baked asset, when loading from assets, then read its hosts`() {
+        val sut = PixelHosts.fromAssets(ApplicationProvider.getApplicationContext<Context>())
+
+        assertThat(sut.hostFor("asset.example.com")).isEqualTo("p1-irl.parsely.com")
     }
 }
