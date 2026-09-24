@@ -14,6 +14,42 @@ The SDK is hosted on MavenCentral repository.
 implementation("com.parsely:parsely:<release_version>")
 ```
 
+## Required: configure your site IDs
+
+The SDK does not hardcode a collection endpoint. Parse.ly decides which endpoint your site's
+data goes to, and the SDK learns it at build time.
+
+**1. Apply the plugin** in your app module's `build.gradle`:
+
+```groovy
+plugins {
+    id 'com.parsely.hosts'
+}
+```
+
+**2. Declare every site ID your app tracks** in `parsely-apikeys.json`, next to that build file:
+
+```json
+{ "apikeys": ["example.com", "example.co.uk"] }
+```
+
+This must be exhaustive. It needs the site ID you pass to `ParselyTracker.init` *and* every
+site ID you ever pass as `SiteIdSource.Custom`.
+
+**3. Commit `parsely-apikeys.json`.** The generated `parsely-hosts.json` asset is a build
+output written under `build/generated/` and does not belong in version control.
+
+Your build fails if a declared site ID is not one Parse.ly recognises. If Parse.ly is
+temporarily unreachable but the generated asset already covers every declared site ID, the
+build warns and continues rather than failing on an outage.
+
+### If you skip the plugin
+
+The plugin is how a misconfiguration is caught. Without it nothing fails at build time and
+**the SDK sends no analytics at all** — an app with no `parsely-hosts.json` asset logs an
+error and drops every event. Events for a site ID missing from the asset are likewise dropped
+rather than sent to the wrong endpoint.
+
 ## Using the SDK
 
 Full instructions and documentation can be found on

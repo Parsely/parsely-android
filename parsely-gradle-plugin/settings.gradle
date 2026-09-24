@@ -1,0 +1,9 @@
+rootProject.name = 'parsely-gradle-plugin'
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}

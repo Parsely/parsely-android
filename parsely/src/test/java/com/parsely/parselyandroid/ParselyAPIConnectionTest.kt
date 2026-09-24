@@ -23,7 +23,7 @@ class ParselyAPIConnectionTest {
 
     @Before
     fun setUp() {
-        sut = ParselyAPIConnection(url)
+        sut = ParselyAPIConnection()
     }
 
     @After
@@ -38,7 +38,7 @@ class ParselyAPIConnectionTest {
             mockServer.enqueue(MockResponse().setResponseCode(200))
 
             // when
-            val result = sut.send(pixelPayload)
+            val result = sut.send(url, pixelPayload)
             runCurrent()
 
             // then
@@ -57,12 +57,29 @@ class ParselyAPIConnectionTest {
             mockServer.enqueue(MockResponse().setResponseCode(400))
 
             // when
-            val result = sut.send(pixelPayload)
+            val result = sut.send(url, pixelPayload)
             runCurrent()
 
             // then
             assertThat(result.isFailure).isTrue
             assertThat(result.exceptionOrNull()).isInstanceOf(IOException::class.java)
+        }
+
+    @Test
+    fun `given two different urls, when sending, then each request goes to the url it was given`() =
+        runTest {
+            // given
+            mockServer.enqueue(MockResponse().setResponseCode(200))
+            mockServer.enqueue(MockResponse().setResponseCode(200))
+
+            // when
+            sut.send(mockServer.url("/first").toString(), pixelPayload)
+            sut.send(mockServer.url("/second").toString(), pixelPayload)
+            runCurrent()
+
+            // then
+            assertThat(mockServer.takeRequest().path).isEqualTo("/first")
+            assertThat(mockServer.takeRequest().path).isEqualTo("/second")
         }
 
     companion object {

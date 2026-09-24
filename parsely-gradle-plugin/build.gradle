@@ -1,0 +1,23 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.10'
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+dependencies {
+    // Provided by the consuming Android build; never bundled.
+    compileOnly 'com.android.tools.build:gradle-api:8.2.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
+}
+
+gradlePlugin {
+    plugins {
+        parselyHosts {
+            id = 'com.parsely.hosts'
+            implementationClass = 'com.parsely.gradle.ParselyHostsPlugin'
+        }
+    }
+}

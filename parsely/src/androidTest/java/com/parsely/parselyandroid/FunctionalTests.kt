@@ -13,9 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.File
 import java.io.FileInputStream
 import java.io.ObjectInputStream
-import java.lang.reflect.Field
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.HttpsURLConnection
 import kotlin.io.path.Path
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -27,8 +27,11 @@ import kotlinx.coroutines.yield
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
+import okhttp3.tls.HandshakeCertificates
+import okhttp3.tls.HeldCertificate
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -38,8 +41,30 @@ class FunctionalTests {
 
     private lateinit var parselyTracker: ParselyTracker
     private val server = MockWebServer()
-    private val url = server.url("/").toString()
     private lateinit var appsFiles: Path
+
+    /**
+     * The SDK sends only to `https://<host>/mobileproxy`, where the host comes from the baked
+     * asset — so the test server has to speak TLS on the port `androidTest/assets` names. The
+     * certificate is generated per run and trusted on both sides; nothing outside this process
+     * trusts it.
+     */
+    @Before
+    fun startServer() {
+        val localhost = HeldCertificate.Builder()
+            .addSubjectAlternativeName("localhost")
+            .build()
+        val certificates = HandshakeCertificates.Builder()
+            .heldCertificate(localhost)
+            .addTrustedCertificate(localhost.certificate)
+            .build()
+
+        server.useHttps(certificates.sslSocketFactory(), false)
+        server.start(bakedPort)
+
+        HttpsURLConnection.setDefaultSSLSocketFactory(certificates.sslSocketFactory())
+        HttpsURLConnection.setDefaultHostnameVerifier { hostname, _ -> hostname == "localhost" }
+    }
 
     private fun beforeEach(activity: Activity) {
         appsFiles = Path(activity.filesDir.path)
@@ -299,6 +324,8 @@ class FunctionalTests {
     fun customSiteIdIsAppliedToConcurrentEventsInEngagementSession() {
         ActivityScenario.launch(SampleActivity::class.java).use { scenario ->
             // given
+            // Declared in androidTest/assets/parsely-hosts.json, on the same host as `siteId`,
+            // so both site IDs coalesce into the single request this test expects.
             val customSiteId = "customSiteId"
             val flushInterval = 30.seconds
             scenario.onActivity { activity: Activity ->
@@ -355,9 +382,6 @@ class FunctionalTests {
         activity: Activity,
         flushInterval: Duration = defaultFlushInterval
     )  {
-        val field: Field = ParselyTrackerInternal::class.java.getDeclaredField("ROOT_URL")
-        field.isAccessible = true
-        field.set(this, url)
         ParselyTracker.init(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
         )
@@ -365,7 +389,12 @@ class FunctionalTests {
     }
 
     private companion object {
+        // Every site ID the tests track, including the custom one, must appear in
+        // androidTest/assets/parsely-hosts.json mapped to localhost on this port — the SDK drops
+        // events for a site ID the baked asset does not cover.
         const val siteId = "123"
+        const val bakedPort = 9099
+
         const val localStorageFileName = "parsely-events.ser"
         val defaultFlushInterval = 5.seconds
     }
