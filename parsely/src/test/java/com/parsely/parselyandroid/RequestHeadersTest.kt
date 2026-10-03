@@ -75,15 +75,51 @@ class RequestHeadersTest {
     }
 
     @Test
-    fun `when building headers from a context, then use the app's package and the device build`() {
-        val context = RuntimeEnvironment.getApplication()
+    fun `given the system User-Agent, when building headers, then append it so device brand and model still parse`() {
+        val headers = RequestHeaders.build(
+            appName = "com.example.news",
+            appVersion = "5.12.0",
+            osVersion = "14",
+            deviceModel = "Pixel 7",
+            siteId = "example.com",
+            sdkVersion = "4.2.1",
+            systemUserAgent = "Dalvik/2.1.0 (Linux; U; Android 14; Pixel 7 Build/UP1A.231005.007)",
+        )
 
-        val headers = RequestHeaders.from(context, "example.com")
+        assertThat(headers["User-Agent"]).isEqualTo(
+            "com.example.news/5.12.0 Android/14 (Pixel 7) ParselySDK/android/4.2.1 " +
+                "Dalvik/2.1.0 (Linux; U; Android 14; Pixel 7 Build/UP1A.231005.007)"
+        )
+    }
+
+    @Test
+    fun `given a system User-Agent with non-ASCII characters, when building headers, then keep the User-Agent printable ASCII`() {
+        val headers = RequestHeaders.build(
+            "app", "1.0", "14", "Pixel 7", siteId = "example.com", sdkVersion = "4.2.1",
+            systemUserAgent = "Dalvik/2.1.0 (Linux; U; Android 14; Galaxy ™ Build/X)",
+        )
+
+        assertThat(headers["User-Agent"])
+            .isEqualTo("app/1.0 Android/14 (Pixel 7) ParselySDK/android/4.2.1 Dalvik/2.1.0 (Linux; U; Android 14; Galaxy _ Build/X)")
+            .matches("[ -~]+")
+    }
+
+    @Test
+    fun `when building headers from a context, then use the app's package, the device build and the system User-Agent`() {
+        val context = RuntimeEnvironment.getApplication()
+        val previous = System.getProperty("http.agent")
+        System.setProperty("http.agent", "Dalvik/2.1.0 (Linux; U; Android 14; Pixel 7 Build/UP1A.231005.007)")
+
+        val headers = try {
+            RequestHeaders.from(context, "example.com")
+        } finally {
+            if (previous == null) System.clearProperty("http.agent") else System.setProperty("http.agent", previous)
+        }
 
         assertThat(headers["User-Agent"])
             .startsWith("${context.packageName}/")
             .contains(" Android/${Build.VERSION.RELEASE} (${Build.MODEL}) ")
-            .endsWith(" ParselySDK/android/$SDK_VERSION")
+            .endsWith(" ParselySDK/android/$SDK_VERSION Dalvik/2.1.0 (Linux; U; Android 14; Pixel 7 Build/UP1A.231005.007)")
         assertThat(headers["X-Parsely-Apikey"]).isEqualTo("example.com")
     }
 
