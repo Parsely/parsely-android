@@ -47,6 +47,9 @@ class FunctionalTests {
         if (File("$appsFiles/$localStorageFileName").exists()) {
             throw RuntimeException("Local storage file exists. Something went wrong with orchestrating the tests.")
         }
+
+        // These scenarios assert exact flush and heartbeat timings.
+        TimerJitter.enabled = false
     }
 
     /**
@@ -358,8 +361,6 @@ class FunctionalTests {
         val field: Field = ParselyTrackerInternal::class.java.getDeclaredField("ROOT_URL")
         field.isAccessible = true
         field.set(this, url)
-        // These scenarios assert exact flush and heartbeat timings.
-        TimerJitter.enabled = false
         ParselyTracker.init(
             siteId, flushInterval.inWholeSeconds.toInt(), activity.application
         )
