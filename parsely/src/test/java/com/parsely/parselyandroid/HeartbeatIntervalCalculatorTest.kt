@@ -14,7 +14,7 @@ internal class HeartbeatIntervalCalculatorTest {
 
     @Before
     fun setUp() {
-        sut = HeartbeatIntervalCalculator(fakeClock)
+        sut = HeartbeatIntervalCalculator(fakeClock) { 1.0 }
     }
 
     @Test
@@ -64,6 +64,49 @@ internal class HeartbeatIntervalCalculatorTest {
         // ((currentTime + offset) * backoff) and then in milliseconds
         // (2 + 35) * 0.3 * 1000 = 11100
         assertThat(result).isEqualTo(11100)
+    }
+
+    @Test
+    fun `given jitter, when calculating interval, then scale the interval by it`() {
+        // given
+        fakeClock.fakeNow = Duration.ZERO
+        val startTime = Duration.ZERO
+
+        // when
+        val shortened = HeartbeatIntervalCalculator(fakeClock) { 0.9 }.calculate(startTime)
+        val lengthened = HeartbeatIntervalCalculator(fakeClock) { 1.1 }.calculate(startTime)
+
+        // then
+        // (0 + 35) * 0.3 * jitter * 1000
+        assertThat(shortened).isEqualTo(9450)
+        assertThat(lengthened).isEqualTo(11550)
+    }
+
+    @Test
+    fun `given jitter above 1 near the cap, when calculating interval, then never exceed MAX_TIME_BETWEEN_HEARTBEATS`() {
+        // given
+        fakeClock.fakeNow = 2965.seconds
+        val startTime = Duration.ZERO
+
+        // when
+        val result = HeartbeatIntervalCalculator(fakeClock) { 1.1 }.calculate(startTime)
+
+        // then
+        assertThat(result).isEqualTo(MAX_TIME_BETWEEN_HEARTBEATS.inWholeMilliseconds)
+    }
+
+    @Test
+    fun `given default jitter, when calculating interval, then stay within 10 percent of the base interval and vary`() {
+        // given
+        fakeClock.fakeNow = Duration.ZERO
+        val defaultJitterSut = HeartbeatIntervalCalculator(fakeClock)
+
+        // when
+        val results = List(200) { defaultJitterSut.calculate(Duration.ZERO) }
+
+        // then
+        assertThat(results).allSatisfy { assertThat(it).isBetween(9450, 11550) }
+        assertThat(results.distinct().size).isGreaterThan(1)
     }
 
     class FakeClock : Clock() {

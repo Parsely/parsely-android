@@ -128,6 +128,35 @@ internal class EngagementManagerTest {
     }
 
     @Test
+    fun `given jittered heartbeat intervals, when heartbeats and a stop happen, then engaged time adds up to the time elapsed`() = runTest {
+        // given
+        val jitters = ArrayDeque(listOf(0.9, 1.1, 1.0))
+        val clock = FakeClock(testScheduler)
+        sut = EngagementManager(
+            eventQueuer,
+            DEFAULT_INTERVAL.inWholeMilliseconds,
+            baseEvent,
+            HeartbeatIntervalCalculator(clock) { jitters.removeFirstOrNull() ?: 1.0 },
+            this,
+            clock
+        )
+        sut.start()
+
+        // when
+        // heartbeats at 9.45 s ((0 + 35) * 0.3 * 0.9) and 24.118 s (9.45 + (9.45 + 35) * 0.3 * 1.1),
+        // then a stop 5 s into the third interval
+        advanceTimeBy(29_118)
+        runCurrent()
+        sut.stop()
+
+        // then
+        assertThat(eventQueuer.events).hasSize(3).satisfies({
+            assertThat(it.map { event -> event["inc"] }).containsExactly(9L, 14L, 5L)
+            assertThat(it.last()).containsEntry("tt", currentTime)
+        })
+    }
+
+    @Test
     fun `when starting manager, then it should return true for isRunning`() = runTest {
         // given
         sut = EngagementManager(

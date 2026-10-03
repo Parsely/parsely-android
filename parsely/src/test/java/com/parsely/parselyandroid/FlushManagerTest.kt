@@ -3,6 +3,7 @@ package com.parsely.parselyandroid
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -15,7 +16,7 @@ class FlushManagerTest {
     fun `when timer starts and interval time passes, then flush queue`() = runTest {
         var flushEventsCounter = 0
         val sut =
-            ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
+            ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope, noJitter)
 
         sut.start()
         advanceTimeBy(DEFAULT_INTERVAL_MILLIS)
@@ -28,7 +29,7 @@ class FlushManagerTest {
     fun `when timer starts and three interval time passes, then flush queue 3 times`() = runTest {
         var flushEventsCounter = 0
         val sut =
-            ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
+            ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope, noJitter)
 
         sut.start()
         advanceTimeBy(3 * DEFAULT_INTERVAL_MILLIS)
@@ -42,7 +43,7 @@ class FlushManagerTest {
         runTest {
             var flushEventsCounter = 0
             val sut =
-                ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
+                ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope, noJitter)
 
             sut.start()
             advanceTimeBy(2 * DEFAULT_INTERVAL_MILLIS)
@@ -59,7 +60,7 @@ class FlushManagerTest {
         runTest {
             var flushEventsCounter = 0
             val sut =
-                ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
+                ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope, noJitter)
 
             sut.start()
             advanceTimeBy(DEFAULT_INTERVAL_MILLIS / 2)
@@ -76,7 +77,7 @@ class FlushManagerTest {
         runTest {
             var flushEventsCounter = 0
             val sut =
-                ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
+                ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope, noJitter)
 
             sut.start()
             advanceTimeBy(DEFAULT_INTERVAL_MILLIS / 2)
@@ -93,7 +94,57 @@ class FlushManagerTest {
             assertThat(flushEventsCounter).isEqualTo(1)
         }
 
+    @Test
+    fun `given jitter, when timer starts, then flush after the interval scaled by the jitter`() = runTest {
+        var flushEventsCounter = 0
+        val sut =
+            ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope) { 0.8 }
+
+        sut.start()
+        advanceTimeBy(24.seconds.inWholeMilliseconds - 1)
+        runCurrent()
+        assertThat(flushEventsCounter).isEqualTo(0)
+
+        advanceTimeBy(1)
+        runCurrent()
+        assertThat(flushEventsCounter).isEqualTo(1)
+    }
+
+    @Test
+    fun `given jitter, when timer runs, then draw a new jitter for each tick`() = runTest {
+        val flushTimes = mutableListOf<Long>()
+        val jitters = ArrayDeque(listOf(0.8, 1.2, 1.0))
+        val sut = ParselyFlushManager(
+            { flushTimes += currentTime }, DEFAULT_INTERVAL_MILLIS, backgroundScope
+        ) { jitters.removeFirstOrNull() ?: 1.0 }
+
+        sut.start()
+        advanceTimeBy(90.seconds.inWholeMilliseconds)
+        runCurrent()
+
+        // 30 s x 0.8, then 30 s x 1.2, then 30 s x 1.0
+        assertThat(flushTimes).containsExactly(24_000, 60_000, 90_000)
+    }
+
+    @Test
+    fun `given default jitter, when timer starts, then first flush comes between 80 and 120 percent of the interval`() =
+        runTest {
+            var flushEventsCounter = 0
+            val sut =
+                ParselyFlushManager({ flushEventsCounter++ }, DEFAULT_INTERVAL_MILLIS, backgroundScope)
+
+            sut.start()
+            advanceTimeBy(24.seconds.inWholeMilliseconds - 1)
+            runCurrent()
+            assertThat(flushEventsCounter).isEqualTo(0)
+
+            advanceTimeBy(12.seconds.inWholeMilliseconds)
+            runCurrent()
+            assertThat(flushEventsCounter).isEqualTo(1)
+        }
+
     private companion object {
         val DEFAULT_INTERVAL_MILLIS: Long = 30.seconds.inWholeMilliseconds
+        val noJitter = { 1.0 }
     }
 }

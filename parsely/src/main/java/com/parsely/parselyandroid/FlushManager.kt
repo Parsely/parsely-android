@@ -1,5 +1,6 @@
 package com.parsely.parselyandroid
 
+import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,7 +24,8 @@ internal interface FlushManager {
 internal class ParselyFlushManager(
     private val onFlush: () -> Unit,
     override val intervalMillis: Long,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val jitter: () -> Double = { Random.nextDouble(MIN_JITTER, MAX_JITTER) },
 ) : FlushManager {
     private var job: Job? = null
 
@@ -32,7 +34,7 @@ internal class ParselyFlushManager(
 
         job = coroutineScope.launch {
             while (isActive) {
-                delay(intervalMillis)
+                delay((intervalMillis * jitter()).toLong())
                 onFlush.invoke()
             }
         }
@@ -44,4 +46,10 @@ internal class ParselyFlushManager(
 
     override val isRunning: Boolean
         get() = job?.isActive ?: false
+
+    internal companion object {
+        // Each tick waits 80-120% of the interval, so apps opened together stop flushing in step.
+        const val MIN_JITTER = 0.8
+        const val MAX_JITTER = 1.2
+    }
 }
