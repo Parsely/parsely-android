@@ -86,20 +86,20 @@ dependencies {
     androidTestUtil 'androidx.test:orchestrator:1.4.2'
 }
 
-def static getVersionFromGitTag() {
-    return 'git describe --abbrev=0 --tags'.execute().text.trim()
+def static getVersionFromGitTag(File dir) {
+    return new ProcessBuilder('git', 'describe', '--abbrev=0', '--tags').directory(dir).start().text.trim()
 }
 
 def isTagBuild = System.getenv("GITHUB_REF_TYPE") == 'tag'
+def sdkVersion = "${getVersionFromGitTag(rootDir)}${isTagBuild ? '' : '-SNAPSHOT'}"
 
 mavenPublishing {
     publishToMavenCentral(false)
     signAllPublications()
 
-    def version = "${getVersionFromGitTag()}${isTagBuild ? '' : '-SNAPSHOT'}"
-    logger.lifecycle("Version: $version")
+    logger.lifecycle("Version: $sdkVersion")
 
-    coordinates("com.parsely", "parsely", version)
+    coordinates("com.parsely", "parsely", sdkVersion)
     pom {
         name = 'Parse.ly Android SDK'
         description = 'The official Parse.ly Android toolkit'
@@ -126,5 +126,34 @@ mavenPublishing {
             name = 'Parse.ly'
             url = 'https://www.parse.ly/'
         }
+    }
+}
+
+// The User-Agent names the SDK version, so it comes from the same tag as the published artifact.
+abstract class GenerateSdkVersion extends DefaultTask {
+    @Input
+    abstract Property<String> getSdkVersion()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void generate() {
+        def file = new File(outputDir.get().asFile, "com/parsely/parselyandroid/SdkVersion.kt")
+        file.parentFile.mkdirs()
+        file.text = """package com.parsely.parselyandroid
+
+internal const val SDK_VERSION: String = "${sdkVersion.get()}"
+"""
+    }
+}
+
+def generateSdkVersion = tasks.register("generateSdkVersion", GenerateSdkVersion) {
+    it.sdkVersion.set(sdkVersion.toString())
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.java.addGeneratedSourceDirectory(generateSdkVersion) { it.outputDir }
     }
 }

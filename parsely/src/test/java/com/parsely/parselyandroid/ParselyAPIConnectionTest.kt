@@ -51,6 +51,32 @@ class ParselyAPIConnectionTest {
         }
 
     @Test
+    fun `given headers, when making connection with events, then send them with the request`() =
+        runTest {
+            // given
+            mockServer.enqueue(MockResponse().setResponseCode(200))
+            sut = ParselyAPIConnection(
+                url,
+                mapOf(
+                    "User-Agent" to "com.example.news/5.12.0 Android/14 (Pixel 7) ParselySDK/android/4.2.1",
+                    "X-Parsely-Apikey" to "example.com",
+                )
+            )
+
+            // when
+            sut.send(pixelPayload)
+            runCurrent()
+
+            // then
+            assertThat(mockServer.takeRequest()).satisfies({
+                assertThat(it.headers["User-Agent"])
+                    .isEqualTo("com.example.news/5.12.0 Android/14 (Pixel 7) ParselySDK/android/4.2.1")
+                assertThat(it.headers["X-Parsely-Apikey"]).isEqualTo("example.com")
+                assertThat(it.headers["Content-Type"]).isEqualTo("application/json")
+            })
+        }
+
+    @Test
     fun `given unsuccessful response, when request is made, then return failure with exception`() =
         runTest {
             // given

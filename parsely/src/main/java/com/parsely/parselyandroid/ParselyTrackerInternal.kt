@@ -50,7 +50,7 @@ internal class ParselyTrackerInternal internal constructor(
         flushQueue = FlushQueue(
             flushManager,
             localStorageRepository,
-            ParselyAPIConnection(ROOT_URL + "mobileproxy"),
+            ParselyAPIConnection(ROOT_URL + "mobileproxy", RequestHeaders.from(context, siteId)),
             sdkScope,
             AndroidConnectivityStatusProvider(context)
         )

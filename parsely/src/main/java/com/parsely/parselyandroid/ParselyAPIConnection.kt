@@ -22,13 +22,17 @@ internal interface RestClient {
     suspend fun send(payload: String): Result<Unit>
 }
 
-internal class ParselyAPIConnection(private val url: String) : RestClient {
+internal class ParselyAPIConnection(
+    private val url: String,
+    private val headers: Map<String, String> = emptyMap(),
+) : RestClient {
     override suspend fun send(payload: String): Result<Unit> {
         var connection: HttpURLConnection? = null
         try {
             connection = URL(url).openConnection() as HttpURLConnection
             connection.doOutput = true
             connection.setRequestProperty("Content-Type", "application/json")
+            headers.forEach { (name, value) -> connection.setRequestProperty(name, value) }
             val output = connection.outputStream
             output.write(payload.toByteArray())
             output.close()
