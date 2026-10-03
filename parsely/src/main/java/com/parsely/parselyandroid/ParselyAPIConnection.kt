@@ -32,7 +32,8 @@ internal class ParselyAPIConnection(private val url: String) : RestClient {
             val output = connection.outputStream
             output.write(payload.toByteArray())
             output.close()
-            connection.inputStream
+            val status = connection.responseCode
+            if (status >= 400) return Result.failure(HttpStatusException(status))
         } catch (ex: Exception) {
             return Result.failure(ex)
         } finally {

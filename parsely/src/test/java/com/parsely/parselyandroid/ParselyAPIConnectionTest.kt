@@ -32,6 +32,23 @@ class ParselyAPIConnectionTest {
     }
 
     @Test
+    fun `given payload too large response, when request is made, then return failure with the status`() =
+        runTest {
+            // given
+            mockServer.enqueue(MockResponse().setResponseCode(413))
+
+            // when
+            val result = sut.send(pixelPayload)
+            runCurrent()
+
+            // then
+            assertThat(result.exceptionOrNull())
+                .isInstanceOfSatisfying(HttpStatusException::class.java) {
+                    assertThat(it.status).isEqualTo(413)
+                }
+        }
+
+    @Test
     fun `given successful response, when making connection with events, then make POST request with JSON Content-Type header`() =
         runTest {
             // given
