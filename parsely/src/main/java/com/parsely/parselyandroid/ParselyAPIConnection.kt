@@ -22,11 +22,18 @@ internal interface RestClient {
     suspend fun send(payload: String): Result<Unit>
 }
 
-internal class ParselyAPIConnection(private val url: String) : RestClient {
+internal class ParselyAPIConnection(
+    private val url: String,
+    private val connectTimeoutMillis: Int = CONNECT_TIMEOUT_MILLIS,
+    private val readTimeoutMillis: Int = READ_TIMEOUT_MILLIS,
+) : RestClient {
     override suspend fun send(payload: String): Result<Unit> {
         var connection: HttpURLConnection? = null
         try {
             connection = URL(url).openConnection() as HttpURLConnection
+            // Without these a stalled proxy holds the flush, and the queue lock, indefinitely.
+            connection.connectTimeout = connectTimeoutMillis
+            connection.readTimeout = readTimeoutMillis
             connection.doOutput = true
             connection.setRequestProperty("Content-Type", "application/json")
             val output = connection.outputStream
@@ -40,5 +47,10 @@ internal class ParselyAPIConnection(private val url: String) : RestClient {
         }
 
         return Result.success(Unit)
+    }
+
+    internal companion object {
+        const val CONNECT_TIMEOUT_MILLIS = 10_000
+        const val READ_TIMEOUT_MILLIS = 10_000
     }
 }

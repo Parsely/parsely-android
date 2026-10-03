@@ -1,5 +1,7 @@
 package com.parsely.parselyandroid
 
+import java.net.SocketTimeoutException
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -63,6 +65,21 @@ class ParselyAPIConnectionTest {
             // then
             assertThat(result.isFailure).isTrue
             assertThat(result.exceptionOrNull()).isInstanceOf(IOException::class.java)
+        }
+
+    @Test
+    fun `given server that answers slower than the read timeout, when request is made, then fail with a timeout`() =
+        runTest {
+            // given
+            mockServer.enqueue(MockResponse().setResponseCode(200).setHeadersDelay(2, TimeUnit.SECONDS))
+            sut = ParselyAPIConnection(url, readTimeoutMillis = 200)
+
+            // when
+            val result = sut.send(pixelPayload)
+            runCurrent()
+
+            // then
+            assertThat(result.exceptionOrNull()).isInstanceOf(SocketTimeoutException::class.java)
         }
 
     companion object {
