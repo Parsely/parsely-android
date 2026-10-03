@@ -15,7 +15,8 @@ internal class FlushQueue(
     private val restClient: RestClient,
     private val scope: CoroutineScope,
     private val connectivityStatusProvider: ConnectivityStatusProvider,
-    private val clock: Clock = Clock(),
+    // Monotonic, so setting the device clock back cannot stretch a backoff.
+    private val clock: Clock = MonotonicClock(),
     private val jitter: () -> Double = { Random.nextDouble(MIN_JITTER, MAX_JITTER) },
 ) {
 
@@ -23,7 +24,8 @@ internal class FlushQueue(
 
     // Guarded by mutex.
     private var consecutiveFailures = 0
-    private var nextAttemptAtMillis = 0L
+    // A monotonic clock can read negative, so "no backoff" is the lowest possible time.
+    private var nextAttemptAtMillis = Long.MIN_VALUE
 
     operator fun invoke(skipSendingEvents: Boolean) {
         if (!connectivityStatusProvider.isReachable()) {
@@ -72,7 +74,7 @@ internal class FlushQueue(
 
     private fun resetBackoff() {
         consecutiveFailures = 0
-        nextAttemptAtMillis = 0
+        nextAttemptAtMillis = Long.MIN_VALUE
     }
 
     /** Waits twice as long after each consecutive failure, up to [MAX_BACKOFF_MILLIS], then jitters. */

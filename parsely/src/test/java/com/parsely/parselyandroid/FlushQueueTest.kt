@@ -361,6 +361,29 @@ class FlushQueueTest {
             assertThat(restClient.sendCount).isEqualTo(5)
         }
 
+    @Test
+    fun `given a clock that reads below zero, when flushing for the first time, then send`() =
+        runTest {
+            // given
+            val clock = FakeClock().apply { nowMillis = -5_000 }
+            val restClient = FakeRestClient().apply { nextResult = Result.success(Unit) }
+            val sut = FlushQueue(
+                FakeFlushManager(),
+                FakeRepository().apply { insertEvents(listOf(mapOf("test" to 123))) },
+                restClient,
+                this,
+                FakeConnectivityStatusProvider(),
+                clock,
+            ) { 1.0 }
+
+            // when
+            sut.invoke(false)
+            runCurrent()
+
+            // then
+            assertThat(restClient.sendCount).isEqualTo(1)
+        }
+
     private class FakeFlushManager : FlushManager {
         var stopped = false
         override fun start() {
