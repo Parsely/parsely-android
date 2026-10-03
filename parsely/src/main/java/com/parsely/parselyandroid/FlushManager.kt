@@ -1,6 +1,5 @@
 package com.parsely.parselyandroid
 
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -25,7 +24,7 @@ internal class ParselyFlushManager(
     private val onFlush: () -> Unit,
     override val intervalMillis: Long,
     private val coroutineScope: CoroutineScope,
-    private val jitter: () -> Double = { Random.nextDouble(MIN_JITTER, MAX_JITTER) },
+    private val jitter: () -> Double = { TimerJitter.between(MIN_JITTER, MAX_JITTER) },
 ) : FlushManager {
     private var job: Job? = null
 

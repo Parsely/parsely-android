@@ -1,13 +1,12 @@
 package com.parsely.parselyandroid
 
-import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 internal open class HeartbeatIntervalCalculator(
     private val clock: Clock,
-    private val jitter: () -> Double = { Random.nextDouble(MIN_JITTER, MAX_JITTER) },
+    private val jitter: () -> Double = { TimerJitter.between(MIN_JITTER, MAX_JITTER) },
 ) {
 
     open fun calculate(startTime: Duration): Long {
